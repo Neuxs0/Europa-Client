@@ -144,26 +144,3 @@ publishing {
 
     }
 }
-
-tasks.register('copyModToGame') {
-    dependsOn 'jar' // Ensure the JAR is built before copying
-
-    doLast {
-        def destinationDir = file("/home/neuxs/Documents/CRLauncher/cosmic-reach/instances/EuropaClientDev/quiltmods/")
-        //This line gets the name of the jar
-        def jarFile = tasks.jar.archiveFile.get()
-
-        // Create the destination directory if it doesn't exist
-        if (!destinationDir.exists()) {
-            destinationDir.mkdirs()
-        }
-
-        copy {
-            from jarFile
-            into destinationDir
-        }
-        println "Copied mod JAR to ${destinationDir}"
-    }
-}
-
-tasks.build.dependsOn copyModToGame
