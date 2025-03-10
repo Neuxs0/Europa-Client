@@ -1,4 +1,5 @@
-# v1.1.0 - March 10, 16:00 PDT
+# v1.1.0
+Release time: 16:00 PDT, March 10, 2025
 ### Fixes
 - Fixed removal of no-clip on respawn
 ### Commands
@@ -8,9 +9,10 @@
 - Player List command (#playerList, #pl)
 ### Misc
 - Puzzle Loader support
-- Better chat logging
+- Better client chat logging
 
-# v1.0.0 - March 9, 05:30 PDT
+# v1.0.0
+Release time: 05:30 PDT, March 9, 2025
 ### Commands
 - Help command (#help, #h, #?)
 - NoClip command (#noclip, #nc)
