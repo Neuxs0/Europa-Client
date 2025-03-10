@@ -1,8 +1,6 @@
 # Europa Client
 A simple Cosmic Reach client by Neuxs.
 
-Known Compatibility: Cosmic Quilt
-
 ## Features:
 - Custom chat commands
     - #help (alias: #?, #h)
