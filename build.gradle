@@ -1,10 +1,14 @@
+plugins {
+    id "java-base"
+}
+
 allprojects {
     group = rootProject.property("group")
     version = rootProject.property("version")
 }
 
 subprojects {
-    apply plugin: 'java'
+    apply plugin: "java"
     repositories {
         maven {
             name "JitPack"
@@ -13,8 +17,6 @@ subprojects {
     }
 
     processResources {
-        def puzzleDir = "/home/neuxs/Documents/CRLauncher/cosmic-reach/instances/EuropaClientDevPuzzle/cosmic-reach/pmods/"
-        def quiltDir = "/home/neuxs/Documents/CRLauncher/cosmic-reach/instances/EuropaClientDevQuilt/quiltmods/"
         def resourceTargets = ["quilt.mod.json", "puzzle.mod.json"]
 
         def replaceProperties = [
@@ -26,20 +28,109 @@ subprojects {
         ]
 
         inputs.properties replaceProperties
-        replaceProperties.put "project", project
+        replaceProperties.put("project", project)
         filesMatching(resourceTargets) {
             expand replaceProperties
         }
-
-//        doLast {
-//            copy {
-//                from "../puzzle/build/libs/EuropaClient-puzzle-${project.version}.jar"
-//                into puzzleDir
-//            }
-//            copy {
-//                from "../quilt/build/libs/EuropaClient-quilt-${project.version}.jar"
-//                into quiltDir
-//            }
-//        }
     }
+}
+
+def mod_id = rootProject.property("id")
+def mod_version = rootProject.property("version")
+
+// Package distribution task
+task packageDist {
+    dependsOn project(":nocheat:puzzle").tasks.jar
+    dependsOn project(":nocheat:quilt").tasks.jar
+    dependsOn project(":full:puzzle").tasks.jar
+    dependsOn project(":full:quilt").tasks.jar
+
+    outputs.dir file("dist")
+
+    doLast {
+        def distDir = file("dist")
+        distDir.mkdirs()
+
+        def jarsToCopy = [
+                [source: project(":nocheat:puzzle").tasks.jar.archiveFile, destination: distDir],
+                [source: project(":nocheat:quilt").tasks.jar.archiveFile, destination: distDir],
+                [source: project(":full:puzzle").tasks.jar.archiveFile, destination: distDir],
+                [source: project(":full:quilt").tasks.jar.archiveFile, destination: distDir]
+        ]
+        jarsToCopy.each { jarInfo ->
+            // Convert RegularFile to File using asFile
+            def sourceJarFile = jarInfo.source.get().asFile
+            def destinationDir = jarInfo.destination
+            copy {
+                from sourceJarFile
+                into destinationDir
+            }
+            logger.lifecycle("Copied ${sourceJarFile.name} to ${destinationDir.path}")
+        }
+    }
+}
+
+// Cleanup task: Delete subproject build directories and extra folders.
+task cleanBuildDirs(dependsOn: packageDist) {
+    doLast {
+        // Delete each subproject's build directory
+        subprojects.each { subproject ->
+            def buildDir = subproject.buildDir
+            if (buildDir.exists()) {
+                if (buildDir.deleteDir()) {
+                    logger.lifecycle("Deleted build directory for ${subproject.name}: ${buildDir.path}")
+                } else {
+                    logger.lifecycle(
+                            "Unable to delete build directory for ${subproject.name}: ${buildDir.path}"
+                    )
+                }
+            }
+        }
+
+        // Extra folders to delete relative to the root project directory
+        def extraFolders = [
+                "full/build",
+                "full/common/build",
+                "full/puzzle/build",
+                "full/puzzle/.gradle",
+                "full/quilt/build",
+                "nocheat/build",
+                "nocheat/common/build",
+                "nocheat/puzzle/build",
+                "nocheat/puzzle/.gradle",
+                "nocheat/quilt/build"
+        ]
+
+        extraFolders.each { folderPath ->
+            def folder = file(folderPath)
+            if (folder.exists()) {
+                int attempts = 0
+                boolean deletedSuccessfully = false
+                while (attempts < 5 && !deletedSuccessfully) {
+                    if (folder.deleteDir()) {
+                        logger.lifecycle("Deleted folder: ${folder.path}")
+                        deletedSuccessfully = true
+                    } else {
+                        attempts++
+                        logger.lifecycle(
+                                "Attempt ${attempts} to delete folder ${folder.path} failed. Retrying..."
+                        )
+                        Thread.sleep(1000)
+                    }
+                }
+                if (!deletedSuccessfully) {
+                    logger.lifecycle(
+                            "WARNING: Could not delete folder: ${folder.path} after ${attempts} attempts."
+                    )
+                }
+            } else {
+                logger.lifecycle("Folder not found (skipped): ${folder.path}")
+            }
+        }
+    }
+}
+
+tasks.named("build") {
+    dependsOn packageDist
+    finalizedBy cleanBuildDirs
 }

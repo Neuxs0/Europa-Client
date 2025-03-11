@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "group": "${mod_group}",
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "Neuxs"
+  ],
+  "meta": {
+    "icon": "${mod_id}:icons/icon.png"
+  },
+  "entrypoints": {
+    "client_init": [
+      "${mod_group}.${mod_id}.PuzzleClient"
+    ]
+  },
+  "mixins": [
+    "${mod_id}.mixins.json"
+  ],
+  "depends": {
+    "cosmic-reach": ">=0.4.1",
+    "puzzle-loader": ">=2.3.7"
+  },
+  "accessTransformers": [
+    "${mod_id}.manipulator"
+  ]
+}

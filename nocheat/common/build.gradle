@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id "cosmicloom"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+loom {
+
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    cosmicReach(loom.cosmicReachClient("alpha", cosmic_reach_version))
+    cosmicReachServer(loom.cosmicReachServer("alpha", cosmic_reach_version))
+    modImplementation(loom.cosmicQuilt(cosmic_quilt_version))
+}

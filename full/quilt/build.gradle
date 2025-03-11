@@ -1,0 +1,114 @@
+plugins {
+    id "application"
+    id "maven-publish"
+    id "cosmicloom"
+}
+
+
+loom {
+
+}
+
+repositories {
+    ivy {
+        name "Cosmic Reach"
+        url "https://github.com/CRModders/CosmicArchive/raw/main/versions"
+        patternLayout {
+            artifact "[classifier]/[revision]/client/Cosmic-Reach-[revision].jar"
+        }
+        metadataSources {
+            artifact()
+        }
+        content {
+            includeModule "finalforeach", "cosmicreach"
+        }
+    }
+    maven {
+        name "JitPack"
+        url "https://jitpack.io"
+    }
+    maven {
+        name "Quilt"
+        url "https://maven.quiltmc.org/repository/release"
+    }
+    maven {
+        name "Fabric"
+        url "https://maven.fabricmc.net/"
+    }
+    maven {
+        name "Sponge"
+        url "https://repo.spongepowered.org/maven/"
+    }
+    mavenCentral()
+}
+
+configurations {
+    cosmicreach
+    compileOnly.extendsFrom(cosmicreach)
+
+    internal {
+        visible = false
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    compileClasspath.extendsFrom(internal)
+    runtimeClasspath.extendsFrom(internal)
+    testCompileClasspath.extendsFrom(internal)
+    testRuntimeClasspath.extendsFrom(internal)
+}
+
+dependencies {
+    // Cosmic Reach
+    cosmicReach(loom.cosmicReachClient("alpha", cosmic_reach_version))
+    cosmicReachServer(loom.cosmicReachServer("alpha", cosmic_reach_version))
+
+    // Cosmic Quilt
+    modImplementation(loom.cosmicQuilt(cosmic_quilt_version))
+
+    // Depend on the common module for shared code.
+    implementation project(":full:common")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(":full:common").sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).configureEach {
+    source(project(":full:common").sourceSets.main.allJava)
+}
+
+processResources {
+    from project(":full:common").sourceSets.main.resources
+    def resourceTargets = [ "quilt.mod.json" ]
+    def replaceProperties = [
+            mod_version      : project.version,
+            mod_group        : project.group,
+            mod_description  : project.description,
+            mod_name         : project.name,
+            mod_id           : rootProject.property("id")
+    ]
+
+    inputs.properties replaceProperties
+    replaceProperties.put("project", project)
+    filesMatching(resourceTargets) {
+        expand replaceProperties
+    }
+}
+
+application {
+    mainClass = "org.quiltmc.loader.impl.launch.knot.KnotClient"
+}
+
+applicationDefaultJvmArgs = [
+        "-Dloader.development=true",
+        "-Dloader.gameJarPath=" + configurations.cosmicreach.asPath
+]
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+    archiveFileName.set("${rootProject.name}-quilt-${project.version}.jar")
+}

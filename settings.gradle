@@ -21,8 +21,14 @@ buildscript() {
     }
 }
 
-include("common")
-include("quilt")
-include("puzzle")
+include("full")
+include("full:common")
+include("full:quilt")
+include("full:puzzle")
+
+include("nocheat")
+include("nocheat:common")
+include("nocheat:quilt")
+include("nocheat:puzzle")
 
 rootProject.name = "EuropaClient"

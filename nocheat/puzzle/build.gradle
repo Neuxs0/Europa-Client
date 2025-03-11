@@ -1,0 +1,76 @@
+plugins {
+    id "java"
+    id "jigsaw"
+    id "com.github.johnrengelman.shadow"
+}
+
+loom {
+    splitEnvironmentSourceSets()
+    mods {
+        "SimplyShaders" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+    accessWidenerPath = file("src/main/resources/${id}.manipulator")
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    // Referencing a Cosmic Reach dependency using the version from gradle.properties.
+    cosmicReach("finalforeach:cosmicreach-alpha:${property("cosmic_reach_version")}")
+
+    // Depend on the common module containing shared code.
+    implementation project(":nocheat:common")
+}
+
+tasks.named("compileClientJava") {
+    source(project(":nocheat:common").sourceSets.main.allSource)
+}
+
+tasks.named("compileClientJava") {
+    source(project(":nocheat:common").sourceSets.main.allJava)
+}
+
+processResources {
+    def resourceTargets = ["puzzle.mod.json"]
+    def replaceProperties = [
+            mod_version     : project.version,
+            mod_group       : project.group,
+            mod_description : project.description,
+            mod_name        : project.name,
+            mod_id          : rootProject.property("id")
+    ]
+
+    inputs.properties replaceProperties
+    replaceProperties.put("project", project)
+    filesMatching(resourceTargets) {
+        expand replaceProperties
+    }
+}
+
+jar {
+    archiveFileName.set("${rootProject.name}-puzzle-${project.version}-nocheat.jar")
+}
+
+// New task to copy europa_client.mixins.json from the common module.
+tasks.register("copyMixins", Copy) {
+    from(file("../nocheat/common/src/main/resources/europa_client.mixins.json"))
+    into(file("src/client/resources"))
+    // Declaring the output directory helps Gradle with up-to-date checks.
+    outputs.dir file("src/client/resources")
+}
+
+// Make sure processClientResources waits for the copyMixins task.
+tasks.named("processClientResources") {
+    dependsOn tasks.named("copyMixins")
+}
+
+// Optionally, if the jar task also relies on the copied file, ensure it depends on copyMixins.
+jar.dependsOn(tasks.named("copyMixins"))
