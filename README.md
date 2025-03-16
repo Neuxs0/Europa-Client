@@ -9,4 +9,4 @@ A simple Cosmic Reach client by Neuxs.
 
 ## Building
 1. Run `./gradlew build`
-2. Build files located in ./build/libs/
+2. Build files located in ./dist
