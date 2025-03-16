@@ -1,3 +1,11 @@
+# v1.2.1
+Release time: 16:00 PDT, March 16, 2025
+### Fixes
+- Fixed fullbright for Cosmic Reach Alpha v0.4.4
+### Misc
+- Updated to Cosmic Reach Alpha v0.4.4
+- Updated to require Puzzle Loader v2.3.8
+
 # v1.2.0
 Release time: 19:00 PDT, March 15, 2025
 ### Fixes
