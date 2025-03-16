@@ -4,7 +4,6 @@ in vec4 a_lighting;
 uniform vec3 u_batchPosition;
 uniform mat4 u_projViewTrans;
 uniform mat4 u_modelMat;
-
 uniform float u_time;
 uniform vec3 cameraPosition;
 

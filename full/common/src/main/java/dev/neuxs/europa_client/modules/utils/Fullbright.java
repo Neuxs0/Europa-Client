@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.modules.utils;
 
+import com.badlogic.gdx.Gdx;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.utils.Chat;

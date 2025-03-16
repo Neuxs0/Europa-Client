@@ -27,29 +27,45 @@ out vec4 outColor;
 uniform float u_fogDensity;
 #import "base:shaders/common/fog.glsl"
 
-void main() {
+void main()
+{
     vec2 numTiles = floor(v_texCoord0);
     vec2 tilingTexCoords = v_texCoord0;
-    if(numTiles.xy != vec2(0.0, 0.0)) {
-        tilingTexCoords = v_texCoord0 - numTiles;
+
+    if(numTiles.xy != vec2(0.0, 0.0))
+    {
+        tilingTexCoords = (v_texCoord0 - numTiles);
         vec2 flooredTexCoords = floor((v_texCoord0 - numTiles) * 16.0) / 16.0;
         numTiles = numTiles + vec2(1.0, 1.0);
-        tilingTexCoords = flooredTexCoords + mod(((tilingTexCoords - flooredTexCoords) * numTiles) * 16.0, 1.0) / 16.0;
+        tilingTexCoords = flooredTexCoords +
+        mod(((tilingTexCoords - flooredTexCoords) * numTiles) * 16.0, 1.0)
+        / 16.0;
     }
+
     vec4 texColor = texture(texDiffuse, tilingTexCoords);
-    float fadeOutDistance = (u_renderDistanceInChunks - 1.0) * 16.0;
-    float fadeOutFactor = clamp((fadeOutDistance - length(worldPos.xz - cameraPosition.xz)) / 16.0, 0.0, 1.0);
+
+    float fadeOutDistance = (u_renderDistanceInChunks - 1) * 16.0;
+    float fadeOutFactor = clamp((fadeOutDistance - length(worldPos.xz -
+    cameraPosition.xz)) / 16.0, 0.0, 1.0);
     float alpha = texColor.a * pow(fadeOutFactor, 0.5);
-    if(alpha == 0.0) {
+    if(alpha == 0.0)
+    {
         discard;
     }
-    vec3 lightTint = vec3(1.0);
+
     vec3 waterColor = texColor.rgb;
+    vec3 lightTint = vec3(1.0);
+
     outColor = tintColor * vec4(waterColor * lightTint, alpha);
-    outColor.rgb = max(outColor.rgb, texColor.rgb * worldAmbientColor);
-    vec3 fogColor = skyAmbientColor;
-    fogColor = getFogColor(fogColor, blocklight.rgb, u_fogDensity, worldPos, cameraPosition);
-    outColor.rgb = applyFog(fogColor, outColor.rgb, u_fogDensity, worldPos, cameraPosition);
-    float gamma = 1.1;
+
+    vec3 fogColor = vec3(1.0) - pow(vec3(1.0) - skyAmbientColor, vec3(2.0));
+    fogColor = getFogColor(fogColor, vec3(1.0), u_fogDensity, worldPos,
+    cameraPosition);
+    outColor.rgb = applyFog(fogColor, outColor.rgb, u_fogDensity, worldPos,
+    cameraPosition);
+
+    outColor.rgb = max(outColor.rgb, texColor.rgb);
+
+    float gamma = 1.0;
     outColor.rgb = pow(outColor.rgb, vec3(1.0 / gamma));
 }

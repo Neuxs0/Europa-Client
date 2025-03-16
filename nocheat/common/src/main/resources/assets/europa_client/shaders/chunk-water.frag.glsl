@@ -37,9 +37,13 @@ void main() {
         tilingTexCoords = flooredTexCoords + mod(((tilingTexCoords - flooredTexCoords) * numTiles) * 16.0, 1.0) / 16.0;
     }
     vec4 texColor = texture(texDiffuse, tilingTexCoords);
+    #ifndef FULLBRIGHT
     float fadeOutDistance = (u_renderDistanceInChunks - 1.0) * 16.0;
     float fadeOutFactor = clamp((fadeOutDistance - length(worldPos.xz - cameraPosition.xz)) / 16.0, 0.0, 1.0);
     float alpha = texColor.a * pow(fadeOutFactor, 0.5);
+    #else
+    float alpha = texColor.a;
+    #endif
     if(alpha == 0.0) {
         discard;
     }
