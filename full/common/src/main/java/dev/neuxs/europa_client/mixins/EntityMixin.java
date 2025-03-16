@@ -1,7 +1,7 @@
 package dev.neuxs.europa_client.mixins;
 
+import dev.neuxs.europa_client.modules.Modules;
 import finalforeach.cosmicreach.entities.Entity;
-import dev.neuxs.europa_client.modules.cheats.NoClip;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -20,7 +20,14 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffX(float x) {
         Entity self = (Entity) (Object) this;
-        return self.noClip ? x * NoClip.getSpeed() : x;
+        float modifier = 1.0F;
+        if (self.isNoClip()) {
+            modifier *= Modules.noClip.getSpeed();
+        }
+        if (Modules.speed.isEnabled()) {
+            modifier *= Modules.speed.getSpeed();
+        }
+        return x * modifier;
     }
 
     @ModifyArg(
@@ -34,7 +41,11 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffY(float y) {
         Entity self = (Entity) (Object) this;
-        return self.noClip ? y * NoClip.getSpeed() : y;
+        float modifier = 1.0F;
+        if (self.isNoClip()) {
+            modifier *= Modules.noClip.getSpeed();
+        }
+        return y * modifier;
     }
 
     @ModifyArg(
@@ -48,6 +59,13 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffZ(float z) {
         Entity self = (Entity) (Object) this;
-        return self.noClip ? z * NoClip.getSpeed() : z;
+        float modifier = 1.0F;
+        if (self.isNoClip()) {
+            modifier *= Modules.noClip.getSpeed();
+        }
+        if (Modules.speed.isEnabled()) {
+            modifier *= Modules.speed.getSpeed();
+        }
+        return z * modifier;
     }
 }

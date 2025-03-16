@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.modules.cheats.NoClip;
+import dev.neuxs.europa_client.modules.Modules;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.networking.NetworkIdentity;
 import finalforeach.cosmicreach.networking.packets.entities.NoClipPacket;
@@ -15,13 +15,9 @@ public abstract class NoClipPacketMixin {
     @Shadow
     private boolean shouldNoClip;
 
-    /**
-     * Replaces the handle method with a client-authoritative version
-     * that always applies the no-clip state.
-     */
     @Overwrite
     public void handle(NetworkIdentity identity, ChannelHandlerContext ctx) {
         Player player = identity.getPlayer();
-        NoClip.setNoClip(player, this.shouldNoClip);
+        Modules.noClip.setNoClip(player, this.shouldNoClip);
     }
 }

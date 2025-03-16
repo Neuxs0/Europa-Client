@@ -9,11 +9,13 @@
     "intermediate_mappings":"net.fabricmc:intermediary",
 
     "metadata": {
-      "name": "${mod_name}",
+      "name": "Europa Client",
       "description": "${mod_description}",
       "contributors": {
         "Neuxs": "Owner"
       },
+
+      "license": "MIT",
 
       "contact": {
         "homepage": "https://neuxs.dev/",
@@ -35,7 +37,7 @@
       },
       {
         "id": "cosmicreach",
-        "versions": "*"
+        "versions": ">= 0.4.2"
       }
     ]
   },

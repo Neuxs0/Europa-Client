@@ -1,7 +1,6 @@
 package dev.neuxs.europa_client.commands.misc;
 
 import dev.neuxs.europa_client.Client;
-import finalforeach.cosmicreach.chat.IChat;
 import dev.neuxs.europa_client.commands.ClientCommand;
 
 public class SayCommand extends ClientCommand {

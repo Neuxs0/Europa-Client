@@ -42,7 +42,6 @@ public class ClientCommandManager {
     ) {
         String withoutPrefix = messageText.substring(1);
 
-        // For the special case of "say", we want to preserve the rest of the message as a single argument.
         String[] args;
         String commandStr;
         if (withoutPrefix.toLowerCase().startsWith("say ")) {
@@ -50,7 +49,6 @@ public class ClientCommandManager {
             String rest = withoutPrefix.substring(4);
             args = new String[]{commandStr, rest};
         } else {
-            // Otherwise split by whitespace (first token is the command name)
             String[] parts = withoutPrefix.split(" ");
             commandStr = parts[0].toLowerCase();
             args = withoutPrefix.split(" ");

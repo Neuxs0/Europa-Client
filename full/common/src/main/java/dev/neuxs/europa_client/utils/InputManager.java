@@ -1,11 +1,7 @@
 package dev.neuxs.europa_client.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.modules.ModuleInit;
-import dev.neuxs.europa_client.modules.cheats.NoClip;
-import dev.neuxs.europa_client.modules.utils.Fullbright;
+import dev.neuxs.europa_client.modules.Modules;
 import finalforeach.cosmicreach.gamestates.ChatMenu;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
@@ -15,10 +11,10 @@ public class InputManager {
 
     public static void Keybinds() {
         if (!(GameState.currentGameState instanceof ChatMenu)) {
-            if (isFirstFrameKeyDown(ModuleInit.fullbrightKeybind)) {
-                Fullbright.toggle(InGame.getWorld(), true);
-            } else if (isFirstFrameKeyDown(ModuleInit.noClipKeybind)) {
-                NoClip.toggle(true);
+            if (isFirstFrameKeyDown(Modules.fullbright.keyBind)) {
+                Modules.fullbright.toggle(InGame.getWorld(), true);
+            } else if (isFirstFrameKeyDown(Modules.noClip.keyBind)) {
+                Modules.noClip.toggle(true);
             }
         }
     }

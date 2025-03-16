@@ -1,12 +1,10 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.Client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import finalforeach.cosmicreach.gamestates.ChatMenu;
 import finalforeach.cosmicreach.chat.Chat;
-import finalforeach.cosmicreach.chat.IChat;
 import finalforeach.cosmicreach.accounts.Account;
 import finalforeach.cosmicreach.networking.client.ChatSender;
 import dev.neuxs.europa_client.commands.ClientCommandManager;

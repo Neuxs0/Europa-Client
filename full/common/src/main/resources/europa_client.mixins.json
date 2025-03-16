@@ -9,6 +9,7 @@
     "ChatMenuMixin",
     "YouDiedMenuMixin",
     "NoClipPacketMixin",
+    "BlockRaycastsMixin",
     "GameSingletonsInterface"
   ],
   "client": [

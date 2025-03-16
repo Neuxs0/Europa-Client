@@ -13,7 +13,6 @@ public class PlayerListCommand extends ClientCommand {
 
     @Override
     public void run() {
-        // Use the mixin accessor to get the mapping of players to accounts.
         WeakHashMap<Player, Account> playersToAccounts =
                 GameSingletonsInterface.getPlayersToAccounts();
 
@@ -23,7 +22,6 @@ public class PlayerListCommand extends ClientCommand {
             return;
         }
 
-        // Build a comma-separated list of player display names.
         StringBuilder playerList = new StringBuilder();
         int count = 0;
         for (Account account : playersToAccounts.values()) {
@@ -34,7 +32,6 @@ public class PlayerListCommand extends ClientCommand {
             count++;
         }
 
-        // If only one player is online, let them know they're alone!
         if (count == 1) {
             Client.clientChat.addMessage(null,
                     Chat.getClientPrefix() + "You are the only player online!");

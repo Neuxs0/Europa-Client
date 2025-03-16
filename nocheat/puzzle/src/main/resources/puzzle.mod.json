@@ -3,11 +3,12 @@
   "group": "${mod_group}",
   "id": "${mod_id}",
   "version": "${mod_version}",
-  "name": "${mod_name}",
+  "name": "Europa Client No-Cheat",
   "description": "${mod_description}",
   "authors": [
     "Neuxs"
   ],
+  "license": "MIT",
   "meta": {
     "icon": "${mod_id}:icons/icon.png"
   },
@@ -20,7 +21,7 @@
     "${mod_id}.mixins.json"
   ],
   "depends": {
-    "cosmic-reach": ">=0.4.1",
+    "cosmic-reach": ">=0.4.2",
     "puzzle-loader": ">=2.3.7"
   },
   "accessTransformers": [

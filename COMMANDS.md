@@ -1,0 +1,115 @@
+# Commands
+## Full Client
+### Misc
+- **Help**
+    - Usage: #help
+    - Aliases: #h, #?
+    - Description: Returns all valid commands
+- **Say**
+    - Usage: #say \<message>
+    - Aliases: None
+    - Description: Sends the message to the server chat
+- **Type**
+    - Usage: #type
+    - Aliases: #clientType
+    - Description: Returns the type of Europa Client you are using (Full or No-Cheat)
+- **Version**
+    - Usage: #version
+    - Aliases: #clientVersion
+    - Description: Returns what version of Europa Client you are using
+### Utils
+- **Disconnect**
+    - Usage: #disconnect
+    - Aliases: #dc, #quit, #exit
+    - Description: Disconnects you from a server or singleplayer world
+- **Quit Game**
+    - Usage: #quitGame
+    - Aliases: #gameQuit, #closeGame, #exitGame
+    - Description: Quits the game
+- **Player List**
+    - Usage: #playerList
+    - Aliases: #pl
+    - Description: Returns with all online players on the server
+### Modules
+- **Fullbright**
+    - Usage: #fullbright
+    - Aliases: #fb
+    - Description: Makes everything bright
+    - Sub-commands: None
+- **No-Clip**
+    - Usage: #noclip
+    - Aliases: #nc
+    - Description: Become a ghost, though one that can die again
+    - Sub-commands:
+        - **set**
+            - Usage: #noclip set \<setting> \<value>
+            - Aliases: None
+            - Description: Sets settings
+            - Settings: <a href="./MODULES.md#no-clip">See here for settings</a>
+- **Speed**
+    - Usage: #speed
+    - Aliases: #s
+    - Description: Makes you go vroom
+    - Sub-commands:
+        - **set**
+            - Usage: #speed set \<setting> \<value>
+            - Aliases: None
+            - Description: Sets settings
+            - Settings: <a href="./MODULES.md#speed">See here for settings</a>
+- **Reach**
+    - Usage: #reach
+    - Aliases: None
+    - Description: Slenderman?!?!?
+    - Sub-commands:
+        - **set**
+            - Usage: #reach set \<setting> \<value>
+            - Aliases: None
+            - Description: Sets settings
+            - Settings: <a href="./MODULES.md#reach">See here for settings</a>
+
+## No-Cheat Client
+### Misc
+- **Help**
+    - Usage: #help
+    - Aliases: #h, #?
+    - Description: Returns all valid commands
+- **Say**
+    - Usage: #say \<message>
+    - Aliases: None
+    - Description: Sends the message to the server chat
+- **Type**
+    - Usage: #type
+    - Aliases: #clientType
+    - Description: Returns the type of Europa Client you are using (Full or No-Cheat)
+- **Version**
+    - Usage: #version
+    - Aliases: #clientVersion
+    - Description: Returns what version of Europa Client you are using
+### Utils
+- **Disconnect**
+    - Usage: #disconnect
+    - Aliases: #dc, #quit, #exit
+    - Description: Disconnects you from a server or singleplayer world
+- **Quit Game**
+    - Usage: #quitGame
+    - Aliases: #gameQuit, #closeGame, #exitGame
+    - Description: Quits the game
+- **Player List**
+    - Usage: #playerList
+    - Aliases: #pl
+    - Description: Returns with all online players on the server
+### Modules
+- **Fullbright**
+    - Usage: #fullbright
+    - Aliases: #fb
+    - Description: Makes everything bright
+- **Freecam**
+    - Usage: #freecam
+    - Aliases: #fc
+    - Description: Detatch the camera from the player (Cannot clip through blocks)
+    - Sub-commands:
+        - **set**
+            - Usage: #freecam set \<setting> \<value>
+            - Aliases: None
+            - Description: Sets settings for freecam
+            - Settings: <a href="./MODULES.md#freecam-1">See here for settings</a>

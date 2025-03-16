@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.utils;
 
-import dev.neuxs.europa_client.modules.cheats.NoClip;
+import dev.neuxs.europa_client.modules.Modules;
 import finalforeach.cosmicreach.gamestates.InGame;
 
 public class SyncModules {
@@ -8,11 +8,8 @@ public class SyncModules {
 
     public static void Sync() {
         // Sync no-clip
-        if (!InGame.getLocalPlayer().getEntity().noClip) {
-            if (NoClip.isEnabled()) {
-                NoClip.disable();
-                NoClip.toggle(false);
-            }
+        if (InGame.getLocalPlayer().getEntity().isNoClip() != Modules.noClip.isEnabled()) {
+            Modules.noClip.enable(false);
         }
     }
 }

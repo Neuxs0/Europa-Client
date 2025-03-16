@@ -1,29 +1,27 @@
 package dev.neuxs.europa_client.modules;
 
-public class Module {
+public abstract class Module {
     public int keyBind;
+    private boolean enabled;
 
-    private static boolean enabled;
-
-
-    public Module(int keybind, boolean defaultEnabled) {
-        this.keyBind = keybind;
-        enabled = defaultEnabled;
+    public Module(int keyBind, boolean defaultEnabled) {
+        this.keyBind = keyBind;
+        this.enabled = defaultEnabled;
     }
 
-    public static void toggle() {
-        enabled = !enabled;
+    public void toggle() {
+        this.enabled = !this.enabled;
     }
 
-    public static void enable() {
-        enabled = true;
+    public void enable() {
+        this.enabled = true;
     }
 
-    public static void disable() {
-        enabled = false;
+    public void disable() {
+        this.enabled = false;
     }
 
-    public static boolean isEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 }

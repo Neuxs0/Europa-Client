@@ -4,10 +4,11 @@ import dev.neuxs.europa_client.commands.misc.HelpCommand;
 import dev.neuxs.europa_client.commands.misc.SayCommand;
 import dev.neuxs.europa_client.commands.misc.TypeCommand;
 import dev.neuxs.europa_client.commands.misc.VersionCommand;
-import dev.neuxs.europa_client.commands.modules.NoClipCommand;
-import dev.neuxs.europa_client.commands.modules.SetNoClipSpeedCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.NoClipCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.ReachCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.SpeedCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
-import dev.neuxs.europa_client.commands.modules.FullbrightCommand;
+import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
 import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
 
@@ -24,9 +25,12 @@ public class ClientCommandRegistry {
         ClientCommandManager.registerCommand("quitGame", QuitGameCommand::new, "gameQuit", "closeGame", "exitGame");
         ClientCommandManager.registerCommand("playerList", PlayerListCommand::new, "pl");
 
-        // Modules
+        // Modules - Utils
         ClientCommandManager.registerCommand("fullbright", FullbrightCommand::new, "fb");
+
+        // Modules - Cheats
         ClientCommandManager.registerCommand("noclip", NoClipCommand::new, "nc");
-        ClientCommandManager.registerCommand("setNoClipSpeed", SetNoClipSpeedCommand::new, "sncs", "setncspeed");
+        ClientCommandManager.registerCommand("speed", SpeedCommand::new, "s");
+        ClientCommandManager.registerCommand("reach", ReachCommand::new);
     }
 }

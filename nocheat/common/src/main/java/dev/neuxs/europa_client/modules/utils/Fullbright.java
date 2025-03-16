@@ -13,18 +13,15 @@ import finalforeach.cosmicreach.world.World;
 import finalforeach.cosmicreach.world.Zone;
 
 public class Fullbright extends Module {
-    public int keybind;
-
-    private static boolean enabled;
 
     public Fullbright(int keybind, boolean defaultEnabled) {
         super(keybind, defaultEnabled);
     }
 
-    public static void toggle(World world, boolean messaging) {
-        enabled = !enabled;
+    public void toggle(World world, boolean messaging) {
+        this.toggle();
 
-        if (enabled) {
+        if (this.isEnabled()) {
             ChunkShader customChunkShader = new ChunkShader(
                     Identifier.of("europa_client", "shaders/chunk.vert.glsl"),
                     Identifier.of("europa_client", "shaders/chunk.frag.glsl")
@@ -33,24 +30,21 @@ public class Fullbright extends Module {
                     Identifier.of("europa_client", "shaders/chunk-water.vert.glsl"),
                     Identifier.of("europa_client", "shaders/chunk-water.frag.glsl")
             );
-
             ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
             ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
         } else {
-            // Revert back to the default shader implementations.
             ChunkShader.initChunkShaders();
         }
 
         GameShader.reloadAllShaders();
 
-        // For each chunk, force a complete rebuild of its mesh group.
+        // Rebuild all chunk meshes.
         for (Zone zone : world.getZones()) {
             for (Region region : zone.getRegions()) {
                 for (Chunk chunk : region.getChunks()) {
                     if (chunk.getMeshGroup() != null) {
                         chunk.getMeshGroup().dispose();
                     }
-
                     chunk.setMeshGroup(null);
                     GameSingletons.zoneRenderer.addChunk(chunk);
                     chunk.flagForRemeshing(true);
@@ -58,22 +52,11 @@ public class Fullbright extends Module {
             }
         }
 
-        // Force the mesh generation thread to process all remesh requests.
         GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
-        if (enabled && messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
-        else Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
-    }
-
-    public static void enable() {
-        enabled = true;
-    }
-
-    public static void disable() {
-        enabled = false;
-    }
-
-    public static boolean isEnabled() {
-        return enabled;
+        if (this.isEnabled() && messaging)
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
+        else
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
     }
 }

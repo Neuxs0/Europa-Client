@@ -7,49 +7,42 @@ import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.InGame;
 
 public class NoClip extends Module {
-    public int keyBind;
-
-    private static boolean enabled;
-    private static float speed = 1.0f;
-
+    private float speed = 1.0f;
 
     public NoClip(int keybind, boolean defaultEnabled) {
         super(keybind, defaultEnabled);
     }
 
-
-    public static void setNoClip(Player player, boolean noClip) {
-        player.getEntity().noClip = noClip;
-        if (noClip) {
-            player.getEntity().velocity.setZero();
-        }
+    public void setNoClip(Player player, boolean noClip) {
+        player.getEntity().setNoClip(noClip);
+        if (noClip) player.getEntity().velocity.setZero();
     }
 
-    public static void setSpeed(float newSpeed) {
-        speed = Math.max(0.1f, Math.min(newSpeed, 10.0f));
-        Client.clientChat.addMessage(null, "No-clip speed set to " + speed);
+    public void setSpeed(float newSpeed) {
+        this.speed = Math.max(0.1f, Math.min(newSpeed, 10.0f));
+        Client.clientChat.addMessage(null, "No-clip speed set to " + this.speed);
     }
 
-    public static float getSpeed() {
-        return speed;
+    public float getSpeed() {
+        return this.speed;
     }
 
-    public static void toggle(boolean messaging) {
-        enabled = !enabled;
-        NoClip.setNoClip(InGame.getLocalPlayer(), enabled);
-        if (enabled && messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip enabled");
-        else Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip disabled");
+    public void toggle(boolean messaging) {
+        this.toggle();
+        setNoClip(InGame.getLocalPlayer(), this.isEnabled());
+        if (this.isEnabled() && messaging)
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip enabled");
+        else
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip disabled");
     }
 
-    public static void enable() {
-        enabled = true;
+    public void enable(boolean messaging) {
+        setNoClip(InGame.getLocalPlayer(), true);
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip enabled");
     }
 
-    public static void disable() {
-        enabled = false;
-    }
-
-    public static boolean isEnabled() {
-        return enabled;
+    public void disable(boolean messaging) {
+        setNoClip(InGame.getLocalPlayer(), false);
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-clip disabled");
     }
 }

@@ -91,14 +91,18 @@ task cleanBuildDirs(dependsOn: packageDist) {
         def extraFolders = [
                 "full/build",
                 "full/common/build",
+                "full/common/bin",
                 "full/puzzle/build",
                 "full/puzzle/.gradle",
                 "full/quilt/build",
+                "full/quilt/bin",
                 "nocheat/build",
                 "nocheat/common/build",
+                "nocheat/common/bin",
                 "nocheat/puzzle/build",
                 "nocheat/puzzle/.gradle",
-                "nocheat/quilt/build"
+                "nocheat/quilt/build",
+                "nocheat/quilt/bin"
         ]
 
         extraFolders.each { folderPath ->

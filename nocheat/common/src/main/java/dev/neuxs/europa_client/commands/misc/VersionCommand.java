@@ -1,6 +1,5 @@
 package dev.neuxs.europa_client.commands.misc;
 
-import com.badlogic.gdx.Version;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.commands.ClientCommand;
 import dev.neuxs.europa_client.utils.Chat;
