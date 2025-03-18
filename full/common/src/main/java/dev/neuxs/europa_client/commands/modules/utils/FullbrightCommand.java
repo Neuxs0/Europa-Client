@@ -7,7 +7,7 @@ import finalforeach.cosmicreach.gamestates.InGame;
 public class FullbrightCommand extends ClientCommand {
     @Override
     public void run() {
-        Modules.fullbright.toggle(InGame.getWorld(), true);
+        Modules.fullbright.toggle(true);
     }
 
     @Override

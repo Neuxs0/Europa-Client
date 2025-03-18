@@ -4,6 +4,7 @@ import dev.neuxs.europa_client.commands.ClientCommandRegistry;
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.InputManager;
 import dev.neuxs.europa_client.utils.SyncModules;
+import dev.neuxs.europa_client.settings.SettingsManager;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 import org.slf4j.Logger;
@@ -21,6 +22,8 @@ public class Client {
         LOGGER.info("Europa Client Initializing...");
 
         Modules.initModules();
+        SettingsManager.loadSettings();
+        SettingsManager.startFileWatcher();
         ClientCommandRegistry.registerClientCommands();
 
         LOGGER.info("Europa Client Initialized!");

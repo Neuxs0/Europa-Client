@@ -2,38 +2,57 @@ package dev.neuxs.europa_client.modules.cheats;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
+import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 
 public class Speed extends Module {
-    private float speed = 1.5f;
 
     public Speed(int keybind, boolean defaultEnabled) {
-        super(keybind, defaultEnabled);
+        super("speed", keybind, defaultEnabled);
+        customSettings.put("speed", new Setting<>("speed", 1.5f, value -> value >= 0.1f && value <= 10.0f));
     }
 
     public float getSpeed() {
-        return this.speed;
+        @SuppressWarnings("unchecked")
+        Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
+        return speedSetting.getValue();
     }
 
     public void setSpeed(float newSpeed) {
-        this.speed = Math.max(0.1f, Math.min(newSpeed, 10.0f));
-        Client.clientChat.addMessage(null, "Player speed set to " + this.speed);
-    }
-
-    public void toggle(boolean messaging) {
-        this.toggle();
-
-        if (this.isEnabled() && messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed enabled");
-        else Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed disabled");
+        @SuppressWarnings("unchecked")
+        Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
+        speedSetting.setValue(newSpeed);
+        Client.clientChat.addMessage(null, "Player speed set to " + speedSetting.getValue());
     }
 
     public void enable(boolean messaging) {
-        this.enable();
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed enabled");
+        if (!isEnabled()) {
+            setEnabled(true);
+            if (messaging) {
+                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed enabled");
+            }
+        }
     }
 
     public void disable(boolean messaging) {
-        this.disable();
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed disabled");
+        if (isEnabled()) {
+            setEnabled(false);
+            if (messaging) {
+                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Speed disabled");
+            }
+        }
+    }
+
+    public void toggle(boolean messaging) {
+        if (isEnabled()) {
+            disable(messaging);
+        } else {
+            enable(messaging);
+        }
+    }
+
+    @Override
+    public void onKeyPressed() {
+        toggle(true);
     }
 }

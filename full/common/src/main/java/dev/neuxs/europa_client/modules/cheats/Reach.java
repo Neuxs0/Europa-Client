@@ -2,38 +2,57 @@ package dev.neuxs.europa_client.modules.cheats;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
+import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 
 public class Reach extends Module {
-    private float reach = 6.0f; // Default game's reach distance is 6
 
     public Reach(int keybind, boolean defaultEnabled) {
-        super(keybind, defaultEnabled);
+        super("reach", keybind, defaultEnabled);
+        customSettings.put("distance", new Setting<>("distance", 6.0f, value -> value >= 1.0f));
     }
 
     public float getReachDistance() {
-        return this.reach;
+        @SuppressWarnings("unchecked")
+        Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
+        return distanceSetting.getValue();
     }
 
-    public void setReachDistance(float newSpeed) {
-        this.reach = Math.max(newSpeed, 1.0f);
-        Client.clientChat.addMessage(null, "Reach set to " + this.reach);
-    }
-
-    public void toggle(boolean messaging) {
-        this.toggle();
-
-        if (this.isEnabled() && messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach enabled");
-        else Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach disabled");
+    public void setReachDistance(float newDistance) {
+        @SuppressWarnings("unchecked")
+        Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
+        distanceSetting.setValue(newDistance);
+        Client.clientChat.addMessage(null, "Reach set to " + distanceSetting.getValue());
     }
 
     public void enable(boolean messaging) {
-        this.enable();
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach enabled");
+        if (!isEnabled()) {
+            setEnabled(true);
+            if (messaging) {
+                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach enabled");
+            }
+        }
     }
 
     public void disable(boolean messaging) {
-        this.disable();
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach disabled");
+        if (isEnabled()) {
+            setEnabled(false);
+            if (messaging) {
+                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach disabled");
+            }
+        }
+    }
+
+    public void toggle(boolean messaging) {
+        if (isEnabled()) {
+            disable(messaging);
+        } else {
+            enable(messaging);
+        }
+    }
+
+    @Override
+    public void onKeyPressed() {
+        toggle(true);
     }
 }

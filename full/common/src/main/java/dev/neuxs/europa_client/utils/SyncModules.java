@@ -9,7 +9,7 @@ public class SyncModules {
     public static void Sync() {
         // Sync no-clip
         if (InGame.getLocalPlayer().getEntity().isNoClip() != Modules.noClip.isEnabled()) {
-            Modules.noClip.enable(false);
+            Modules.noClip.setEnabled(false);
         }
     }
 }
