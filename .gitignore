@@ -3,7 +3,8 @@ run/
 
 build/
 bin/
-dev/
+misc/
+*.gz
 
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
