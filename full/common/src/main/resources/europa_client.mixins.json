@@ -10,6 +10,7 @@
     "YouDiedMenuMixin",
     "NoClipPacketMixin",
     "BlockRaycastsMixin",
+    "BlockModelJsonMixin",
     "GameSingletonsInterface"
   ],
   "client": [
