@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SettingsManager {
-    private static String filePath = "config/modules_settings.json";
+    private static String filePath = "config/europaclient/modules_settings.json";
     private static boolean autoSaveEnabled = true;
     private static volatile long lastAutoSaveTime = 0;
     private static volatile boolean internalUpdate = false;
