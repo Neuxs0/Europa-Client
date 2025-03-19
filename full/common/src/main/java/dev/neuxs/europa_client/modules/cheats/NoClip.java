@@ -11,7 +11,7 @@ public class NoClip extends Module {
 
     public NoClip(int keybind, boolean defaultEnabled) {
         super("noclip", keybind, defaultEnabled);
-        customSettings.put("speed", new Setting<>("speed", 1.0f, value -> value >= 0.1f && value <= 10.0f));
+        customSettings.put("speed", new Setting<>("speed", 1.0f, value -> value >= 1.0f));
     }
 
     public void setNoClip(Player player, boolean noClip) {

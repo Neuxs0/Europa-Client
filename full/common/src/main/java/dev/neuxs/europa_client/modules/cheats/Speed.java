@@ -9,7 +9,7 @@ public class Speed extends Module {
 
     public Speed(int keybind, boolean defaultEnabled) {
         super("speed", keybind, defaultEnabled);
-        customSettings.put("speed", new Setting<>("speed", 1.5f, value -> value >= 0.1f && value <= 10.0f));
+        customSettings.put("speed", new Setting<>("speed", 1.5f, value -> value >= 1.0f));
     }
 
     public float getSpeed() {

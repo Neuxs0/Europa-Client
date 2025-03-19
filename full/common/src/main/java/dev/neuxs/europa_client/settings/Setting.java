@@ -1,11 +1,7 @@
 package dev.neuxs.europa_client.settings;
 
-import dev.neuxs.europa_client.settings.SettingsManager;
 import java.util.function.Predicate;
 
-/**
- * A generic model for storing a setting.
- */
 public class Setting<T> {
     private final String name;
     private final T defaultValue;
@@ -36,11 +32,17 @@ public class Setting<T> {
     }
 
     public void setValue(T newValue) {
+        // If the new value is equal to the current value, do nothing.
+        if (this.value != null && this.value.equals(newValue)) {
+            return;
+        }
         if (!validator.test(newValue)) {
             throw new IllegalArgumentException("Invalid value for setting " + name);
         }
         this.value = newValue;
-        // Automatically trigger saving of settings on change.
-        SettingsManager.autoSaveIfEnabled();
+        // Only auto-save if we are not reloading settings.
+        if (!dev.neuxs.europa_client.settings.SettingsManager.isReloading()) {
+            dev.neuxs.europa_client.settings.SettingsManager.autoSaveIfEnabled();
+        }
     }
 }
