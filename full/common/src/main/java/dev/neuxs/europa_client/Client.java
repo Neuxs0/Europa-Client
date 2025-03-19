@@ -1,5 +1,8 @@
 package dev.neuxs.europa_client;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.HeadlessApplication;
+import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import dev.neuxs.europa_client.commands.ClientCommandRegistry;
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.InputManager;

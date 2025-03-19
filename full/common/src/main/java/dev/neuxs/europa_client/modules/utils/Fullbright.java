@@ -14,73 +14,73 @@ import finalforeach.cosmicreach.world.Zone;
 import finalforeach.cosmicreach.gamestates.InGame;
 
 public class Fullbright extends Module {
+    public ChunkShader blockShader;
+    public ChunkShader waterShader;
 
     public Fullbright(int keybind, boolean defaultEnabled) {
         super("fullbright", keybind, defaultEnabled);
     }
 
     public void enable(boolean messaging) {
-        if (!isEnabled()) {
-            setEnabled(true);
-            World world = InGame.getWorld();
+        setEnabled(true);
+        World world = InGame.getWorld();
 
-            ChunkShader customChunkShader = new ChunkShader(
-                    Identifier.of("europa_client", "shaders/chunk.vert.glsl"),
-                    Identifier.of("europa_client", "shaders/chunk.frag.glsl")
-            );
-            ChunkShader customWaterShader = new ChunkShader(
-                    Identifier.of("europa_client", "shaders/chunk-water.vert.glsl"),
-                    Identifier.of("europa_client", "shaders/chunk-water.frag.glsl")
-            );
-            ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
-            ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
-            GameShader.reloadAllShaders();
+        ChunkShader customChunkShader = new ChunkShader(
+                Identifier.of("europa_client", "shaders/chunk.vert.glsl"),
+                Identifier.of("europa_client", "shaders/chunk.frag.glsl")
+        );
+        ChunkShader customWaterShader = new ChunkShader(
+                Identifier.of("europa_client", "shaders/chunk-water.vert.glsl"),
+                Identifier.of("europa_client", "shaders/chunk-water.frag.glsl")
+        );
+        ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
+        ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
+        this.blockShader = customChunkShader;
+        this.waterShader = customWaterShader;
+        GameShader.reloadAllShaders();
 
-            for (Zone zone : world.getZones()) {
-                for (Region region : zone.getRegions()) {
-                    for (Chunk chunk : region.getChunks()) {
-                        if (chunk.getMeshGroup() != null) {
-                            chunk.getMeshGroup().dispose();
-                        }
-                        chunk.setMeshGroup(null);
-                        GameSingletons.zoneRenderer.addChunk(chunk);
-                        chunk.flagForRemeshing(true);
+        for (Zone zone : world.getZones()) {
+            for (Region region : zone.getRegions()) {
+                for (Chunk chunk : region.getChunks()) {
+                    if (chunk.getMeshGroup() != null) {
+                        chunk.getMeshGroup().dispose();
                     }
+                    chunk.setMeshGroup(null);
+                    GameSingletons.zoneRenderer.addChunk(chunk);
+                    chunk.flagForRemeshing(true);
                 }
             }
-            GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
+        }
+        GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
-            if (messaging) {
-                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
-            }
+        if (messaging) {
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
         }
     }
 
     public void disable(boolean messaging) {
-        if (isEnabled()) {
-            setEnabled(false);
-            World world = InGame.getWorld();
+        setEnabled(false);
+        World world = InGame.getWorld();
 
-            ChunkShader.initChunkShaders();
-            GameShader.reloadAllShaders();
+        ChunkShader.initChunkShaders();
+        GameShader.reloadAllShaders();
 
-            for (Zone zone : world.getZones()) {
-                for (Region region : zone.getRegions()) {
-                    for (Chunk chunk : region.getChunks()) {
-                        if (chunk.getMeshGroup() != null) {
-                            chunk.getMeshGroup().dispose();
-                        }
-                        chunk.setMeshGroup(null);
-                        GameSingletons.zoneRenderer.addChunk(chunk);
-                        chunk.flagForRemeshing(true);
+        for (Zone zone : world.getZones()) {
+            for (Region region : zone.getRegions()) {
+                for (Chunk chunk : region.getChunks()) {
+                    if (chunk.getMeshGroup() != null) {
+                        chunk.getMeshGroup().dispose();
                     }
+                    chunk.setMeshGroup(null);
+                    GameSingletons.zoneRenderer.addChunk(chunk);
+                    chunk.flagForRemeshing(true);
                 }
             }
-            GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
+        }
+        GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
-            if (messaging) {
-                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
-            }
+        if (messaging) {
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
         }
     }
 
