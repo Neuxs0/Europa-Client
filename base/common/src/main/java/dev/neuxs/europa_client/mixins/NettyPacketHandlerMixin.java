@@ -30,7 +30,7 @@ public abstract class NettyPacketHandlerMixin {
                                                      ChannelHandlerContext ctx,
                                                      Object msg
     ) {
-        if (packet != null && Modules.packetInspectorEnabled) {
+        if (packet != null && Modules.packetInspector.isEnabled()) {
             NetworkIdentity identity = this.getIdentity(ctx);
 
             String side = "UNKNOWN";
@@ -45,7 +45,7 @@ public abstract class NettyPacketHandlerMixin {
             }
             Client.LOGGER.info("[PACKET RECV] ({}) ID: {}, Type: {}", side, packet.packetID, packet.getClass().getSimpleName());
         } else {
-            if (Modules.packetInspectorEnabled) {
+            if (Modules.packetInspector.isEnabled()) {
                 Client.LOGGER.warn("[PACKET RECV] ModifyVariable intercepted a null packet after receive().");
             }
         }

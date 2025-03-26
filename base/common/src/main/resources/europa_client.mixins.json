@@ -7,6 +7,8 @@
     "UIMixin",
     "InGameMixin",
     "ChatMenuMixin",
+    "GamePacketLoggingMixin",
+    "NettyPacketHandlerMixin",
     "GameSingletonsInterface"
   ],
   "client": [

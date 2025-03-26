@@ -2,13 +2,14 @@ package dev.neuxs.europa_client.modules;
 
 import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
+import dev.neuxs.europa_client.modules.utils.PacketInspector;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Modules {
-    public static boolean packetInspectorEnabled = false;
-
     public static Fullbright fullbright;
+    public static PacketInspector packetInspector;
 
     public static List<Module> moduleList = new ArrayList<>();
 
@@ -17,5 +18,8 @@ public class Modules {
 
         fullbright = new Fullbright(unknown, false);
         moduleList.add(fullbright);
+
+        packetInspector = new PacketInspector(unknown, false);
+        moduleList.add(packetInspector);
     }
 }

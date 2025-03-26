@@ -16,7 +16,7 @@ import java.util.Map;
 
 @SuppressWarnings({"BusyWait", "unused"})
 public class SettingsManager {
-    private static String filePath = "config/europaclient/modules_settings.json";
+    private static String filePath = "config/europaclient/cheat-modules-settings.json";
     private static boolean autoSaveEnabled = true;
     private static volatile long lastAutoSaveTime = 0;
     private static volatile boolean internalUpdate = false;

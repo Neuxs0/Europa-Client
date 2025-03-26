@@ -22,7 +22,7 @@ public abstract class GamePacketLoggingMixin {
     )
     private void cosmicreach$logSentPacket(ChannelHandlerContext ctx, CallbackInfo ci) {
         GamePacket self = (GamePacket) (Object) this;
-        if (Modules.packetInspectorEnabled) {
+        if (Modules.packetInspector.isEnabled()) {
             Client.LOGGER.info("[PACKET SEND] ID: {}, Type: {}", self.packetID, self.getClass().getSimpleName());
         }
     }
