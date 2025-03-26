@@ -6,47 +6,51 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.accessor.InGameAccessor;
+import dev.neuxs.europa_client.utils.rendering.Renderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
-import dev.neuxs.europa_client.accessor.InGameAccessor;
-import finalforeach.cosmicreach.ui.actions.AlignXAction;
-import finalforeach.cosmicreach.ui.actions.AlignYAction;
-import finalforeach.cosmicreach.ui.widgets.CRButton;
 
 public class GUI extends GameState implements InputProcessor {
-    private InputProcessor previousInputProcessor;
-    private boolean previousCursorCatchedState;
-    private InputMultiplexer inputMultiplexer;
 
     public GUI() {}
+
+    public void renderMenu(Viewport viewport, Matrix4 projectionMatrix) {
+        if (viewport == null || projectionMatrix == null) {
+            return;
+        }
+
+        float worldW = viewport.getWorldWidth();
+        float worldH = viewport.getWorldHeight();
+
+        Renderer.drawBorderedBox(
+                projectionMatrix,
+                worldW / 2f - (worldW / 1.5f) / 2f,
+                worldH / 2f - (worldH / 1.5f) / 2f,
+                worldW / 1.5f,
+                worldH / 1.5f,
+                5f,
+                Renderer.color(40, 40, 40, 255),
+                Renderer.color(60, 60, 60, 255)
+        );
+    }
+
 
     @Override
     public void create() {
         super.create();
-        this.previousInputProcessor = Gdx.input.getInputProcessor();
-        this.previousCursorCatchedState = Gdx.input.isCursorCatched();
-        this.inputMultiplexer = new InputMultiplexer(this.stage, this);
-        Gdx.input.setInputProcessor(this.inputMultiplexer);
+        InputMultiplexer inputMultiplexer = new InputMultiplexer(this.stage, this);
+        Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCursorCatched(false);
-
-        // On-Screen UI Rendering
-
-        CRButton exampleButton = new CRButton("Test Button") {
-            @Override
-            public void onClick() {
-                super.onClick();
-                System.out.println("Test Button Clicked!");
-            }
-        };
-        exampleButton.addAction(new AlignXAction(1, 0.5f));
-        exampleButton.addAction(new AlignYAction(8, 0.5f, 25.0f));
-        exampleButton.setSize(200, 50);
-        this.stage.addActor(exampleButton);
     }
 
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
+
         if (GameState.IN_GAME.isCreated()) {
             GameState.IN_GAME.resize(width, height);
         }
@@ -54,13 +58,19 @@ public class GUI extends GameState implements InputProcessor {
 
     @Override
     public void update(float deltaTime) {
-        this.stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+        if (this.stage != null) {
+            this.stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+        }
 
         if (GameState.IN_GAME.isCreated()) {
-            InGameAccessor inGameAccessor = (InGameAccessor) GameState.IN_GAME;
-            PlayerController pc = inGameAccessor.europa_client$getPlayerController_accessor();
-            if (pc != null && GameState.IN_GAME.getWorldCamera() instanceof PerspectiveCamera) {
-                pc.updateCamera((PerspectiveCamera) GameState.IN_GAME.getWorldCamera());
+            try {
+                InGameAccessor inGameAccessor = (InGameAccessor) GameState.IN_GAME;
+                PlayerController pc = inGameAccessor.europa_client$getPlayerController_accessor();
+                if (pc != null && GameState.IN_GAME.getWorldCamera() instanceof PerspectiveCamera) {
+                    pc.updateCamera((PerspectiveCamera) GameState.IN_GAME.getWorldCamera());
+                }
+            } catch (Exception e) {
+                Client.LOGGER.error("Error updating player controller camera: {}", e.getMessage());
             }
         }
     }
@@ -68,6 +78,16 @@ public class GUI extends GameState implements InputProcessor {
     @Override
     public void render() {
         super.render();
+
+        Viewport relevantViewport = null;
+        if (GameState.IN_GAME.isCreated()) {
+            relevantViewport = GameState.IN_GAME.newUiViewport;
+            if (relevantViewport == null) {
+                relevantViewport = this.newUiViewport;
+            }
+        } else {
+            relevantViewport = this.newUiViewport;
+        }
 
         if (GameState.IN_GAME.isCreated()) {
             GameState.IN_GAME.render();
@@ -80,9 +100,21 @@ public class GUI extends GameState implements InputProcessor {
         Gdx.gl.glDisable(GL20.GL_CULL_FACE);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        this.newUiViewport.apply(true);
+        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
-        this.stage.draw();
+        Matrix4 currentUiMatrix = null;
+        relevantViewport.apply(true);
+        currentUiMatrix = relevantViewport.getCamera().combined;
+
+        int screenPixelWidth = Gdx.graphics.getWidth();
+        int screenPixelHeight = Gdx.graphics.getHeight();
+        Gdx.gl.glViewport(0, 0, screenPixelWidth, screenPixelHeight);
+
+        if (this.stage != null) {
+            this.stage.draw();
+        }
+
+        renderMenu(relevantViewport, currentUiMatrix);
 
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
@@ -93,11 +125,10 @@ public class GUI extends GameState implements InputProcessor {
         }
     }
 
-    @Override
-    public boolean keyDown(int keycode) {
-        if (!this.firstFrame && keycode == Input.Keys.ESCAPE && this.stage.getKeyboardFocus() == null) {
-            switchToPreviousState();
-            return true;
+    @Override public boolean keyDown(int keycode) {
+        if (!this.firstFrame && keycode == Input.Keys.ESCAPE && (this.stage == null || this.stage.getKeyboardFocus() == null)) {
+            GameState.switchToGameState(GameState.IN_GAME);
+            return true; // Indicate the input was handled
         }
         return false;
     }
@@ -109,49 +140,4 @@ public class GUI extends GameState implements InputProcessor {
     @Override public boolean touchCancelled(int screenX, int screenY, int pointer, int button) { return false; }
     @Override public boolean mouseMoved(int screenX, int screenY) { return false; }
     @Override public boolean scrolled(float amountX, float amountY) { return false; }
-
-    @Override
-    public void onSwitchTo() {
-        super.onSwitchTo();
-        if (this.inputMultiplexer == null) {
-            this.inputMultiplexer = new InputMultiplexer(this.stage, this);
-        }
-        Gdx.input.setInputProcessor(this.inputMultiplexer);
-        Gdx.input.setCursorCatched(false);
-        System.out.println("EuropaMenu onSwitchTo().");
-    }
-
-    @Override
-    public void switchAwayTo(GameState nextGameState) {
-        super.switchAwayTo(nextGameState);
-        if (this.previousInputProcessor != null) {
-            Gdx.input.setInputProcessor(this.previousInputProcessor);
-        } else {
-            Gdx.input.setInputProcessor(null);
-        }
-        System.out.println("EuropaMenu switchAwayTo(). Restored input to: " + (Gdx.input.getInputProcessor() != null ? Gdx.input.getInputProcessor().getClass().getSimpleName() : "null"));
-
-        if (nextGameState == GameState.IN_GAME) {
-            Gdx.input.setCursorCatched(this.previousCursorCatchedState);
-            System.out.println("EuropaMenu: Re-catching cursor: " + this.previousCursorCatchedState);
-        } else {
-            Gdx.input.setCursorCatched(false);
-            System.out.println("EuropaMenu: Releasing cursor.");
-        }
-    }
-
-    private void switchToPreviousState() {
-        GameState.switchToGameState(GameState.IN_GAME);
-    }
-
-    @Override public boolean dropsCursorItems() { return true; }
-    @Override public void dispose() {
-        super.dispose();
-        if (Gdx.input.getInputProcessor() == this.inputMultiplexer) {
-            Gdx.input.setInputProcessor(null);
-        }
-        if (this.stage != null) {
-            this.stage.dispose();
-        }
-    }
 }
