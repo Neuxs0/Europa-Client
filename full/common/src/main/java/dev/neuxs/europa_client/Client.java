@@ -1,8 +1,5 @@
 package dev.neuxs.europa_client;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.headless.HeadlessApplication;
-import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import dev.neuxs.europa_client.commands.ClientCommandRegistry;
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.InputManager;
@@ -17,7 +14,7 @@ public class Client {
     public static final String MOD_ID = "europa_client";
     public static final String MOD_NAME = "Europa Client";
     public static Logger LOGGER = LoggerFactory.getLogger("EuropaClient");
-    public static String VERSION = "1.2.0";
+    public static String VERSION = "2.0.0";
     public static boolean playerDied = false;
     public static IChat clientChat = Chat.MAIN_CLIENT_CHAT;
 

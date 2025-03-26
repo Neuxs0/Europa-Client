@@ -38,12 +38,18 @@ subprojects {
 def mod_id = rootProject.property("id")
 def mod_version = rootProject.property("version")
 
+// Task to delete the dist directory
+task cleanDist(type: Delete) {
+    delete file("dist")
+}
+
 // Package distribution task
 task packageDist {
     dependsOn project(":nocheat:puzzle").tasks.jar
     dependsOn project(":nocheat:quilt").tasks.jar
     dependsOn project(":full:puzzle").tasks.jar
     dependsOn project(":full:quilt").tasks.jar
+    dependsOn cleanDist  // Ensure dist is cleaned before packaging
 
     outputs.dir file("dist")
 
@@ -70,8 +76,9 @@ task packageDist {
     }
 }
 
+
 // Cleanup task: Delete subproject build directories and extra folders.
-task cleanBuildDirs(dependsOn: packageDist) {
+task cleanBuildDirs() { //removed depends on packageDist
     doLast {
         // Delete each subproject's build directory
         subprojects.each { subproject ->
@@ -133,8 +140,11 @@ task cleanBuildDirs(dependsOn: packageDist) {
         }
     }
 }
-
 tasks.named("build") {
     dependsOn packageDist
     finalizedBy cleanBuildDirs
+}
+
+tasks.named("clean") {
+    dependsOn cleanBuildDirs, cleanDist
 }

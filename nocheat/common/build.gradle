@@ -20,4 +20,5 @@ dependencies {
     cosmicReach(loom.cosmicReachClient("alpha", cosmic_reach_version))
     cosmicReachServer(loom.cosmicReachServer("alpha", cosmic_reach_version))
     modImplementation(loom.cosmicQuilt(cosmic_quilt_version))
+    implementation "com.google.code.gson:gson:2.8.9"
 }
