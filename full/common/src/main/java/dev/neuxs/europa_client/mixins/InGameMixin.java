@@ -30,7 +30,7 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
     }
 
     @Override
-    public PlayerController getPlayerController_accessor() {
+    public PlayerController europa_client$getPlayerController_accessor() {
         return playerController;
     }
 

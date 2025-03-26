@@ -58,7 +58,7 @@ public class GUI extends GameState implements InputProcessor {
 
         if (GameState.IN_GAME.isCreated()) {
             InGameAccessor inGameAccessor = (InGameAccessor) GameState.IN_GAME;
-            PlayerController pc = inGameAccessor.getPlayerController_accessor();
+            PlayerController pc = inGameAccessor.europa_client$getPlayerController_accessor();
             if (pc != null && GameState.IN_GAME.getWorldCamera() instanceof PerspectiveCamera) {
                 pc.updateCamera((PerspectiveCamera) GameState.IN_GAME.getWorldCamera());
             }

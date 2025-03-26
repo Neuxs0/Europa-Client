@@ -14,7 +14,7 @@ public class PlayerListCommand extends ClientCommand {
     @Override
     public void run() {
         WeakHashMap<Player, Account> playersToAccounts =
-                GameSingletonsInterface.getPlayersToAccounts();
+                GameSingletonsInterface.europa_client$getPlayersToAccounts();
 
         if (playersToAccounts == null || playersToAccounts.isEmpty()) {
             Client.clientChat.addMessage(null,

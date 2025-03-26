@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(GameSingletons.class)
 public interface GameSingletonsInterface {
     @Accessor("playersToAccounts")
-    static WeakHashMap<Player, Account> getPlayersToAccounts() {
+    static WeakHashMap<Player, Account> europa_client$getPlayersToAccounts() {
         throw new AssertionError();
     }
 }
