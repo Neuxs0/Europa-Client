@@ -14,21 +14,30 @@ buildscript() {
     }
     dependencies {
         classpath "org.codeberg.CRModders:cosmic-loom:1.1.1"
-
-
         classpath "com.github.johnrengelman:shadow:8.1.1"
         classpath "com.github.PuzzleLoader:jigsaw:$jigsaw_gradle_version"
     }
 }
 
-include("full")
-include("full:common")
-include("full:quilt")
-include("full:puzzle")
+include("base")
+include("base:common")
+include("base:quilt")
+include("base:puzzle")
 
-include("nocheat")
-include("nocheat:common")
-include("nocheat:quilt")
-include("nocheat:puzzle")
+include("cheat")
+include("cheat:common")
+include("cheat:quilt")
+include("cheat:puzzle")
+
+if (file('bypass').isDirectory()) {
+    println "Including optional 'bypass' project."
+    include("bypass")
+    include("bypass:common")
+    include("bypass:quilt")
+    include("bypass:puzzle")
+} else {
+    println "Optional 'bypass' project not found, skipping include."
+}
+
 
 rootProject.name = "EuropaClient"
