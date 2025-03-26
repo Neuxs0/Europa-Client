@@ -1,79 +1,43 @@
 package dev.neuxs.europa_client.utils.rendering;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Null;
+import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
+import dev.neuxs.europa_client.utils.rendering.ui.FontRenderer;
+import dev.neuxs.europa_client.utils.rendering.ui.LineRenderer;
 
-@SuppressWarnings({"SuspiciousNameCombination", "unused"})
+@SuppressWarnings({"unused"})
 public class Renderer {
-    private static final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    protected static final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    protected static final SpriteBatch batch = new SpriteBatch();
+    protected static final GlyphLayout glyphLayout = new GlyphLayout();
 
-    public static Color color(int r, int g, int b, int a) {
-        float red = MathUtils.clamp(r, 0, 255) / 255.0f;
-        float green = MathUtils.clamp(g, 0, 255) / 255.0f;
-        float blue = MathUtils.clamp(b, 0, 255) / 255.0f;
-        float alpha = MathUtils.clamp(a, 0, 255) / 255.0f;
-        return new Color(red, green, blue, alpha);
+    // LineRenderer
+    public static void drawLine(Matrix4 projectionMatrix, float x1, float y1, float x2, float y2, float w, Color color) {
+        LineRenderer.drawLine(projectionMatrix, x1, y1, x2, y2, w, color);
+    }
+    public static void drawDebugLines(Matrix4 projectionMatrix, float x, float y, float w, float h) {
+        LineRenderer.drawDebugLines(projectionMatrix, x, y, w, h);
     }
 
-    public static Color color(int r, int g, int b) {
-        return color(r, g, b, 255);
+    // BoxRenderer
+    public static void drawBox(Matrix4 projectionMatrix, float x, float y, float w, float h, @Null Color color) {
+        BoxRenderer.drawBox(projectionMatrix, x, y, w, h, color);
+    }
+    public static void drawBorderedBox(Matrix4 projectionMatrix, float x, float y, float w, float h, float borderW, @Null Color fillColor, @Null Color borderColor) {
+        BoxRenderer.drawBorderedBox(projectionMatrix, x, y, w, h, borderW, fillColor, borderColor);
     }
 
-    public static void drawLine(Matrix4 projectionMatrix, float x1, float y1, float x2, float y2, int width, Color color) {
-        if (projectionMatrix == null || color == null || color.a <= 0 || width <= 0) return;
-
-        shapeRenderer.setProjectionMatrix(projectionMatrix);
-
-        Gdx.gl.glLineWidth(width);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(color);
-        shapeRenderer.line(x1, y1, x2, y2);
-        shapeRenderer.end();
-        Gdx.gl.glLineWidth(1);
+    // FontRenderer
+    public static Vector2 getTextDimensions(String fontName, String text) {
+        return FontRenderer.getTextDimensions(fontName, text);
     }
-
-    public static void drawBox(Matrix4 projectionMatrix, float x, float y, float width, float height, @Null Color color) {
-        if (color == null || color.a <= 0 || width <= 0 || height <= 0) return;
-
-        shapeRenderer.setProjectionMatrix(projectionMatrix);
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(color);
-        shapeRenderer.rect(x, y, width, height);
-        shapeRenderer.end();
-    }
-
-    public static void drawBorderedBox(Matrix4 projectionMatrix, float x, float y, float width, float height, float borderWidth, @Null Color fillColor, @Null Color borderColor) {
-        if (width <= 0 || height <= 0) return;
-
-        shapeRenderer.setProjectionMatrix(projectionMatrix);
-
-        boolean fill = fillColor != null && fillColor.a > 0;
-        boolean border = borderColor != null && borderColor.a > 0 && borderWidth > 0;
-
-        if (!fill && !border) return;
-
-        if (fill) {
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(fillColor);
-            shapeRenderer.rect(x, y, width, height);
-            shapeRenderer.end();
-        }
-
-        if (border) {
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(borderColor);
-
-            shapeRenderer.rect(x, y + height - borderWidth, width, borderWidth);
-            shapeRenderer.rect(x, y, width, borderWidth);
-            shapeRenderer.rect(x, y, borderWidth, height);
-            shapeRenderer.rect(x + width - borderWidth, y, borderWidth, height);
-
-            shapeRenderer.end();
-        }
+    public static void drawText(Matrix4 projectionMatrix, String fontName, String text, float x, float y, Color color, int alignment, float wrapWidth, boolean wrap) {
+        FontRenderer.drawText(projectionMatrix, fontName, text, x, y, color, alignment, wrapWidth, wrap);
     }
 }

@@ -30,7 +30,6 @@ public class GUI extends GameState implements InputProcessor {
         Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
 
 
-        // Constants
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 

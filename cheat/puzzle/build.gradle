@@ -56,6 +56,12 @@ processResources {
 
 jar {
     archiveFileName.set("${rootProject.name}-puzzle-${project.version}-cheat.jar")
+
+    from(project(":cheat:common").sourceSets.main.resources) {
+        exclude 'europa_client.mixins.json'
+    }
+
+    from(sourceSets.client.output.resourcesDir)
 }
 
 tasks.register("copyMixins", Copy) {

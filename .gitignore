@@ -2,6 +2,7 @@
 run/
 
 build/
+test/
 bin/
 /dev/
 /bypass/

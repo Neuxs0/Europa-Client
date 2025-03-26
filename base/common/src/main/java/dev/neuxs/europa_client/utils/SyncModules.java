@@ -2,8 +2,6 @@ package dev.neuxs.europa_client.utils;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Modules;
-import finalforeach.cosmicreach.gamestates.InGame;
-import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
 
 public class SyncModules {

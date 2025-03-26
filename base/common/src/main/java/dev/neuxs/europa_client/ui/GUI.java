@@ -4,12 +4,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
+import dev.neuxs.europa_client.ui.pages.HomePage;
+import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
@@ -23,33 +26,54 @@ public class GUI extends GameState implements InputProcessor {
             return;
         }
 
+        Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
+        Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
+
+
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 
+
         // Menu Container
+        float menuContainerX = worldW / 2f - (worldW / 1.5f) / 2f;
+        float menuContainerY = worldH / 2f - (worldH / 1.5f) / 2f;
+        float menuContainerW = worldW / 1.5f;
+        float menuContainerH = worldH / 1.5f;
+        float menuContainerBorderWidth = 5f;
+        float containerTopY = menuContainerY + menuContainerH;
         Renderer.drawBorderedBox(
                 projectionMatrix,
-                worldW / 2f - (worldW / 1.5f) / 2f,
-                worldH / 2f - (worldH / 1.5f) / 2f,
-                worldW / 1.5f,
-                worldH / 1.5f,
-                5f,
-                Renderer.color(40, 40, 40, 255),
-                Renderer.color(60, 60, 60, 255)
+                menuContainerX,
+                menuContainerY,
+                menuContainerW,
+                menuContainerH,
+                menuContainerBorderWidth,
+                mainBackgroundColor,
+                mainBorderColor
         );
+
 
         // Side menu seperator
+        float sideMenuSeperatorX = menuContainerX + 125; // menuContainerX + distance from left edge of menu
         Renderer.drawLine(
                 projectionMatrix,
-                20,
-                worldH - (worldH / 1.5f),
-                40,
-                worldH / 1.5f,
-                6,
-                Renderer.color(60, 60, 60, 255)
+                sideMenuSeperatorX,
+                menuContainerY,
+                sideMenuSeperatorX,
+                containerTopY,
+                menuContainerBorderWidth,
+                mainBorderColor
         );
-    }
 
+        // Page area corner dimensions:
+        // Bottom-Left:  (308, 105)
+        // Bottom-Right: (884, 105)
+        // Top-Right:    (884, 495)
+        // Top-Left:     (308, 495)
+
+        // Render Pages
+        HomePage.renderContent(projectionMatrix);
+    }
 
     @Override
     public void create() {

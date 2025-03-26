@@ -18,7 +18,7 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
     @Shadow
     static PlayerController playerController;
 
-    // Thanks to Zombi for telling me about this
+    // Thanks to tympanicblock61 for telling me about this
     @Inject(method = "switchAwayTo", at = @At("HEAD"), cancellable = true)
     private void preventUnloadOnSwitch(GameState gameState, CallbackInfo ci) {
         if (gameState instanceof GUI) {
