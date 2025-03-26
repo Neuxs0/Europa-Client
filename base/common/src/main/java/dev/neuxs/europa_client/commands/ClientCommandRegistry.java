@@ -6,7 +6,7 @@ import dev.neuxs.europa_client.commands.misc.TypeCommand;
 import dev.neuxs.europa_client.commands.misc.VersionCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
 import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
-import dev.neuxs.europa_client.commands.utils.PacketInspectorCommand;
+import dev.neuxs.europa_client.commands.modules.utils.PacketInspectorCommand;
 import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
 

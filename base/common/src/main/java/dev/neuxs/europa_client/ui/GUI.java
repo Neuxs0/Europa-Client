@@ -26,6 +26,7 @@ public class GUI extends GameState implements InputProcessor {
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 
+        // Menu Container
         Renderer.drawBorderedBox(
                 projectionMatrix,
                 worldW / 2f - (worldW / 1.5f) / 2f,
@@ -34,6 +35,17 @@ public class GUI extends GameState implements InputProcessor {
                 worldH / 1.5f,
                 5f,
                 Renderer.color(40, 40, 40, 255),
+                Renderer.color(60, 60, 60, 255)
+        );
+
+        // Side menu seperator
+        Renderer.drawLine(
+                projectionMatrix,
+                20,
+                worldH - (worldH / 1.5f),
+                40,
+                worldH / 1.5f,
+                6,
                 Renderer.color(60, 60, 60, 255)
         );
     }
