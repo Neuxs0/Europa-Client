@@ -9,6 +9,7 @@ import finalforeach.cosmicreach.gamestates.ChatMenu;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 
+@SuppressWarnings("unused")
 public class InputManager {
     public InputManager() {}
 

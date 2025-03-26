@@ -14,11 +14,10 @@ public class Modules {
     public static Speed speed;
     public static Reach reach;
 
-    // Central list of all modules.
     public static List<Module> moduleList = new ArrayList<>();
 
     public static void initModules() {
-        int unknown = Input.Keys.UNKNOWN; // 0 if not set
+        int unknown = Input.Keys.UNKNOWN;
 
         fullbright = new Fullbright(unknown, false);
         moduleList.add(fullbright);

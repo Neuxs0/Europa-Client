@@ -14,8 +14,7 @@ public class ReachCommand extends ClientCommand {
             return;
         }
 
-        // If additional arguments are provided, check for setting speed.
-        // Expected format: "#reach set speed <value>"
+        // Expected format: "#reach set distance <value>"
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
                 args[2].equalsIgnoreCase("distance")) {
 

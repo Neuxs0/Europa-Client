@@ -2,6 +2,7 @@ package dev.neuxs.europa_client.settings;
 
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class Setting<T> {
     private final String name;
     private final T defaultValue;
@@ -32,7 +33,6 @@ public class Setting<T> {
     }
 
     public void setValue(T newValue) {
-        // If the new value is equal to the current value, do nothing.
         if (this.value != null && this.value.equals(newValue)) {
             return;
         }
@@ -40,7 +40,7 @@ public class Setting<T> {
             throw new IllegalArgumentException("Invalid value for setting " + name);
         }
         this.value = newValue;
-        // Only auto-save if we are not reloading settings.
+
         if (!dev.neuxs.europa_client.settings.SettingsManager.isReloading()) {
             dev.neuxs.europa_client.settings.SettingsManager.autoSaveIfEnabled();
         }

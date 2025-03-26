@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Null;
 
+@SuppressWarnings({"SuspiciousNameCombination", "unused"})
 public class Renderer {
     private static final ShapeRenderer shapeRenderer = new ShapeRenderer();
 

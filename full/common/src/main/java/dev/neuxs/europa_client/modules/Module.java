@@ -4,13 +4,11 @@ import dev.neuxs.europa_client.settings.Setting;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"unused", "rawtypes"})
 public abstract class Module {
-    // Unique identifier (e.g., "noclip", "speed", "reach").
     protected final String id;
-    // Store each module's enabled state and keybind.
     protected final Setting<Boolean> enabled;
     protected final Setting<Integer> keybind;
-    // Map of module-specific custom settings.
     protected final Map<String, Setting<?>> customSettings;
 
     public Module(String id, int defaultKeybind, boolean defaultEnabled) {
@@ -40,7 +38,6 @@ public abstract class Module {
         keybind.setValue(key);
     }
 
-    // Default action when a module’s keybind is pressed.
     public void onKeyPressed() {
         toggle();
     }
@@ -49,16 +46,6 @@ public abstract class Module {
         setEnabled(!isEnabled());
     }
 
-    /**
-     * Exports settings in the following structure:
-     * {
-     *   "enabled": boolean,
-     *   "keybind": integer,
-     *   "settings": {
-     *       ... extra settings ...
-     *   }
-     * }
-     */
     public Map<String, Object> exportSettings() {
         Map<String, Object> obj = new HashMap<>();
         obj.put("enabled", enabled.getValue());
@@ -71,9 +58,6 @@ public abstract class Module {
         return obj;
     }
 
-    /**
-     * Imports module settings from a Map.
-     */
     @SuppressWarnings("unchecked")
     public void importSettings(Map<String, Object> data) {
         if (data.containsKey("enabled")) {
@@ -101,9 +85,6 @@ public abstract class Module {
         }
     }
 
-    /**
-     * Converts the loaded value to the proper type.
-     */
     private Object convertValue(Object defaultValue, Object value) {
         if (defaultValue instanceof Float) {
             if (value instanceof Number) {

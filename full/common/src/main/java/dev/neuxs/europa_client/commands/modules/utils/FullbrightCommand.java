@@ -2,7 +2,6 @@ package dev.neuxs.europa_client.commands.modules.utils;
 
 import dev.neuxs.europa_client.commands.ClientCommand;
 import dev.neuxs.europa_client.modules.Modules;
-import finalforeach.cosmicreach.gamestates.InGame;
 
 public class FullbrightCommand extends ClientCommand {
     @Override

@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 
+@SuppressWarnings("unchecked")
 public class Speed extends Module {
 
     public Speed(int keybind, boolean defaultEnabled) {
@@ -13,13 +14,11 @@ public class Speed extends Module {
     }
 
     public float getSpeed() {
-        @SuppressWarnings("unchecked")
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         return speedSetting.getValue();
     }
 
     public void setSpeed(float newSpeed) {
-        @SuppressWarnings("unchecked")
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         speedSetting.setValue(newSpeed);
         Client.clientChat.addMessage(null, "Player speed set to " + speedSetting.getValue());

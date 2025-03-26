@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.modules.Modules;
-import finalforeach.cosmicreach.util.logging.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -15,6 +14,7 @@ import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"BusyWait", "unused"})
 public class SettingsManager {
     private static String filePath = "config/europaclient/modules_settings.json";
     private static boolean autoSaveEnabled = true;
@@ -63,7 +63,10 @@ public class SettingsManager {
             File parent = file.getParentFile();
 
             if (!parent.exists()) {
-                parent.mkdirs();
+                boolean created = parent.mkdirs();
+                if (!created) {
+                    Client.LOGGER.error("Failed to create config directory: {}", parent.getAbsolutePath());
+                }
             }
 
             try (FileWriter writer = new FileWriter(file)) {
@@ -76,7 +79,7 @@ public class SettingsManager {
         } finally {
             internalUpdate = false;
         }
-        System.out.println("Settings automatically saved to " + filePath);
+        Client.LOGGER.info("Settings automatically saved to {}", filePath);
     }
 
     @SuppressWarnings("unchecked")

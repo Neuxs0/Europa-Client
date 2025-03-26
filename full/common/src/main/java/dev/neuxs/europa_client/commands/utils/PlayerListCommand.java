@@ -5,7 +5,6 @@ import dev.neuxs.europa_client.commands.ClientCommand;
 import dev.neuxs.europa_client.mixins.GameSingletonsInterface;
 import dev.neuxs.europa_client.utils.Chat;
 import finalforeach.cosmicreach.accounts.Account;
-import finalforeach.cosmicreach.chat.IChat;
 import finalforeach.cosmicreach.entities.player.Player;
 import java.util.WeakHashMap;
 

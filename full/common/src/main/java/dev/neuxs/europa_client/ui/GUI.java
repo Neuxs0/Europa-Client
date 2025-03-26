@@ -79,7 +79,7 @@ public class GUI extends GameState implements InputProcessor {
     public void render() {
         super.render();
 
-        Viewport relevantViewport = null;
+        Viewport relevantViewport;
         if (GameState.IN_GAME.isCreated()) {
             relevantViewport = GameState.IN_GAME.newUiViewport;
             if (relevantViewport == null) {
@@ -102,7 +102,7 @@ public class GUI extends GameState implements InputProcessor {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
-        Matrix4 currentUiMatrix = null;
+        Matrix4 currentUiMatrix;
         relevantViewport.apply(true);
         currentUiMatrix = relevantViewport.getCamera().combined;
 
@@ -128,7 +128,7 @@ public class GUI extends GameState implements InputProcessor {
     @Override public boolean keyDown(int keycode) {
         if (!this.firstFrame && keycode == Input.Keys.ESCAPE && (this.stage == null || this.stage.getKeyboardFocus() == null)) {
             GameState.switchToGameState(GameState.IN_GAME);
-            return true; // Indicate the input was handled
+            return true;
         }
         return false;
     }

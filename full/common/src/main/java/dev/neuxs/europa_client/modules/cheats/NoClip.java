@@ -7,6 +7,7 @@ import dev.neuxs.europa_client.utils.Chat;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.InGame;
 
+@SuppressWarnings("unchecked")
 public class NoClip extends Module {
 
     public NoClip(int keybind, boolean defaultEnabled) {
@@ -22,14 +23,12 @@ public class NoClip extends Module {
     }
 
     public void setSpeed(float newSpeed) {
-        @SuppressWarnings("unchecked")
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         speedSetting.setValue(newSpeed);
         Client.clientChat.addMessage(null, "No-clip speed set to " + speedSetting.getValue());
     }
 
     public float getSpeed() {
-        @SuppressWarnings("unchecked")
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         return speedSetting.getValue();
     }

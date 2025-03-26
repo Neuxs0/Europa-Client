@@ -8,6 +8,7 @@ import dev.neuxs.europa_client.Client;
 import finalforeach.cosmicreach.chat.IChat;
 import finalforeach.cosmicreach.accounts.Account;
 
+@SuppressWarnings("unused")
 public class ClientCommandManager {
 
     private static final Map<String, Supplier<ClientCommand>> COMMANDS =
@@ -68,7 +69,7 @@ public class ClientCommandManager {
             command.run();
         } catch (Exception e) {
             Client.clientChat.addMessage(null, "Error running command: " + e.getMessage());
-            e.printStackTrace();
+            Client.LOGGER.error("Error running command: {}", e.getMessage());
         }
     }
 

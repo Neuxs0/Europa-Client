@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.Modules;
 
 import java.util.Map;
 
+@SuppressWarnings("unchecked")
 public class SettingsLoader {
     public static void loadModules(Map<String, Object> settingsMap) {
         for (Module module : Modules.moduleList) {

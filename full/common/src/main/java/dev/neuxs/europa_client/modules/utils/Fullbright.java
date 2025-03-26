@@ -13,6 +13,7 @@ import finalforeach.cosmicreach.world.World;
 import finalforeach.cosmicreach.world.Zone;
 import finalforeach.cosmicreach.gamestates.InGame;
 
+@SuppressWarnings("DuplicatedCode")
 public class Fullbright extends Module {
     public ChunkShader blockShader;
     public ChunkShader waterShader;

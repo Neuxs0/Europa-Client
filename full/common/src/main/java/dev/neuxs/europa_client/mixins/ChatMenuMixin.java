@@ -9,6 +9,7 @@ import finalforeach.cosmicreach.accounts.Account;
 import finalforeach.cosmicreach.networking.client.ChatSender;
 import dev.neuxs.europa_client.commands.ClientCommandManager;
 
+@SuppressWarnings("unused")
 @Mixin(ChatMenu.class)
 public abstract class ChatMenuMixin {
 

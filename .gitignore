@@ -4,6 +4,8 @@ run/
 build/
 bin/
 /dev/
+/bypass/
+fonts/
 *.gz
 
 !gradle/wrapper/gradle-wrapper.jar

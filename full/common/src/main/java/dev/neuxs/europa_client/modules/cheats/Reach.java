@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 
+@SuppressWarnings("unchecked")
 public class Reach extends Module {
 
     public Reach(int keybind, boolean defaultEnabled) {
@@ -13,13 +14,11 @@ public class Reach extends Module {
     }
 
     public float getReachDistance() {
-        @SuppressWarnings("unchecked")
         Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
         return distanceSetting.getValue();
     }
 
     public void setReachDistance(float newDistance) {
-        @SuppressWarnings("unchecked")
         Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
         distanceSetting.setValue(newDistance);
         Client.clientChat.addMessage(null, "Reach set to " + distanceSetting.getValue());

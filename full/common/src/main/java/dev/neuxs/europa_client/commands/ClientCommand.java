@@ -1,6 +1,5 @@
 package dev.neuxs.europa_client.commands;
 
-import finalforeach.cosmicreach.chat.IChat;
 import finalforeach.cosmicreach.accounts.Account;
 
 public abstract class ClientCommand {

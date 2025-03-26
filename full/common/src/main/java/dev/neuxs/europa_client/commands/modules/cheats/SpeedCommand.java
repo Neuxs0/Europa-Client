@@ -14,7 +14,6 @@ public class SpeedCommand extends ClientCommand {
             return;
         }
 
-        // If additional arguments are provided, check for setting speed.
         // Expected format: "#speed set speed <value>"
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
                 args[2].equalsIgnoreCase("speed")) {
