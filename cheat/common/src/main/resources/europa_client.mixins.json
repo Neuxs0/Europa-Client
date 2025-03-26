@@ -11,6 +11,8 @@
     "YouDiedMenuMixin",
     "NoClipPacketMixin",
     "BlockRaycastsMixin",
+    "GamePacketLoggingMixin",
+    "NettyPacketHandlerMixin",
     "GameSingletonsInterface"
   ],
   "client": [

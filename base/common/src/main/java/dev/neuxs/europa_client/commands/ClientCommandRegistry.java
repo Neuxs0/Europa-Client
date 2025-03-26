@@ -6,6 +6,7 @@ import dev.neuxs.europa_client.commands.misc.TypeCommand;
 import dev.neuxs.europa_client.commands.misc.VersionCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
 import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
+import dev.neuxs.europa_client.commands.utils.PacketInspectorCommand;
 import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
 
@@ -24,5 +25,6 @@ public class ClientCommandRegistry {
 
         // Modules - Utils
         ClientCommandManager.registerCommand("fullbright", FullbrightCommand::new, "fb");
+        ClientCommandManager.registerCommand("packetInspector", PacketInspectorCommand::new);
     }
 }

@@ -9,6 +9,7 @@ import dev.neuxs.europa_client.commands.modules.cheats.ReachCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.SpeedCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
 import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
+import dev.neuxs.europa_client.commands.utils.PacketInspectorCommand;
 import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
 
@@ -27,6 +28,7 @@ public class ClientCommandRegistry {
 
         // Modules - Utils
         ClientCommandManager.registerCommand("fullbright", FullbrightCommand::new, "fb");
+        ClientCommandManager.registerCommand("packetInspector", PacketInspectorCommand::new);
 
         // Modules - Cheats
         ClientCommandManager.registerCommand("noclip", NoClipCommand::new, "nc");

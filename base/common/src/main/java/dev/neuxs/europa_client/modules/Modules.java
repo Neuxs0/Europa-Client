@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Modules {
+    public static boolean packetInspectorEnabled = false;
+
     public static Fullbright fullbright;
 
     public static List<Module> moduleList = new ArrayList<>();
