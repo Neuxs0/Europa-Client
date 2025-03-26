@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
 import dev.neuxs.europa_client.ui.pages.HomePage;
+import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
@@ -25,8 +26,8 @@ public class GUI extends GameState implements InputProcessor {
             return;
         }
 
-        Color mainBackgroundColor = Renderer.color(40, 40, 40, 255);
-        Color mainBorderColor = Renderer.color(60, 60, 60, 255);
+        Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
+        Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
 
 
         // Constants
