@@ -14,6 +14,7 @@ import dev.neuxs.europa_client.accessor.InGameAccessor;
 import dev.neuxs.europa_client.ui.pages.HomePage;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
+import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
@@ -33,6 +34,9 @@ public class GUI extends GameState implements InputProcessor {
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 
+        // Background Dim
+        BoxRenderer backgroundDim = new BoxRenderer(0, 0, worldW, worldH, ColorUtils.color(0, 0, 0, 75));
+        backgroundDim.render(projectionMatrix);
 
         // Menu Container
         float menuContainerX = worldW / 2f - (worldW / 1.5f) / 2f;
@@ -41,16 +45,18 @@ public class GUI extends GameState implements InputProcessor {
         float menuContainerH = worldH / 1.5f;
         float menuContainerBorderWidth = 5f;
         float containerTopY = menuContainerY + menuContainerH;
-        Renderer.drawBorderedBox(
-                projectionMatrix,
+        BoxRenderer menuContainer = new BoxRenderer(
                 menuContainerX,
                 menuContainerY,
                 menuContainerW,
                 menuContainerH,
-                menuContainerBorderWidth,
-                mainBackgroundColor,
-                mainBorderColor
+                mainBackgroundColor
         );
+        menuContainer.setBorderWidth(menuContainerBorderWidth);
+        menuContainer.setBorderEnabled(true);
+        menuContainer.setBorderColor(mainBorderColor);
+        menuContainer.setBorderRadius(15f);
+        menuContainer.render(projectionMatrix);
 
 
         // Side menu seperator
@@ -146,11 +152,11 @@ public class GUI extends GameState implements InputProcessor {
         int screenPixelHeight = Gdx.graphics.getHeight();
         Gdx.gl.glViewport(0, 0, screenPixelWidth, screenPixelHeight);
 
+        renderMenu(relevantViewport, currentUiMatrix);
+
         if (this.stage != null) {
             this.stage.draw();
         }
-
-        renderMenu(relevantViewport, currentUiMatrix);
 
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
