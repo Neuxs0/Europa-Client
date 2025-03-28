@@ -11,7 +11,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
-import dev.neuxs.europa_client.ui.pages.HomePage;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
@@ -19,6 +18,12 @@ import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
 public class GUI extends GameState implements InputProcessor {
+    private final Color mainDimColor = ColorUtils.color(0, 0, 0, 75);
+    private final Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
+    private final Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
+
+    private final BoxRenderer backgroundDim = new BoxRenderer();
+    private final BoxRenderer menuContainer = new BoxRenderer();
 
     public GUI() {}
 
@@ -27,47 +32,29 @@ public class GUI extends GameState implements InputProcessor {
             return;
         }
 
-        Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
-        Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
-
-
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 
-        // Background Dim
-        BoxRenderer backgroundDim = new BoxRenderer(0, 0, worldW, worldH, ColorUtils.color(0, 0, 0, 75));
+        backgroundDim.setSize(worldW, worldH);
         backgroundDim.render(projectionMatrix);
 
-        // Menu Container
-        float menuContainerX = worldW / 2f - (worldW / 1.5f) / 2f;
-        float menuContainerY = worldH / 2f - (worldH / 1.5f) / 2f;
-        float menuContainerW = worldW / 1.5f;
-        float menuContainerH = worldH / 1.5f;
-        float menuContainerBorderWidth = 5f;
-        float containerTopY = menuContainerY + menuContainerH;
-        BoxRenderer menuContainer = new BoxRenderer(
-                menuContainerX,
-                menuContainerY,
-                menuContainerW,
-                menuContainerH,
-                mainBackgroundColor
+
+        menuContainer.setSize(worldW / 1.5f, worldH / 1.5f);
+        menuContainer.setPosition(
+                worldW / 2f - menuContainer.getWidth() / 2f,
+                worldH / 2f - menuContainer.getHeight() / 2f
         );
-        menuContainer.setBorderWidth(menuContainerBorderWidth);
-        menuContainer.setBorderEnabled(true);
-        menuContainer.setBorderColor(mainBorderColor);
-        menuContainer.setBorderRadius(15f);
         menuContainer.render(projectionMatrix);
 
-
         // Side menu seperator
-        float sideMenuSeperatorX = menuContainerX + 125; // menuContainerX + distance from left edge of menu
+        float sideMenuSeperatorX = menuContainer.getPosX() + 125; // menuContainerX + distance from left edge of menu
         Renderer.drawLine(
                 projectionMatrix,
                 sideMenuSeperatorX,
-                menuContainerY,
+                menuContainer.getPosY(),
                 sideMenuSeperatorX,
-                containerTopY,
-                menuContainerBorderWidth,
+                menuContainer.getPosY() + menuContainer.getHeight(),
+                menuContainer.getBorderWidth(),
                 mainBorderColor
         );
 
@@ -77,8 +64,7 @@ public class GUI extends GameState implements InputProcessor {
         // Top-Right:    (884, 495)
         // Top-Left:     (308, 495)
 
-        // Render Pages
-        HomePage.renderContent(projectionMatrix);
+//        HomePage.renderContent(projectionMatrix);
     }
 
     @Override
@@ -87,6 +73,14 @@ public class GUI extends GameState implements InputProcessor {
         InputMultiplexer inputMultiplexer = new InputMultiplexer(this.stage, this);
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCursorCatched(false);
+
+        backgroundDim.setFillColor(mainDimColor);
+
+        menuContainer.setFillColor(mainBackgroundColor);
+        menuContainer.setBorderWidth(5f);
+        menuContainer.setBorderEnabled(true);
+        menuContainer.setBorderColor(mainBorderColor);
+        menuContainer.setBorderRadius(15f);
     }
 
     @Override

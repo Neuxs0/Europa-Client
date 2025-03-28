@@ -10,6 +10,7 @@ import finalforeach.cosmicreach.chat.IChat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("unused")
 public class Client {
     public static final String MOD_ID = "europa_client";
     public static final String MOD_NAME = "Europa Client";

@@ -3,7 +3,7 @@ package dev.neuxs.europa_client.utils.rendering.ui;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.MathUtils; // Import MathUtils for clamping segments
+import com.badlogic.gdx.math.MathUtils;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 
