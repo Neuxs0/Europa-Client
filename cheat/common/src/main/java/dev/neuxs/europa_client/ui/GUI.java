@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
@@ -32,8 +33,10 @@ public class GUI extends GameState implements InputProcessor {
     private final BoxRenderer backgroundDim = new BoxRenderer();
     private final BoxRenderer menuContainer = new BoxRenderer();
     private final LineRenderer sideMenuSeparator = new LineRenderer();
-    private final TextRenderer testText = new TextRenderer();
-    private final Button testButton = new Button();
+    private final Button utilitiesButton = new Button();
+    private final Button cheatsButton = new Button();
+    private final Button profilesButton = new Button();
+    private final Button settingsButton = new Button();
     private Viewport viewport = GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null ? GameState.IN_GAME.newUiViewport : this.uiViewport;
     private float screenW = viewport.getWorldWidth();
     private float screenH = viewport.getWorldHeight();
@@ -76,20 +79,14 @@ public class GUI extends GameState implements InputProcessor {
         sideMenuSeparator.setColor(mainBorderColor);
         sideMenuSeparator.setWidth(menuContainer.getBorderWidth());
 
-        testText.setFont("cosmicreach");
-        testText.setText("Hello, World");
-        testText.setPosition(screenW / 2f, screenH / 2f);
-        testText.setColor(ColorUtils.color(255, 0, 0, 127));
-
-        testButton.getTextRenderer().setFont("cosmicreach");
-        testButton.getTextRenderer().setText("Click Me!");
-        testButton.setPosition((screenW / 2f) - 200, screenH / 2f);
-        testButton.setSize(150, 100);
-        testButton.setOnClick(
-                (button) -> {
-                    Client.LOGGER.info("Test button clicked!");
-                }
+        // Side Menu
+        utilitiesButton.setSize(100, 50);
+        utilitiesButton.setPosition(
+                menuContainer.getPosX() + 12.5f,
+                (menuContainer.getPosY() + menuContainer.getHeight() - 12.5f) - utilitiesButton.getHeight()
         );
+        utilitiesButton.getTextRenderer().setText("Utilities");
+        utilitiesButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
     }
 
     @Override
@@ -98,6 +95,9 @@ public class GUI extends GameState implements InputProcessor {
 
         if (GameState.IN_GAME.isCreated()) {
             GameState.IN_GAME.resize(width, height);
+            if (GameState.IN_GAME.newUiViewport != null) {
+                viewport = GameState.IN_GAME.newUiViewport;
+            }
             screenW = viewport.getWorldWidth();
             screenH = viewport.getWorldHeight();
         }
@@ -114,9 +114,10 @@ public class GUI extends GameState implements InputProcessor {
         sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
         sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
 
-        testText.setPosition(screenW / 2f, screenH / 2f);
-
-        testButton.setPosition(screenW / 2f, screenH / 2f);
+        utilitiesButton.setPosition(
+                menuContainer.getPosX() + 12.5f,
+                (menuContainer.getPosY() + menuContainer.getHeight() - 12.5f) - utilitiesButton.getHeight()
+        );
     }
 
     @Override
@@ -180,7 +181,10 @@ public class GUI extends GameState implements InputProcessor {
         menuContainer.render(shapeRenderer);
         sideMenuSeparator.render(shapeRenderer);
 
-        testButton.renderShape(shapeRenderer, viewport);
+        utilitiesButton.renderShape(shapeRenderer, viewport);
+        cheatsButton.renderShape(shapeRenderer, viewport);
+        profilesButton.renderShape(shapeRenderer, viewport);
+        settingsButton.renderShape(shapeRenderer, viewport);
 
         shapeRenderer.end();
 
@@ -188,9 +192,10 @@ public class GUI extends GameState implements InputProcessor {
         spriteBatch.setProjectionMatrix(uiMatrix);
         spriteBatch.begin();
 
-        testText.render(spriteBatch, glyphLayout);
-
-        testButton.renderText(spriteBatch, glyphLayout);
+        utilitiesButton.renderText(spriteBatch, glyphLayout, viewport);
+        cheatsButton.renderText(spriteBatch, glyphLayout, viewport);
+        profilesButton.renderText(spriteBatch, glyphLayout, viewport);
+        settingsButton.renderText(spriteBatch, glyphLayout, viewport);
 
         spriteBatch.end();
 

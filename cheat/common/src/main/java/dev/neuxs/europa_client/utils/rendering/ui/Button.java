@@ -14,6 +14,7 @@ import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
+import dev.neuxs.europa_client.managers.font.FontManager;
 
 import java.util.function.Consumer;
 
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
 public class Button {
     private final BoxRenderer boxRenderer;
     private final TextRenderer textRenderer;
+    private final FontManager fontManager;
 
     private Consumer<Button> onClick;
     private Consumer<Button> onHoverEnter;
@@ -48,6 +50,7 @@ public class Button {
     public Button() {
         this.boxRenderer = new BoxRenderer();
         this.textRenderer = new TextRenderer();
+        this.fontManager = new FontManager();
         this.onClick = (button) -> {};
         this.onHoverEnter = (button) -> {};
         this.onHoverExit = (button) -> {};
@@ -122,9 +125,10 @@ public class Button {
         boxRenderer.render(shapeRenderer);
     }
 
-    public void renderText(SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
-        float textX = boxRenderer.getPosX()  + boxRenderer.getWidth() / 2f;
-        float textY = boxRenderer.getPosY() + boxRenderer.getHeight() / 2f;
+    public void renderText(SpriteBatch spriteBatch, GlyphLayout glyphLayout, Viewport viewport) {
+        float textX = boxRenderer.getPosX() + boxRenderer.getWidth() / 2f;
+        float textY = (boxRenderer.getPosY() + boxRenderer.getHeight() / 2f) -
+                      (fontManager.getTextDimensions(viewport, textRenderer.getFont(), textRenderer.getText()).y / 2f);
         textRenderer.setPosition(textX, textY);
         textRenderer.render(spriteBatch, glyphLayout);
     }

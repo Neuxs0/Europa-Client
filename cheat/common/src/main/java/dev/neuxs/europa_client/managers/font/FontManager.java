@@ -1,8 +1,16 @@
 package dev.neuxs.europa_client.managers.font;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.utils.ColorUtils;
 import finalforeach.cosmicreach.CosmicReachFont;
+import finalforeach.cosmicreach.FontTexture;
+import finalforeach.cosmicreach.ui.FontRenderer;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +49,7 @@ public class FontManager {
 
         return font;
     }
+
     public String getFontName(BitmapFont font) {
         if (font == null) return null;
 
@@ -53,11 +62,21 @@ public class FontManager {
         Client.LOGGER.error("Font object not found in FontRenderer map.");
         return null;
     }
+
     public boolean isFontAvailable(String name) {
         if (name == null || name.trim().isEmpty()) return false;
         return fontMap.containsKey(name.toLowerCase());
     }
+
     public Set<String> getAvailableFontNames() {
         return Collections.unmodifiableSet(fontMap.keySet());
+    }
+
+    public Vector2 getTextDimensions(Viewport uiViewport, BitmapFont font, String text) {
+        Vector2 a = new Vector2(0f, 0f);
+        if (text == null || text.trim().isEmpty()) return a;
+
+        if (getFontName(font).equals("cosmicreach")) return FontRenderer.getTextDimensions(uiViewport, text, a);
+        else return a;
     }
 }
