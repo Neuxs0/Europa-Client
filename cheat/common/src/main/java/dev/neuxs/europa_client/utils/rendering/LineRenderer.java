@@ -62,21 +62,21 @@ public class LineRenderer {
         this.startX = x;
         this.startY = y;
     }
-    public void setStartX(float startX) {
-        this.startX = startX;
+    public void setStartX(float x) {
+        this.startX = x;
     }
-    public void setStartY(float startY) {
-        this.startY = startY;
+    public void setStartY(float y) {
+        this.startY = y;
     }
     public void setEndPoint(float x, float y) {
         this.endX = x;
         this.endY = y;
     }
-    public void setEndX(float endX) {
-        this.endX = endX;
+    public void setEndX(float x) {
+        this.endX = x;
     }
-    public void setEndY(float endY) {
-        this.endY = endY;
+    public void setEndY(float y) {
+        this.endY = y;
     }
     public void setWidth(float width) {
         this.width = Math.max(0, width);
