@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
+import dev.neuxs.europa_client.modules.utils.NoFog;
 import dev.neuxs.europa_client.modules.utils.PacketInspector;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 
 public class Modules {
     public static Fullbright fullbright;
+    public static NoFog noFog;
     public static PacketInspector packetInspector;
 
     public static NoClip noClip;
@@ -25,6 +27,9 @@ public class Modules {
 
         fullbright = new Fullbright(unknown, false);
         moduleList.add(fullbright);
+
+        noFog = new NoFog(unknown, false);
+        moduleList.add(noFog);
 
         packetInspector = new PacketInspector(unknown, false);
         moduleList.add(packetInspector);

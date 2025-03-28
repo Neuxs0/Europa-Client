@@ -43,23 +43,6 @@ public class TextRenderer {
         this.wrap = defaultWrap;
     }
 
-    public TextRenderer(String text, float x, float y, Color color) {
-        this();
-        setText(text);
-        setPosition(x, y);
-        setColor(color);
-    }
-
-    public TextRenderer(String text, float x, float y, BitmapFont font, Color color, int alignment, float wrapWidth, boolean wrap) {
-        setText(text);
-        setPosition(x, y);
-        setFont(font);
-        setColor(color);
-        setAlignment(alignment);
-        setWrapWidth(wrapWidth);
-        setWrap(wrap);
-    }
-
     public void render(SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
         if (this.text == null || this.text.isEmpty() || this.color == null || this.color.a <= 0) return;
 
@@ -125,7 +108,7 @@ public class TextRenderer {
                      fontManager.getFont(font.toLowerCase()) : defaultFont;
     }
     public void setColor(Color color) {
-        this.color = (color != null) ? color.cpy() : defaultColor;
+        this.color = (color != null) ? color.cpy() : defaultColor.cpy();
     }
     public void setAlignment(int alignment) {
         boolean isValid = false;

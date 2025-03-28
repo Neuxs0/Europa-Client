@@ -18,6 +18,7 @@ import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.LineRenderer;
+import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
@@ -32,6 +33,7 @@ public class GUI extends GameState implements InputProcessor {
     private final BoxRenderer menuContainer = new BoxRenderer();
     private final LineRenderer sideMenuSeparator = new LineRenderer();
     private final TextRenderer testText = new TextRenderer();
+    private final Button testButton = new Button();
     private Viewport viewport = GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null ? GameState.IN_GAME.newUiViewport : this.uiViewport;
     private float screenW = viewport.getWorldWidth();
     private float screenH = viewport.getWorldHeight();
@@ -78,6 +80,16 @@ public class GUI extends GameState implements InputProcessor {
         testText.setText("Hello, World");
         testText.setPosition(screenW / 2f, screenH / 2f);
         testText.setColor(ColorUtils.color(255, 0, 0, 127));
+
+        testButton.getTextRenderer().setFont("cosmicreach");
+        testButton.getTextRenderer().setText("Click Me!");
+        testButton.setPosition((screenW / 2f) - 200, screenH / 2f);
+        testButton.setSize(150, 100);
+        testButton.setOnClick(
+                (button) -> {
+                    Client.LOGGER.info("Test button clicked!");
+                }
+        );
     }
 
     @Override
@@ -104,6 +116,8 @@ public class GUI extends GameState implements InputProcessor {
         sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
 
         testText.setPosition(screenW / 2f, screenH / 2f);
+
+        testButton.setPosition(screenW / 2f, screenH / 2f);
     }
 
     @Override
@@ -167,6 +181,8 @@ public class GUI extends GameState implements InputProcessor {
         menuContainer.render(shapeRenderer);
         sideMenuSeparator.render(shapeRenderer);
 
+        testButton.renderShape(shapeRenderer);
+
         shapeRenderer.end();
 
         // Sprite Batch batch
@@ -174,6 +190,8 @@ public class GUI extends GameState implements InputProcessor {
         spriteBatch.begin();
 
         testText.render(spriteBatch, glyphLayout);
+
+        testButton.renderText(spriteBatch, glyphLayout);
 
         spriteBatch.end();
 

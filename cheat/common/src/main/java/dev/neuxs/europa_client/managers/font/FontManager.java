@@ -29,6 +29,8 @@ public class FontManager {
         }
 
         // TODO: Custom fonts
+        //  Separate Client's custom fonts and user's custom fonts for better customization
+        //  Add file management for user's custom fonts
     }
 
     public BitmapFont getFont(String name) {

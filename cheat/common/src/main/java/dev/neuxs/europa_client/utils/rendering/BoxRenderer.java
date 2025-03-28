@@ -42,19 +42,6 @@ public class BoxRenderer {
         this.dropShadowColor = defaultDropShadowColor.cpy();
     }
 
-    public BoxRenderer(float x, float y, float w, float h) {
-        this();
-        this.posX = x;
-        this.posY = y;
-        this.width = Math.max(0, w);
-        this.height = Math.max(0, h);
-    }
-
-    public BoxRenderer(float x, float y, float w, float h, Color fillColor) {
-        this(x, y, w, h);
-        setFillColor(fillColor);
-    }
-
     public void render(ShapeRenderer shapeRenderer) {
         if (width <= 0 || height <= 0) return;
 

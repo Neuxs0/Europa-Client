@@ -14,12 +14,12 @@ import finalforeach.cosmicreach.world.Zone;
 import finalforeach.cosmicreach.gamestates.InGame;
 
 @SuppressWarnings("DuplicatedCode")
-public class Fullbright extends Module {
+public class NoFog extends Module {
     public ChunkShader blockShader;
     public ChunkShader waterShader;
 
-    public Fullbright(int keybind, boolean defaultEnabled) {
-        super("fullbright", keybind, defaultEnabled);
+    public NoFog(int keybind, boolean defaultEnabled) {
+        super("nofog", keybind, defaultEnabled);
     }
 
     public void enable(boolean messaging) {
@@ -55,7 +55,7 @@ public class Fullbright extends Module {
         GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
         if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-Fog enabled");
         }
     }
 
@@ -81,7 +81,7 @@ public class Fullbright extends Module {
         GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
         if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
+            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-Fog disabled");
         }
     }
 

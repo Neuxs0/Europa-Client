@@ -48,4 +48,16 @@ public class InputManager {
     public static boolean isFirstFrameKeyDown(int keycode) {
         return Gdx.input.isKeyJustPressed(keycode);
     }
+
+    public static boolean isMouseButtonDown(int keycode) {
+        return Gdx.input.isButtonPressed(keycode);
+    }
+
+    public static boolean isMouseButtonUp(int keycode) {
+        return !Gdx.input.isButtonPressed(keycode);
+    }
+
+    public static boolean isFirstFrameMouseButtonDown(int keycode) {
+        return Gdx.input.isButtonJustPressed(keycode);
+    }
 }

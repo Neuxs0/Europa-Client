@@ -23,15 +23,6 @@ public class LineRenderer {
         this.color = defaultColor.cpy();
     }
 
-    public LineRenderer(float x1, float y1, float x2, float y2, float w, Color color) {
-        this.startX = x1;
-        this.startY = y1;
-        this.endX = x2;
-        this.endY = y2;
-        this.width = Math.max(0, w);
-        this.color = (color != null) ? color.cpy() : defaultColor.cpy();
-    }
-
     public void render(ShapeRenderer shapeRenderer) {
         if (color == null || color.a <= 0 || width <= 0) return;
         shapeRenderer.setColor(this.color);
