@@ -1,14 +1,15 @@
-package dev.neuxs.europa_client.utils.rendering.ui;
+package dev.neuxs.europa_client.utils.rendering;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.utils.rendering.Renderer;
 import finalforeach.cosmicreach.CosmicReachFont;
 
-public class FontRenderer extends Renderer {
+@SuppressWarnings("unused")
+public class FontRenderer {
     private static final Vector2 tempDimensions = new Vector2();
 
     private static BitmapFont getFont(String fontName) {
@@ -27,14 +28,14 @@ public class FontRenderer extends Renderer {
         }
     }
 
-    public static Vector2 getTextDimensions(String fontName, String text) {
+    public static Vector2 getTextDimensions(SpriteBatch spriteBatch, GlyphLayout glyphLayout, String fontName, String text) {
         BitmapFont font = getFont(fontName);
         if (font == null || text == null || text.isEmpty()) return tempDimensions.set(0,0);
         glyphLayout.setText(font, text);
         return tempDimensions.set(glyphLayout.width, glyphLayout.height);
     }
 
-    public static void drawText(Matrix4 projectionMatrix, String fontName, String text, float x, float y, Color color, int alignment, float wrapWidth, boolean wrap) {
+    public static void drawText(SpriteBatch spriteBatch, GlyphLayout glyphLayout, String fontName, String text, float x, float y, Color color, int alignment, float wrapWidth, boolean wrap) {
         if (text == null || text.isEmpty() || color == null || color.a <= 0) {
             return;
         }
@@ -51,12 +52,7 @@ public class FontRenderer extends Renderer {
 
         font.setColor(color);
 
-        batch.setProjectionMatrix(projectionMatrix);
-        batch.begin();
-
-        font.draw(batch, glyphLayout, x, y);
-
-        batch.end();
+        font.draw(spriteBatch, glyphLayout, x, y);
 
         font.setColor(originalFontColor);
     }

@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Align;
-import dev.neuxs.europa_client.utils.rendering.ui.FontRenderer;
+import dev.neuxs.europa_client.utils.rendering.FontRenderer;
 
 public class HomePage {
     

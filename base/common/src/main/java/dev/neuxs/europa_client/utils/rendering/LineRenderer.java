@@ -1,4 +1,4 @@
-package dev.neuxs.europa_client.utils.rendering.ui;
+package dev.neuxs.europa_client.utils.rendering;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;

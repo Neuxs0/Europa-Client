@@ -16,74 +16,28 @@ import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
 import dev.neuxs.europa_client.ui.pages.HomePage;
 import dev.neuxs.europa_client.utils.ColorUtils;
-import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
-import dev.neuxs.europa_client.utils.rendering.ui.LineRenderer;
+import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
+import dev.neuxs.europa_client.utils.rendering.LineRenderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
 public class GUI extends GameState implements InputProcessor {
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final SpriteBatch spriteBatch = new SpriteBatch();
-    private static final GlyphLayout glyphLayout = new GlyphLayout();
+    private final GlyphLayout glyphLayout = new GlyphLayout();
     private final Color mainDimColor = ColorUtils.color(0, 0, 0, 75);
     private final Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
     private final Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
     private final BoxRenderer backgroundDim = new BoxRenderer();
     private final BoxRenderer menuContainer = new BoxRenderer();
+    private final LineRenderer sideMenuSeparator = new LineRenderer();
+    private Viewport viewport = GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null ? GameState.IN_GAME.newUiViewport : this.uiViewport;
+    private float screenW = viewport.getWorldWidth();
+    private float screenH = viewport.getWorldHeight();
+
+    public float sideMenuSeperatorAmount = 125f;
 
     public GUI() {}
-
-    public void renderMenu(Viewport viewport, Matrix4 projectionMatrix) {
-        if (viewport == null || projectionMatrix == null) {
-            return;
-        }
-
-        float worldW = viewport.getWorldWidth();
-        float worldH = viewport.getWorldHeight();
-
-        // Shape Renderer batch
-        shapeRenderer.setProjectionMatrix(projectionMatrix);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        backgroundDim.setSize(worldW, worldH);
-        backgroundDim.render(shapeRenderer);
-
-
-        menuContainer.setSize(worldW / 1.5f, worldH / 1.5f);
-        menuContainer.setPosition(
-                worldW / 2f - menuContainer.getWidth() / 2f,
-                worldH / 2f - menuContainer.getHeight() / 2f
-        );
-        menuContainer.render(shapeRenderer);
-
-        // Side menu seperator
-        float sideMenuSeperatorX = menuContainer.getPosX() + 125; // menuContainerX + distance from left edge of menu
-        LineRenderer.drawLine(
-                shapeRenderer,
-                sideMenuSeperatorX,
-                menuContainer.getPosY(),
-                sideMenuSeperatorX,
-                menuContainer.getPosY() + menuContainer.getHeight(),
-                menuContainer.getBorderWidth(),
-                mainBorderColor
-        );
-
-        shapeRenderer.end();
-
-        // Sprite Batch batch
-        spriteBatch.setProjectionMatrix(projectionMatrix);
-        spriteBatch.begin();
-
-        // Page area corner dimensions:
-        // Bottom-Left:  (308, 105)
-        // Bottom-Right: (884, 105)
-        // Top-Right:    (884, 495)
-        // Top-Left:     (308, 495)
-
-        HomePage.renderContent(spriteBatch, glyphLayout);
-
-        spriteBatch.end();
-    }
 
     @Override
     public void create() {
@@ -92,13 +46,24 @@ public class GUI extends GameState implements InputProcessor {
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCursorCatched(false);
 
+        backgroundDim.setSize(screenW, screenH);
         backgroundDim.setFillColor(mainDimColor);
 
+        menuContainer.setSize(screenW / 1.5f, screenH / 1.5f);
+        menuContainer.setPosition(
+                screenW / 2f - menuContainer.getWidth() / 2f,
+                screenH / 2f - menuContainer.getHeight() / 2f
+        );
         menuContainer.setFillColor(mainBackgroundColor);
         menuContainer.setBorderWidth(5f);
         menuContainer.setBorderEnabled(true);
         menuContainer.setBorderColor(mainBorderColor);
         menuContainer.setBorderRadius(15f);
+
+        sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
+        sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
+        sideMenuSeparator.setColor(mainBorderColor);
+        sideMenuSeparator.setWidth(menuContainer.getBorderWidth());
     }
 
     @Override
@@ -108,6 +73,21 @@ public class GUI extends GameState implements InputProcessor {
         if (GameState.IN_GAME.isCreated()) {
             GameState.IN_GAME.resize(width, height);
         }
+
+        screenW = GameState.IN_GAME.isCreated() ? GameState.IN_GAME.newUiViewport.getWorldWidth() : this.uiViewport.getWorldWidth();
+        screenH = GameState.IN_GAME.isCreated() ? GameState.IN_GAME.newUiViewport.getWorldHeight() : this.uiViewport.getWorldHeight();
+
+        backgroundDim.setSize(screenW, screenH);
+
+        menuContainer.setSize(screenW / 1.5f, screenH / 1.5f);
+        menuContainer.setPosition(
+                screenW / 2f - menuContainer.getWidth() / 2f,
+                screenH / 2f - menuContainer.getHeight() / 2f
+        );
+
+
+        sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
+        sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
     }
 
     @Override
@@ -133,14 +113,10 @@ public class GUI extends GameState implements InputProcessor {
     public void render() {
         super.render();
 
-        Viewport relevantViewport;
-        if (GameState.IN_GAME.isCreated()) {
-            relevantViewport = GameState.IN_GAME.newUiViewport;
-            if (relevantViewport == null) {
-                relevantViewport = this.newUiViewport;
-            }
+        if (GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null) {
+                viewport = GameState.IN_GAME.newUiViewport;
         } else {
-            relevantViewport = this.newUiViewport;
+            viewport = this.newUiViewport;
         }
 
         if (GameState.IN_GAME.isCreated()) {
@@ -156,15 +132,42 @@ public class GUI extends GameState implements InputProcessor {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
-        Matrix4 currentUiMatrix;
-        relevantViewport.apply(true);
-        currentUiMatrix = relevantViewport.getCamera().combined;
+        Matrix4 uiMatrix;
+        viewport.apply(true);
+        uiMatrix = viewport.getCamera().combined;
 
         int screenPixelWidth = Gdx.graphics.getWidth();
         int screenPixelHeight = Gdx.graphics.getHeight();
         Gdx.gl.glViewport(0, 0, screenPixelWidth, screenPixelHeight);
 
-        renderMenu(relevantViewport, currentUiMatrix);
+
+
+        // Shape Renderer batch
+        shapeRenderer.setProjectionMatrix(uiMatrix);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        backgroundDim.render(shapeRenderer);
+
+        menuContainer.render(shapeRenderer);
+        sideMenuSeparator.render(shapeRenderer);
+
+        shapeRenderer.end();
+
+        // Sprite Batch batch
+        spriteBatch.setProjectionMatrix(uiMatrix);
+        spriteBatch.begin();
+
+        // Page area corner dimensions:
+        // Bottom-Left:  (308, 105)
+        // Bottom-Right: (884, 105)
+        // Top-Right:    (884, 495)
+        // Top-Left:     (308, 495)
+
+        HomePage.renderContent(spriteBatch, glyphLayout);
+
+        spriteBatch.end();
+
+
 
         if (this.stage != null) {
             this.stage.draw();

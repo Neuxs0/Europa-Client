@@ -7,9 +7,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Null;
-import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
-import dev.neuxs.europa_client.utils.rendering.ui.FontRenderer;
-import dev.neuxs.europa_client.utils.rendering.ui.LineRenderer;
 
 @SuppressWarnings({"unused"})
 public class Renderer {
