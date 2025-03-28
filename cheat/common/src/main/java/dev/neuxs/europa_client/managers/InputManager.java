@@ -1,4 +1,4 @@
-package dev.neuxs.europa_client.utils;
+package dev.neuxs.europa_client.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

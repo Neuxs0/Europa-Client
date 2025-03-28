@@ -1,8 +1,3 @@
-// TODO:
-//  Manage fonts via FontRenderer
-//  Change fontName to font.getName(font)
-//  Change setFont(String) to setFont(font)
-
 package dev.neuxs.europa_client.utils.rendering;
 
 import com.badlogic.gdx.graphics.Color;
@@ -11,21 +6,22 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
-import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.managers.font.FontManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
-import finalforeach.cosmicreach.CosmicReachFont;
 
 @SuppressWarnings("unused")
 public class TextRenderer {
+    private static final FontManager fontManager = new FontManager();
+
     private String text;
     private float x;
     private float y;
-    private String fontName;
+    private BitmapFont font;
     private Color color;
     private int alignment;
     private float wrapWidth;
     private boolean wrap;
-    private static final String defaultFontName = "cosmicreach";
+    private static final BitmapFont defaultFont = fontManager.getFont("cosmicreach");
     private static final Color defaultColor = ColorUtils.color(255, 255, 255, 255);
     private static final int defaultAlignment = Align.left;
     private static final float defaultWrapWidth = 0f;
@@ -35,15 +31,12 @@ public class TextRenderer {
             Align.center, Align.left, Align.right,
             Align.bottom, Align.bottomLeft, Align.bottomRight
     };
-    private static final String[] fontNames = {
-            "cosmicreach"
-    };
 
     public TextRenderer() {
         this.text = "";
         this.x = 0f;
         this.y = 0f;
-        this.fontName = defaultFontName;
+        this.font = defaultFont;
         this.color = defaultColor.cpy();
         this.alignment = defaultAlignment;
         this.wrapWidth = defaultWrapWidth;
@@ -57,10 +50,10 @@ public class TextRenderer {
         setColor(color);
     }
 
-    public TextRenderer(String text, float x, float y, String fontName, Color color, int alignment, float wrapWidth, boolean wrap) {
+    public TextRenderer(String text, float x, float y, BitmapFont font, Color color, int alignment, float wrapWidth, boolean wrap) {
         setText(text);
         setPosition(x, y);
-        setFont(fontName);
+        setFont(font);
         setColor(color);
         setAlignment(alignment);
         setWrapWidth(wrapWidth);
@@ -70,52 +63,17 @@ public class TextRenderer {
     public void render(SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
         if (this.text == null || this.text.isEmpty() || this.color == null || this.color.a <= 0) return;
 
-        BitmapFont font = getFontInternal(this.fontName);
-        if (font == null) {
-            Client.LOGGER.error("Cannot render text, font '{}' is unavailable.", this.fontName);
-            return;
-        }
-
-        Color originalFontColor = font.getColor();
-
         glyphLayout.setText(font, this.text, 0, this.text.length(), this.color, this.wrapWidth, this.alignment, this.wrap, null);
 
         font.setColor(this.color);
         font.draw(spriteBatch, glyphLayout, this.x, this.y);
-        font.setColor(originalFontColor);
+        font.setColor(defaultColor.cpy());
     }
 
     public Vector2 getDimensions(GlyphLayout glyphLayout) {
         if (this.text == null || this.text.isEmpty()) return new Vector2(0, 0);
-
-        BitmapFont font = getFontInternal(this.fontName);
-        if (font == null) {
-            Client.LOGGER.warn("Cannot get dimensions, font '{}' is unavailable.", this.fontName);
-            return new Vector2(0, 0);
-        }
-
         glyphLayout.setText(font, this.text, 0, this.text.length(), this.color, this.wrapWidth, this.alignment, this.wrap, null);
-
         return new Vector2(glyphLayout.width, glyphLayout.height);
-    }
-
-    private static BitmapFont getFontInternal(String fontName) {
-        String effectiveFontName = (fontName == null || fontName.trim().isEmpty()) ? defaultFontName : fontName;
-
-        if (effectiveFontName.equals("cosmicreach")) {
-            try {
-                BitmapFont font = CosmicReachFont.getFont();
-                if (font == null) Client.LOGGER.error("CosmicReachFont.getFont() returned null for default font!");
-                return font;
-            } catch (Exception e) {
-                Client.LOGGER.error("Failed to get default CosmicReachFont: {}", e.getMessage(), e);
-                return null;
-            }
-        } else {
-            // Custom fonts are not implemented yet
-            Client.LOGGER.error("Font '{}' is not supported.", effectiveFontName);
-            return null;
-        }
     }
 
     public String getText() {
@@ -127,8 +85,11 @@ public class TextRenderer {
     public float getY() {
         return y;
     }
+    public BitmapFont getFont() {
+        return font;
+    }
     public String getFontName() {
-        return fontName;
+        return fontManager.getFontName(font);
     }
     public Color getColor() {
         return color.cpy();
@@ -156,15 +117,12 @@ public class TextRenderer {
     public void setY(float y) {
         this.y = y;
     }
-    public void setFont(String fontName) {
-        boolean isValid = false;
-        for (String validFont : fontNames) {
-            if (validFont.equalsIgnoreCase(fontName)) {
-                isValid = true;
-                break;
-            }
-        }
-        this.fontName = (fontName != null && !fontName.trim().isEmpty()) && isValid ? fontName.toLowerCase() : defaultFontName;
+    public void setFont(BitmapFont font) {
+        this.font = (font != null && fontManager.isFontAvailable(fontManager.getFontName(font))) ? font : defaultFont;
+    }
+    public void setFont(String font) {
+        this.font = (font != null && !font.trim().isEmpty() && fontManager.isFontAvailable(font.toLowerCase())) ?
+                     fontManager.getFont(font.toLowerCase()) : defaultFont;
     }
     public void setColor(Color color) {
         this.color = (color != null) ? color.cpy() : defaultColor;

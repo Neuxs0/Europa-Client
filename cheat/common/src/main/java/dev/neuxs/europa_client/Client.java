@@ -2,7 +2,7 @@ package dev.neuxs.europa_client;
 
 import dev.neuxs.europa_client.commands.ClientCommandRegistry;
 import dev.neuxs.europa_client.modules.Modules;
-import dev.neuxs.europa_client.utils.InputManager;
+import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.SyncModules;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import finalforeach.cosmicreach.chat.Chat;
