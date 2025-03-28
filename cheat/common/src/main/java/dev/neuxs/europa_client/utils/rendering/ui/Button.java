@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
@@ -32,6 +33,7 @@ public class Button {
     private Color pressedBorderColor;
     private ButtonState currentState;
     private boolean wasPressed;
+    private final Vector2 mousePos = new Vector2();
     private final Color DEFAULT_NORMAL_FILL = ColorUtils.color(50, 50, 50, 255);
     private final Color DEFAULT_HOVER_FILL = ColorUtils.color(70, 70, 70, 255);
     private final Color DEFAULT_PRESSED_FILL = ColorUtils.color(90, 90, 90, 255);
@@ -64,13 +66,14 @@ public class Button {
         this.textRenderer.setAlignment(Align.center);
     }
 
-    public void update() {
+    public void update(Viewport viewport) {
         ButtonState previousState = currentState;
-        int mouseX = Gdx.input.getX();
-        int mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
 
-        boolean mouseOver = mouseX >= boxRenderer.getPosX() && mouseX <= boxRenderer.getPosX() + boxRenderer.getWidth() &&
-                mouseY >= boxRenderer.getPosY() && mouseY <= boxRenderer.getPosY() + boxRenderer.getHeight();
+        viewport.unproject(mousePos);
+
+        boolean mouseOver = mousePos.x >= boxRenderer.getPosX() && mousePos.x <= boxRenderer.getPosX() + boxRenderer.getWidth() &&
+                mousePos.y >= boxRenderer.getPosY() && mousePos.y <= boxRenderer.getPosY() + boxRenderer.getHeight();
 
         if (mouseOver) {
             if (InputManager.isMouseButtonDown(Input.Buttons.LEFT)) {
@@ -97,8 +100,8 @@ public class Button {
         }
     }
 
-    public void renderShape(ShapeRenderer shapeRenderer) {
-        update();
+    public void renderShape(ShapeRenderer shapeRenderer, Viewport viewport) {
+        update(viewport);
 
         switch (currentState) {
             case HOVERED:

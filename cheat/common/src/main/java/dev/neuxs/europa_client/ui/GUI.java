@@ -98,10 +98,9 @@ public class GUI extends GameState implements InputProcessor {
 
         if (GameState.IN_GAME.isCreated()) {
             GameState.IN_GAME.resize(width, height);
+            screenW = viewport.getWorldWidth();
+            screenH = viewport.getWorldHeight();
         }
-
-        screenW = GameState.IN_GAME.isCreated() ? GameState.IN_GAME.newUiViewport.getWorldWidth() : this.uiViewport.getWorldWidth();
-        screenH = GameState.IN_GAME.isCreated() ? GameState.IN_GAME.newUiViewport.getWorldHeight() : this.uiViewport.getWorldHeight();
 
         backgroundDim.setSize(screenW, screenH);
 
@@ -144,9 +143,9 @@ public class GUI extends GameState implements InputProcessor {
         super.render();
 
         if (GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null) {
-                viewport = GameState.IN_GAME.newUiViewport;
+            viewport = GameState.IN_GAME.newUiViewport;
         } else {
-            viewport = this.newUiViewport;
+            Client.LOGGER.error("UI viewport is null");
         }
 
         if (GameState.IN_GAME.isCreated()) {
@@ -181,7 +180,7 @@ public class GUI extends GameState implements InputProcessor {
         menuContainer.render(shapeRenderer);
         sideMenuSeparator.render(shapeRenderer);
 
-        testButton.renderShape(shapeRenderer);
+        testButton.renderShape(shapeRenderer, viewport);
 
         shapeRenderer.end();
 
