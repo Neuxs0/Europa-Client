@@ -7,21 +7,27 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
+import dev.neuxs.europa_client.ui.pages.HomePage;
 import dev.neuxs.europa_client.utils.ColorUtils;
-import dev.neuxs.europa_client.utils.rendering.Renderer;
 import dev.neuxs.europa_client.utils.rendering.ui.BoxRenderer;
+import dev.neuxs.europa_client.utils.rendering.ui.LineRenderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
 public class GUI extends GameState implements InputProcessor {
+    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    private final SpriteBatch spriteBatch = new SpriteBatch();
+    private static final GlyphLayout glyphLayout = new GlyphLayout();
     private final Color mainDimColor = ColorUtils.color(0, 0, 0, 75);
     private final Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
     private final Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
-
     private final BoxRenderer backgroundDim = new BoxRenderer();
     private final BoxRenderer menuContainer = new BoxRenderer();
 
@@ -35,8 +41,12 @@ public class GUI extends GameState implements InputProcessor {
         float worldW = viewport.getWorldWidth();
         float worldH = viewport.getWorldHeight();
 
+        // Shape Renderer batch
+        shapeRenderer.setProjectionMatrix(projectionMatrix);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
         backgroundDim.setSize(worldW, worldH);
-        backgroundDim.render(projectionMatrix);
+        backgroundDim.render(shapeRenderer);
 
 
         menuContainer.setSize(worldW / 1.5f, worldH / 1.5f);
@@ -44,12 +54,12 @@ public class GUI extends GameState implements InputProcessor {
                 worldW / 2f - menuContainer.getWidth() / 2f,
                 worldH / 2f - menuContainer.getHeight() / 2f
         );
-        menuContainer.render(projectionMatrix);
+        menuContainer.render(shapeRenderer);
 
         // Side menu seperator
         float sideMenuSeperatorX = menuContainer.getPosX() + 125; // menuContainerX + distance from left edge of menu
-        Renderer.drawLine(
-                projectionMatrix,
+        LineRenderer.drawLine(
+                shapeRenderer,
                 sideMenuSeperatorX,
                 menuContainer.getPosY(),
                 sideMenuSeperatorX,
@@ -58,13 +68,21 @@ public class GUI extends GameState implements InputProcessor {
                 mainBorderColor
         );
 
+        shapeRenderer.end();
+
+        // Sprite Batch batch
+        spriteBatch.setProjectionMatrix(projectionMatrix);
+        spriteBatch.begin();
+
         // Page area corner dimensions:
         // Bottom-Left:  (308, 105)
         // Bottom-Right: (884, 105)
         // Top-Right:    (884, 495)
         // Top-Left:     (308, 495)
 
-//        HomePage.renderContent(projectionMatrix);
+        HomePage.renderContent(spriteBatch, glyphLayout);
+
+        spriteBatch.end();
     }
 
     @Override
@@ -159,6 +177,12 @@ public class GUI extends GameState implements InputProcessor {
         if (this.firstFrame) {
             this.firstFrame = false;
         }
+    }
+
+    @Override
+    public void dispose() {
+        shapeRenderer.dispose();
+        if (stage != null) stage.dispose();
     }
 
     @Override public boolean keyDown(int keycode) {

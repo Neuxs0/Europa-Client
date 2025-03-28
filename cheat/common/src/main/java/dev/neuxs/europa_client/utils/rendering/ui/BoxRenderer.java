@@ -2,13 +2,11 @@ package dev.neuxs.europa_client.utils.rendering.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.MathUtils;
 import dev.neuxs.europa_client.utils.ColorUtils;
-import dev.neuxs.europa_client.utils.rendering.Renderer;
 
 @SuppressWarnings({"unused", "CommentedOutCode"})
-public class BoxRenderer extends Renderer {
+public class BoxRenderer {
     public float posX;
     public float posY;
     public float width;
@@ -52,7 +50,7 @@ public class BoxRenderer extends Renderer {
         this.fillColor = fillColor;
     }
 
-    public void render(Matrix4 projectionMatrix) {
+    public void render(ShapeRenderer shapeRenderer) {
         if (width <= 0 || height <= 0) return;
 
         boolean hasFill = fillColor != null && fillColor.a > 0;
@@ -65,12 +63,10 @@ public class BoxRenderer extends Renderer {
 
         float effectiveRadius = Math.max(0, Math.min(this.borderRadius, Math.min(width, height) / 2f));
 
-        shapeRenderer.setProjectionMatrix(projectionMatrix);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
         if (hasShadow) {
             shapeRenderer.setColor(dropShadowColor);
             drawRoundedRect(
+                    shapeRenderer,
                     posX + shadowOffsetX,
                     posY + shadowOffsetY,
                     width,
@@ -82,6 +78,7 @@ public class BoxRenderer extends Renderer {
         if (hasBorder) {
             shapeRenderer.setColor(borderColor);
             drawRoundedRect(
+                    shapeRenderer,
                     posX,
                     posY,
                     width,
@@ -100,6 +97,7 @@ public class BoxRenderer extends Renderer {
 
                 if (innerWidth > 0 && innerHeight > 0) {
                     drawRoundedRect(
+                            shapeRenderer,
                             posX + inset,
                             posY + inset,
                             innerWidth,
@@ -109,6 +107,7 @@ public class BoxRenderer extends Renderer {
                 }
             } else {
                 drawRoundedRect(
+                        shapeRenderer,
                         posX,
                         posY,
                         width,
@@ -117,36 +116,34 @@ public class BoxRenderer extends Renderer {
                 );
             }
         }
-
-        shapeRenderer.end();
     }
 
-    private void drawRoundedRect(float x, float y, float width, float height, float radius) {
+    private void drawRoundedRect(ShapeRenderer shapeRenderer, float x, float y, float width, float height, float radius) {
         radius = Math.max(0, Math.min(radius, Math.min(width, height) / 2f));
 
         if (radius <= 0.01f) {
-            Renderer.shapeRenderer.rect(x, y, width, height);
+            shapeRenderer.rect(x, y, width, height);
             return;
         }
 
         int segments = MathUtils.clamp((int)(6 * (float)Math.cbrt(radius)), 4, DEFAULT_ARC_SEGMENTS * 2);
 
-        Renderer.shapeRenderer.arc(x + radius, y + radius, radius, 180f, 90f, segments);
-        Renderer.shapeRenderer.arc(x + radius, y + height - radius, radius, 90f, 90f, segments);
-        Renderer.shapeRenderer.arc(x + width - radius, y + height - radius, radius, 0f, 90f, segments);
-        Renderer.shapeRenderer.arc(x + width - radius, y + radius, radius, 270f, 90f, segments);
+        shapeRenderer.arc(x + radius, y + radius, radius, 180f, 90f, segments);
+        shapeRenderer.arc(x + radius, y + height - radius, radius, 90f, 90f, segments);
+        shapeRenderer.arc(x + width - radius, y + height - radius, radius, 0f, 90f, segments);
+        shapeRenderer.arc(x + width - radius, y + radius, radius, 270f, 90f, segments);
 
         if (width > 2 * radius) {
-            Renderer.shapeRenderer.rect(x + radius, y, width - 2 * radius, radius); // Bottom
-            Renderer.shapeRenderer.rect(x + radius, y + height - radius, width - 2 * radius, radius); // Top
+            shapeRenderer.rect(x + radius, y, width - 2 * radius, radius); // Bottom
+            shapeRenderer.rect(x + radius, y + height - radius, width - 2 * radius, radius); // Top
         }
         if (height > 2 * radius) {
-            Renderer.shapeRenderer.rect(x, y + radius, radius, height - 2 * radius); // Left
-            Renderer.shapeRenderer.rect(x + width - radius, y + radius, radius, height - 2 * radius); // Right
+            shapeRenderer.rect(x, y + radius, radius, height - 2 * radius); // Left
+            shapeRenderer.rect(x + width - radius, y + radius, radius, height - 2 * radius); // Right
         }
 
         if (width > 2 * radius && height > 2 * radius) {
-            Renderer.shapeRenderer.rect(x + radius, y + radius, width - 2 * radius, height - 2 * radius);
+            shapeRenderer.rect(x + radius, y + radius, width - 2 * radius, height - 2 * radius);
         }
     }
 
