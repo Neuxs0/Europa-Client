@@ -14,9 +14,9 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
-import dev.neuxs.europa_client.ui.pages.HomePage;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
+import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.LineRenderer;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
@@ -31,6 +31,7 @@ public class GUI extends GameState implements InputProcessor {
     private final BoxRenderer backgroundDim = new BoxRenderer();
     private final BoxRenderer menuContainer = new BoxRenderer();
     private final LineRenderer sideMenuSeparator = new LineRenderer();
+    private final TextRenderer testText = new TextRenderer();
     private Viewport viewport = GameState.IN_GAME.isCreated() && GameState.IN_GAME.newUiViewport != null ? GameState.IN_GAME.newUiViewport : this.uiViewport;
     private float screenW = viewport.getWorldWidth();
     private float screenH = viewport.getWorldHeight();
@@ -45,6 +46,14 @@ public class GUI extends GameState implements InputProcessor {
         InputMultiplexer inputMultiplexer = new InputMultiplexer(this.stage, this);
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCursorCatched(false);
+
+        /*
+         Page area corner dimensions:
+         Bottom-Left:  (308, 105)
+         Bottom-Right: (884, 105)
+         Top-Right:    (884, 495)
+         Top-Left:     (308, 495)
+        */
 
         backgroundDim.setSize(screenW, screenH);
         backgroundDim.setFillColor(mainDimColor);
@@ -64,6 +73,11 @@ public class GUI extends GameState implements InputProcessor {
         sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
         sideMenuSeparator.setColor(mainBorderColor);
         sideMenuSeparator.setWidth(menuContainer.getBorderWidth());
+
+        testText.setFont("cosmicreach");
+        testText.setText("Hello, World");
+        testText.setPosition(screenW / 2f, screenH / 2f);
+        testText.setColor(ColorUtils.color(255, 0, 0, 127));
     }
 
     @Override
@@ -88,6 +102,8 @@ public class GUI extends GameState implements InputProcessor {
 
         sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
         sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
+
+        testText.setPosition(screenW / 2f, screenH / 2f);
     }
 
     @Override
@@ -157,13 +173,7 @@ public class GUI extends GameState implements InputProcessor {
         spriteBatch.setProjectionMatrix(uiMatrix);
         spriteBatch.begin();
 
-        // Page area corner dimensions:
-        // Bottom-Left:  (308, 105)
-        // Bottom-Right: (884, 105)
-        // Top-Right:    (884, 495)
-        // Top-Left:     (308, 495)
-
-        HomePage.renderContent(spriteBatch, glyphLayout);
+        testText.render(spriteBatch, glyphLayout);
 
         spriteBatch.end();
 
@@ -185,6 +195,7 @@ public class GUI extends GameState implements InputProcessor {
     @Override
     public void dispose() {
         shapeRenderer.dispose();
+        spriteBatch.dispose();
         if (stage != null) stage.dispose();
     }
 

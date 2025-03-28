@@ -17,13 +17,13 @@ public class BoxRenderer {
     private boolean dropShadow;
     private float shadowOffsetX;
     private float shadowOffsetY;
-    private final Color defaultFillColor = ColorUtils.color(255, 255, 255, 255);
-    private final Color defaultBorderColor = ColorUtils.color(150, 150, 150, 255);
-    private final Color defaultDropShadowColor = ColorUtils.color(0, 0, 0, 127);
     private Color fillColor;
     private Color borderColor;
     private Color dropShadowColor;
-    private static final int DEFAULT_ARC_SEGMENTS = 20; // Higher = smoother & less performance.
+    private static final int defaultArcSegments = 20; // Higher = smoother & less performance.
+    private final Color defaultFillColor = ColorUtils.color(255, 255, 255, 255);
+    private final Color defaultBorderColor = ColorUtils.color(150, 150, 150, 255);
+    private final Color defaultDropShadowColor = ColorUtils.color(0, 0, 0, 127);
 
     public BoxRenderer() {
         super();
@@ -129,7 +129,7 @@ public class BoxRenderer {
             return;
         }
 
-        int segments = MathUtils.clamp((int)(6 * (float)Math.cbrt(radius)), 4, DEFAULT_ARC_SEGMENTS * 2);
+        int segments = MathUtils.clamp((int)(6 * (float)Math.cbrt(radius)), 4, defaultArcSegments * 2);
 
         shapeRenderer.arc(x + radius, y + radius, radius, 180f, 90f, segments); // Bottom-left
         shapeRenderer.arc(x + radius, y + height - radius, radius, 90f, 90f, segments); // Top-left
@@ -181,13 +181,13 @@ public class BoxRenderer {
         return dropShadow;
     }
     public Color getFillColor() {
-        return fillColor;
+        return fillColor.cpy();
     }
     public Color getBorderColor() {
-        return borderColor;
+        return borderColor.cpy();
     }
     public Color getDropShadowColor() {
-        return dropShadowColor;
+        return dropShadowColor.cpy();
     }
 
     public void setPosition(float x, float y) {

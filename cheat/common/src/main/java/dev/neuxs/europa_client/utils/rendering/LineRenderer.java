@@ -12,7 +12,6 @@ public class LineRenderer {
     public float endY;
     public float width;
     public Color color;
-
     private final Color defaultColor = ColorUtils.color(255, 255, 255, 255);
 
     public LineRenderer() {
@@ -21,7 +20,7 @@ public class LineRenderer {
         this.endX = 0f;
         this.endY = 0f;
         this.width = 1f;
-        this.color = defaultColor;
+        this.color = defaultColor.cpy();
     }
 
     public LineRenderer(float x1, float y1, float x2, float y2, float w, Color color) {
@@ -30,7 +29,7 @@ public class LineRenderer {
         this.endX = x2;
         this.endY = y2;
         this.width = Math.max(0, w);
-        this.color = (color != null) ? color.cpy() : defaultColor;
+        this.color = (color != null) ? color.cpy() : defaultColor.cpy();
     }
 
     public void render(ShapeRenderer shapeRenderer) {
@@ -55,7 +54,7 @@ public class LineRenderer {
         return width;
     }
     public Color getColor() {
-        return color;
+        return color.cpy();
     }
 
     public void setStartPoint(float x, float y) {
@@ -82,6 +81,6 @@ public class LineRenderer {
         this.width = Math.max(0, width);
     }
     public void setColor(Color color) {
-        this.color = (color != null) ? color.cpy() : defaultColor;
+        this.color = (color != null) ? color.cpy() : defaultColor.cpy();
     }
 }
