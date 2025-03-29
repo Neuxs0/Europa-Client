@@ -8,7 +8,7 @@ public class TypeCommand extends ClientCommand {
 
     @Override
     public void run() {
-        Client.clientChat.addMessage(null, Chat.getClientPrefix() + "You are running the full Europa Client.");
+        Client.clientChat.addMessage(null, Chat.getClientPrefix() + "You are running the " + Client.CLIENT_TYPE + " Europa Client.");
     }
 
     @Override

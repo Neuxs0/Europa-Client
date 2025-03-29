@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 public class Client {
     public static final String MOD_ID = "europa_client";
     public static final String MOD_NAME = "Europa Client";
+    public static final String CLIENT_TYPE = "Cheat";
     public static Logger LOGGER = LoggerFactory.getLogger("EuropaClient");
     public static String VERSION = "2.0.0";
     public static boolean playerDied = false;

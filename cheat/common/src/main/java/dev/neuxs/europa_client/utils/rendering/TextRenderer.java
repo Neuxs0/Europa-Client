@@ -4,8 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.managers.font.FontManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
 
@@ -53,12 +53,6 @@ public class TextRenderer {
         font.setColor(defaultColor.cpy());
     }
 
-    public Vector2 getDimensions(GlyphLayout glyphLayout) {
-        if (this.text == null || this.text.isEmpty()) return new Vector2(0, 0);
-        glyphLayout.setText(font, this.text, 0, this.text.length(), this.color, this.wrapWidth, this.alignment, this.wrap, null);
-        return new Vector2(glyphLayout.width, glyphLayout.height);
-    }
-
     public String getText() {
         return text;
     }
@@ -85,6 +79,12 @@ public class TextRenderer {
     }
     public boolean isWrap() {
         return wrap;
+    }
+    public float getHeight(Viewport viewport) {
+        return fontManager.getTextDimensions(viewport, font, text).y;
+    }
+    public float getWidth(Viewport viewport) {
+        return fontManager.getTextDimensions(viewport, font, text).x;
     }
 
     public void setText(String text) {
