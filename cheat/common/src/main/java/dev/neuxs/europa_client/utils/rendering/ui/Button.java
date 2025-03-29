@@ -34,7 +34,7 @@ public class Button {
     private Color pressedBorderColor;
     private ButtonState currentState;
     private boolean wasPressed;
-    private final Vector2 mousePos = new Vector2();
+    final Vector2 mousePos = new Vector2();
     private final Color DEFAULT_NORMAL_FILL = ColorUtils.color(50, 50, 50, 255);
     private final Color DEFAULT_HOVER_FILL = ColorUtils.color(70, 70, 70, 255);
     private final Color DEFAULT_PRESSED_FILL = ColorUtils.color(90, 90, 90, 255);
