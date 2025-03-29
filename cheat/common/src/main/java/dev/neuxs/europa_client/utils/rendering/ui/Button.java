@@ -49,7 +49,7 @@ public class Button {
     public Button() {
         this.boxRenderer = new BoxRenderer();
         this.textRenderer = new TextRenderer();
-        this.fontManager = new FontManager();
+        this.fontManager = FontManager.getInstance();
         this.onClick = (button) -> {};
         this.onHoverEnter = (button) -> {};
         this.onHoverExit = (button) -> {};
@@ -125,11 +125,12 @@ public class Button {
     }
 
     public void renderText(SpriteBatch spriteBatch, GlyphLayout glyphLayout, Viewport viewport) {
-        float textX = boxRenderer.getPosX() + boxRenderer.getWidth() / 2f;
+        float textX = (boxRenderer.getPosX() + boxRenderer.getWidth() / 2f) -
+                      (fontManager.getTextDimensions(viewport, textRenderer.getFont(), textRenderer.getText()).x / 2f);
         float textY = (boxRenderer.getPosY() + boxRenderer.getHeight() / 2f) -
                       (fontManager.getTextDimensions(viewport, textRenderer.getFont(), textRenderer.getText()).y / 2f);
         textRenderer.setPosition(textX, textY);
-        textRenderer.render(spriteBatch, glyphLayout);
+        textRenderer.render(spriteBatch, glyphLayout, viewport);
     }
 
     public BoxRenderer getBoxRenderer() {

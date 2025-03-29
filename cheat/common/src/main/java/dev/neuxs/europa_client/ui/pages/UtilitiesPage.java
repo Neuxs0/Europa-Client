@@ -6,13 +6,12 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
-import dev.neuxs.europa_client.utils.rendering.ui.Slider;
+import dev.neuxs.europa_client.utils.rendering.ui.Dropdown;
 
 public class UtilitiesPage extends Page {
     private Viewport viewport;
     private Vector4 pageDim;
     private final BoxRenderer pageContainer;
-    private final Slider testSlider = new Slider();
 
     public UtilitiesPage(BoxRenderer pageContainer) {
         super("Utilities", pageContainer);
@@ -24,25 +23,17 @@ public class UtilitiesPage extends Page {
     public void create(Viewport viewport, float width, float height) {
         super.create(viewport, width, height);
         this.viewport = viewport;
-        testSlider.setSize(50, 20);
-        resize(width, height);
     }
 
     @Override
     public void resize(float width, float height) {
         super.resize(width, height);
-        this.pageDim = new Vector4(pageContainer.getPosX(), pageContainer.getPosY(), pageContainer.getWidth(), pageContainer.getHeight());
-
-        testSlider.setPosition(
-                pageDim.x + (pageDim.z / 2f) - (testSlider.getWidth() / 2f),
-                pageDim.y + (pageDim.w / 2f) - (testSlider.getHeight() / 2f)
-        );
+        this.pageDim.set(pageContainer.getPosX(), pageContainer.getPosY(), pageContainer.getWidth(), pageContainer.getHeight());
     }
 
     @Override
     public void renderShape(ShapeRenderer shapeRenderer) {
         super.renderShape(shapeRenderer);
-        testSlider.render(shapeRenderer);
     }
 
     @Override
@@ -54,7 +45,6 @@ public class UtilitiesPage extends Page {
     public void update(float deltaTime) {
         super.update(deltaTime);
         if (this.viewport != null) {
-            testSlider.update(this.viewport);
         }
     }
 

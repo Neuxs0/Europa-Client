@@ -1,15 +1,11 @@
 package dev.neuxs.europa_client.managers.font;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.utils.ColorUtils;
 import finalforeach.cosmicreach.CosmicReachFont;
-import finalforeach.cosmicreach.FontTexture;
 import finalforeach.cosmicreach.ui.FontRenderer;
 
 import java.util.Map;
@@ -19,39 +15,64 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public class FontManager {
+    private static FontManager INSTANCE;
+
+    public static FontManager getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new FontManager();
+        }
+        return INSTANCE;
+    }
 
     public final Map<String, BitmapFont> fontMap;
+    private final GlyphLayout glyphLayout = new GlyphLayout();
+    public static final String COSMIC_REACH_FONT_KEY = "cosmicreach";
 
-    public FontManager() {
+    private FontManager() {
         this.fontMap = new ConcurrentHashMap<>();
+        loadCosmicReachFont();
 
+        // TODO: Implement custom font loading
+    }
+
+    private void loadCosmicReachFont() {
         try {
             BitmapFont cosmicReachFont = CosmicReachFont.getFont();
             if (cosmicReachFont != null) {
-                fontMap.put("cosmicreach", cosmicReachFont);
+                fontMap.put(COSMIC_REACH_FONT_KEY, cosmicReachFont);
             } else {
-                Client.LOGGER.error("Failed to load Cosmic Reach's font: CosmicReachFont.getFont() returned null.");
+                Client.LOGGER.error("Failed to get Cosmic Reach's font: CosmicReachFont.getFont() returned null during initialization.");
             }
         } catch (Exception e) {
-            Client.LOGGER.error("Exception occurred while loading Cosmic Reach's font: {}", e.getMessage(), e);
+            Client.LOGGER.error("Exception occurred while initializing Cosmic Reach's font: {}", e.getMessage(), e);
         }
-
-        // TODO: Custom fonts
-        //  Separate Client's custom fonts and user's custom fonts for better customization
-        //  Add file management for user's custom fonts
     }
 
     public BitmapFont getFont(String name) {
-        if (name == null || name.trim().isEmpty()) return null;
+        if (name == null || name.trim().isEmpty()) {
+            Client.LOGGER.warn("Attempted to get font with null or empty name.");
+            return null;
+        }
 
-        BitmapFont font = fontMap.get(name.toLowerCase());
-        if (font == null) Client.LOGGER.error("Font not found or not loaded.");
+        if (COSMIC_REACH_FONT_KEY.equalsIgnoreCase(name)) {
+            return CosmicReachFont.getFont();
+        }
 
-        return font;
+        return fontMap.get(name.toLowerCase());
+    }
+
+    public BitmapFont getCosmicReachFont() {
+        return CosmicReachFont.getFont();
     }
 
     public String getFontName(BitmapFont font) {
-        if (font == null) return null;
+        if (font == null) {
+            return null;
+        }
+
+        if (font instanceof CosmicReachFont) {
+            return COSMIC_REACH_FONT_KEY;
+        }
 
         for (Map.Entry<String, BitmapFont> entry : fontMap.entrySet()) {
             if (entry.getValue() == font) {
@@ -59,12 +80,16 @@ public class FontManager {
             }
         }
 
-        Client.LOGGER.error("Font object not found in FontRenderer map.");
         return null;
     }
 
     public boolean isFontAvailable(String name) {
-        if (name == null || name.trim().isEmpty()) return false;
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        if (COSMIC_REACH_FONT_KEY.equalsIgnoreCase(name)) {
+            return true;
+        }
         return fontMap.containsKey(name.toLowerCase());
     }
 
@@ -73,10 +98,37 @@ public class FontManager {
     }
 
     public Vector2 getTextDimensions(Viewport uiViewport, BitmapFont font, String text) {
-        Vector2 a = new Vector2(0f, 0f);
-        if (text == null || text.trim().isEmpty()) return a;
+        Vector2 dimensions = new Vector2(0f, 0f);
 
-        if (getFontName(font).equals("cosmicreach")) return FontRenderer.getTextDimensions(uiViewport, text, a);
-        else return a;
+        if (font == null || text == null || text.isEmpty()) {
+            return dimensions;
+        }
+
+        if (font instanceof CosmicReachFont) {
+            return FontRenderer.getTextDimensions(uiViewport, text, dimensions);
+        } else {
+            String fontName = getFontName(font);
+            if (fontMap.containsKey(fontName)) {
+                synchronized (glyphLayout) {
+                    glyphLayout.setText(font, text);
+                    dimensions.set(glyphLayout.width, glyphLayout.height);
+                }
+            } else {
+                Client.LOGGER.warn("getTextDimensions called with an unrecognized non-CosmicReach font.");
+            }
+            return dimensions;
+        }
+    }
+
+    public void dispose() {
+        Client.LOGGER.info("Disposing FontManager resources...");
+        for (Map.Entry<String, BitmapFont> entry : fontMap.entrySet()) {
+            if (!COSMIC_REACH_FONT_KEY.equals(entry.getKey())) {
+                Client.LOGGER.debug("Disposing custom font: {}", entry.getKey());
+                entry.getValue().dispose();
+            }
+        }
+        fontMap.clear();
+        Client.LOGGER.info("FontManager disposed.");
     }
 }

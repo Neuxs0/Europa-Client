@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
+import dev.neuxs.europa_client.managers.font.FontManager;
 import dev.neuxs.europa_client.ui.pages.*;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
@@ -283,7 +284,7 @@ public class GUI extends GameState implements InputProcessor {
             settingsButton.renderText(spriteBatch, glyphLayout, viewport);
         }
 
-        pageTitle.render(spriteBatch, glyphLayout);
+        pageTitle.render(spriteBatch, glyphLayout, viewport);
         collapseSideMenuButton.renderText(spriteBatch, glyphLayout, viewport);
 
         currentPage.renderText(spriteBatch, glyphLayout);
@@ -309,6 +310,7 @@ public class GUI extends GameState implements InputProcessor {
     public void dispose() {
         shapeRenderer.dispose();
         spriteBatch.dispose();
+        FontManager.getInstance().dispose();
         if (stage != null) stage.dispose();
     }
 

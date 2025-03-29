@@ -33,7 +33,7 @@ public class HomePage extends Page {
 
         clientType.setText(Client.CLIENT_TYPE + " Version");
 
-        selectedProfile.setText("Selected Profile: " + "None");
+        selectedProfile.setText("Selected Profile: " + "None  ∨ ∧");
 
         closeInfo.setText("Press ESC to close this menu");
     }
@@ -70,10 +70,10 @@ public class HomePage extends Page {
     public void renderText(SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
         super.renderText(spriteBatch, glyphLayout);
 
-        clientName.render(spriteBatch, glyphLayout);
-        clientType.render(spriteBatch, glyphLayout);
-        selectedProfile.render(spriteBatch, glyphLayout);
-        closeInfo.render(spriteBatch, glyphLayout);
+        clientName.render(spriteBatch, glyphLayout, viewport);
+        clientType.render(spriteBatch, glyphLayout, viewport);
+        selectedProfile.render(spriteBatch, glyphLayout, viewport);
+        closeInfo.render(spriteBatch, glyphLayout, viewport);
     }
 
     @Override
