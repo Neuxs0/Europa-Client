@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
@@ -39,8 +40,10 @@ public class GUI extends GameState implements InputProcessor {
     private float screenW = viewport.getWorldWidth();
     private float screenH = viewport.getWorldHeight();
 
-    public float sideMenuSize = 150f;
-    public float sideMenuButtonPadding = 9f;
+    public Vector2 menuSize = new Vector2(screenW / 1.8f, screenH / 1.65f);
+    public float sideMenuWidth = 110f;
+    public float sideMenuButtonPadding = 10f;
+    public float sideMenuButtonBorderRadius = 7.5f;
 
     public GUI() {}
 
@@ -61,38 +64,37 @@ public class GUI extends GameState implements InputProcessor {
 
         backgroundDim.setFillColor(mainDimColor);
 
-        menuContainer.setSize(screenW / 1.6f, screenH / 1.6f);
+        menuContainer.setSize(menuSize.x, menuSize.y);
         menuContainer.setFillColor(mainBorderColor);
         menuContainer.setBorderRadius(15f);
 
-        sideMenu.setSize(sideMenuSize, menuContainer.getHeight() + 10f);
         sideMenu.setFillColor(mainBackgroundColor);
         sideMenu.setBorderRadius(10f);
 
         // Side Menu
-        utilitiesButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        utilitiesButton.setSize(sideMenuWidth - sideMenuButtonPadding * 2, 50);
         utilitiesButton.getTextRenderer().setText("Utilities");
         utilitiesButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
         utilitiesButton.getBoxRenderer().setBorderWidth(1.5f);
-        utilitiesButton.getBoxRenderer().setBorderRadius(7.5f);
+        utilitiesButton.getBoxRenderer().setBorderRadius(sideMenuButtonBorderRadius);
 
-        cheatsButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        cheatsButton.setSize(sideMenuWidth - sideMenuButtonPadding * 2, 50);
         cheatsButton.getTextRenderer().setText("Cheats");
         cheatsButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
         cheatsButton.getBoxRenderer().setBorderWidth(1.5f);
-        cheatsButton.getBoxRenderer().setBorderRadius(7.5f);
+        cheatsButton.getBoxRenderer().setBorderRadius(sideMenuButtonBorderRadius);
 
-        profilesButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        profilesButton.setSize(sideMenuWidth - sideMenuButtonPadding * 2, 50);
         profilesButton.getTextRenderer().setText("Profiles");
         profilesButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
         profilesButton.getBoxRenderer().setBorderWidth(1.5f);
-        profilesButton.getBoxRenderer().setBorderRadius(7.5f);
+        profilesButton.getBoxRenderer().setBorderRadius(sideMenuButtonBorderRadius);
 
-        settingsButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        settingsButton.setSize(sideMenuWidth - sideMenuButtonPadding * 2, 50);
         settingsButton.getTextRenderer().setText("Settings");
         settingsButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
         settingsButton.getBoxRenderer().setBorderWidth(1.5f);
-        settingsButton.getBoxRenderer().setBorderRadius(7.5f);
+        settingsButton.getBoxRenderer().setBorderRadius(sideMenuButtonBorderRadius);
     }
 
     @Override
@@ -110,15 +112,17 @@ public class GUI extends GameState implements InputProcessor {
 
         backgroundDim.setSize(screenW, screenH);
 
-        menuContainer.setSize(screenW / 1.5f, screenH / 1.5f);
+        menuContainer.setSize(menuSize.x, menuSize.y);
         menuContainer.setPosition(
                 screenW / 2f - menuContainer.getWidth() / 2f,
                 screenH / 2f - menuContainer.getHeight() / 2f
         );
 
+        float sideMenuPadding = 7.5f;
+        sideMenu.setSize(sideMenuWidth, menuContainer.getHeight() - (sideMenuPadding * 2));
         sideMenu.setPosition(
-                menuContainer.getPosX() + 7.5f,
-                menuContainer.getPosY() + 7.5f
+                menuContainer.getPosX() + sideMenuPadding,
+                menuContainer.getPosY() + sideMenuPadding
         );
 
         float sideMenuButtonX = sideMenu.getPosX() + sideMenuButtonPadding;
