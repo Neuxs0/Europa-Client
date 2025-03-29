@@ -11,14 +11,11 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
-import dev.neuxs.europa_client.utils.rendering.TextRenderer;
-import dev.neuxs.europa_client.utils.rendering.LineRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
@@ -32,7 +29,8 @@ public class GUI extends GameState implements InputProcessor {
     private final Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
     private final BoxRenderer backgroundDim = new BoxRenderer();
     private final BoxRenderer menuContainer = new BoxRenderer();
-    private final LineRenderer sideMenuSeparator = new LineRenderer();
+    private final BoxRenderer sideMenu = new BoxRenderer();
+    private final BoxRenderer contentMenu = new BoxRenderer();
     private final Button utilitiesButton = new Button();
     private final Button cheatsButton = new Button();
     private final Button profilesButton = new Button();
@@ -41,7 +39,8 @@ public class GUI extends GameState implements InputProcessor {
     private float screenW = viewport.getWorldWidth();
     private float screenH = viewport.getWorldHeight();
 
-    public float sideMenuSeperatorAmount = 125f;
+    public float sideMenuSize = 150f;
+    public float sideMenuButtonPadding = 9f;
 
     public GUI() {}
 
@@ -60,33 +59,40 @@ public class GUI extends GameState implements InputProcessor {
          Top-Left:     (308, 495)
         */
 
-        backgroundDim.setSize(screenW, screenH);
         backgroundDim.setFillColor(mainDimColor);
 
-        menuContainer.setSize(screenW / 1.5f, screenH / 1.5f);
-        menuContainer.setPosition(
-                screenW / 2f - menuContainer.getWidth() / 2f,
-                screenH / 2f - menuContainer.getHeight() / 2f
-        );
-        menuContainer.setFillColor(mainBackgroundColor);
-        menuContainer.setBorderWidth(5f);
-        menuContainer.setBorderEnabled(true);
-        menuContainer.setBorderColor(mainBorderColor);
+        menuContainer.setSize(screenW / 1.6f, screenH / 1.6f);
+        menuContainer.setFillColor(mainBorderColor);
         menuContainer.setBorderRadius(15f);
 
-        sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
-        sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
-        sideMenuSeparator.setColor(mainBorderColor);
-        sideMenuSeparator.setWidth(menuContainer.getBorderWidth());
+        sideMenu.setSize(sideMenuSize, menuContainer.getHeight() + 10f);
+        sideMenu.setFillColor(mainBackgroundColor);
+        sideMenu.setBorderRadius(10f);
 
         // Side Menu
-        utilitiesButton.setSize(100, 50);
-        utilitiesButton.setPosition(
-                menuContainer.getPosX() + 12.5f,
-                (menuContainer.getPosY() + menuContainer.getHeight() - 12.5f) - utilitiesButton.getHeight()
-        );
+        utilitiesButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
         utilitiesButton.getTextRenderer().setText("Utilities");
         utilitiesButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
+        utilitiesButton.getBoxRenderer().setBorderWidth(1.5f);
+        utilitiesButton.getBoxRenderer().setBorderRadius(7.5f);
+
+        cheatsButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        cheatsButton.getTextRenderer().setText("Cheats");
+        cheatsButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
+        cheatsButton.getBoxRenderer().setBorderWidth(1.5f);
+        cheatsButton.getBoxRenderer().setBorderRadius(7.5f);
+
+        profilesButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        profilesButton.getTextRenderer().setText("Profiles");
+        profilesButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
+        profilesButton.getBoxRenderer().setBorderWidth(1.5f);
+        profilesButton.getBoxRenderer().setBorderRadius(7.5f);
+
+        settingsButton.setSize(sideMenuSize - sideMenuButtonPadding * 2, 50);
+        settingsButton.getTextRenderer().setText("Settings");
+        settingsButton.getTextRenderer().setColor(ColorUtils.color(255, 255, 255, 255));
+        settingsButton.getBoxRenderer().setBorderWidth(1.5f);
+        settingsButton.getBoxRenderer().setBorderRadius(7.5f);
     }
 
     @Override
@@ -110,14 +116,26 @@ public class GUI extends GameState implements InputProcessor {
                 screenH / 2f - menuContainer.getHeight() / 2f
         );
 
-
-        sideMenuSeparator.setStartPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY());
-        sideMenuSeparator.setEndPoint(menuContainer.getPosX() + sideMenuSeperatorAmount, menuContainer.getPosY() + menuContainer.getHeight());
-
-        utilitiesButton.setPosition(
-                menuContainer.getPosX() + 12.5f,
-                (menuContainer.getPosY() + menuContainer.getHeight() - 12.5f) - utilitiesButton.getHeight()
+        sideMenu.setPosition(
+                menuContainer.getPosX() + 7.5f,
+                menuContainer.getPosY() + 7.5f
         );
+
+        float sideMenuButtonX = sideMenu.getPosX() + sideMenuButtonPadding;
+        float sideMenuButtonY = sideMenu.getPosY() + sideMenu.getHeight() - sideMenuButtonPadding;
+
+        sideMenuButtonY -= utilitiesButton.getHeight();
+        utilitiesButton.setPosition(sideMenuButtonX, sideMenuButtonY);
+
+        sideMenuButtonY -= sideMenuButtonPadding;
+        sideMenuButtonY -= cheatsButton.getHeight();
+        cheatsButton.setPosition(sideMenuButtonX, sideMenuButtonY);
+
+        sideMenuButtonY = sideMenu.getPosY() + sideMenuButtonPadding;
+        settingsButton.setPosition(sideMenuButtonX, sideMenuButtonY);
+
+        sideMenuButtonY += settingsButton.getHeight() + sideMenuButtonPadding;
+        profilesButton.setPosition(sideMenuButtonX, sideMenuButtonY);
     }
 
     @Override
@@ -179,7 +197,7 @@ public class GUI extends GameState implements InputProcessor {
         backgroundDim.render(shapeRenderer);
 
         menuContainer.render(shapeRenderer);
-        sideMenuSeparator.render(shapeRenderer);
+        sideMenu.render(shapeRenderer);
 
         utilitiesButton.renderShape(shapeRenderer, viewport);
         cheatsButton.renderShape(shapeRenderer, viewport);
