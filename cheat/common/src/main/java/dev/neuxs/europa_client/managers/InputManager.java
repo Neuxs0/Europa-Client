@@ -26,7 +26,17 @@ public class InputManager {
             return;
         }
 
-        for (Module module : Modules.moduleList) {
+        for (Module module : Modules.utilModuleList) {
+            int key = module.getKeybind();
+            if (key == 0) {
+                continue;
+            }
+            if (isFirstFrameKeyDown(key)) {
+                module.onKeyPressed();
+            }
+        }
+
+        for (Module module : Modules.cheatModuleList) {
             int key = module.getKeybind();
             if (key == 0) {
                 continue;

@@ -11,7 +11,7 @@ import finalforeach.cosmicreach.gamestates.InGame;
 public class NoClip extends Module {
 
     public NoClip(int keybind, boolean defaultEnabled) {
-        super("noclip", keybind, defaultEnabled);
+        super("NoClip", keybind, defaultEnabled);
         customSettings.put("speed", new Setting<>("speed", 1.0f, value -> value >= 1.0f));
     }
 

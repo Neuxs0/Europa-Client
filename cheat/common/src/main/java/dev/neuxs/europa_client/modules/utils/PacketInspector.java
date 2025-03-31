@@ -8,7 +8,7 @@ import dev.neuxs.europa_client.utils.Chat;
 public class PacketInspector extends Module {
 
     public PacketInspector(int keybind, boolean defaultEnabled) {
-        super("packetinspector", keybind, defaultEnabled);
+        super("PacketInspector", keybind, defaultEnabled);
     }
 
     public void enable(boolean messaging) {

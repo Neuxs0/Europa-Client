@@ -9,7 +9,7 @@ import dev.neuxs.europa_client.utils.Chat;
 public class Reach extends Module {
 
     public Reach(int keybind, boolean defaultEnabled) {
-        super("reach", keybind, defaultEnabled);
+        super("Reach", keybind, defaultEnabled);
         customSettings.put("distance", new Setting<>("distance", 6.0f, value -> value >= 1.0f));
     }
 

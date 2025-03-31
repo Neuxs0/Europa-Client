@@ -69,7 +69,6 @@ public class GUI extends GameState implements InputProcessor {
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCursorCatched(false);
 
-        backgroundDim.setSize(screenW, screenH);
         backgroundDim.setFillColor(mainDimColor);
 
         // Menu
@@ -138,6 +137,8 @@ public class GUI extends GameState implements InputProcessor {
             screenW = viewport.getWorldWidth();
             screenH = viewport.getWorldHeight();
         }
+
+        backgroundDim.setSize(screenW, screenH);
 
         menuContainer.setPosition(
                 screenW / 2f - menuContainer.getWidth() / 2f,

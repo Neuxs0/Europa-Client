@@ -19,7 +19,7 @@ public class Fullbright extends Module {
     public ChunkShader waterShader;
 
     public Fullbright(int keybind, boolean defaultEnabled) {
-        super("fullbright", keybind, defaultEnabled);
+        super("Fullbright", keybind, defaultEnabled);
     }
 
     public void enable(boolean messaging) {
@@ -27,12 +27,12 @@ public class Fullbright extends Module {
         World world = InGame.getWorld();
 
         ChunkShader customChunkShader = new ChunkShader(
-                Identifier.of("europa_client", "shaders/nofog/chunk.vert.glsl"),
-                Identifier.of("europa_client", "shaders/nofog/chunk.frag.glsl")
+                Identifier.of("europa_client", "shaders/fullbright/chunk.vert.glsl"),
+                Identifier.of("europa_client", "shaders/fullbright/chunk.frag.glsl")
         );
         ChunkShader customWaterShader = new ChunkShader(
-                Identifier.of("europa_client", "shaders/nofog/chunk-water.vert.glsl"),
-                Identifier.of("europa_client", "shaders/nofog/chunk-water.frag.glsl")
+                Identifier.of("europa_client", "shaders/fullbright/chunk-water.vert.glsl"),
+                Identifier.of("europa_client", "shaders/fullbright/chunk-water.frag.glsl")
         );
         ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
         ChunkShader.WATER_BLOCK_SHADER = customWaterShader;

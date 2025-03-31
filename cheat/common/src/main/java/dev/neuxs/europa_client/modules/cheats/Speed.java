@@ -9,7 +9,7 @@ import dev.neuxs.europa_client.utils.Chat;
 public class Speed extends Module {
 
     public Speed(int keybind, boolean defaultEnabled) {
-        super("speed", keybind, defaultEnabled);
+        super("Speed", keybind, defaultEnabled);
         customSettings.put("speed", new Setting<>("speed", 1.5f, value -> value >= 1.0f));
     }
 

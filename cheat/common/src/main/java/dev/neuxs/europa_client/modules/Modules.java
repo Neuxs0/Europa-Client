@@ -20,30 +20,40 @@ public class Modules {
     public static Speed speed;
     public static Reach reach;
 
-    public static List<Module> moduleList = new ArrayList<>();
+    public static List<Module> utilModuleList = new ArrayList<>();
+    public static List<Module> cheatModuleList = new ArrayList<>();
 
     public static void initModules() {
         int unknown = Input.Keys.UNKNOWN;
 
         fullbright = new Fullbright(unknown, false);
-        moduleList.add(fullbright);
+        utilModuleList.add(fullbright);
 
         noFog = new NoFog(unknown, false);
-        moduleList.add(noFog);
+        utilModuleList.add(noFog);
 
         packetInspector = new PacketInspector(unknown, false);
-        moduleList.add(packetInspector);
+        utilModuleList.add(packetInspector);
 
 
         // Cheats
-
         noClip = new NoClip(unknown, false);
-        moduleList.add(noClip);
+        cheatModuleList.add(noClip);
 
         speed = new Speed(unknown, false);
-        moduleList.add(speed);
+        cheatModuleList.add(speed);
 
         reach = new Reach(unknown, false);
-        moduleList.add(reach);
+        cheatModuleList.add(reach);
+    }
+
+    public static Module getModuleById(String id) {
+        for (Module m : cheatModuleList) {
+            if (m.getId().equals(id)) return m;
+        }
+        for (Module m : utilModuleList) {
+            if (m.getId().equals(id)) return m;
+        }
+        return null;
     }
 }

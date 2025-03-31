@@ -19,7 +19,7 @@ public class NoFog extends Module {
     public ChunkShader waterShader;
 
     public NoFog(int keybind, boolean defaultEnabled) {
-        super("nofog", keybind, defaultEnabled);
+        super("NoFog", keybind, defaultEnabled);
     }
 
     public void enable(boolean messaging) {
