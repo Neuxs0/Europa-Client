@@ -63,7 +63,6 @@ public class TextRenderer {
         spriteBatch.setColor(this.color);
 
         if (this.font instanceof CosmicReachFont) {
-            // This renderer knows how to handle the game's specific texture atlas and glyph setup.
             // IMPORTANT: FontRenderer.drawText draws relative to the bottom-left 'y' coordinate
             // and does *not* inherently support GlyphLayout's alignment or wrapping features.
             // Positioning must be handled by setting 'x' and 'y' correctly before calling render.

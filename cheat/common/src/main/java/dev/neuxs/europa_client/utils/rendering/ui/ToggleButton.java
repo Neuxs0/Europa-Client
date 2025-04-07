@@ -19,9 +19,9 @@ public class ToggleButton extends Button {
     private Color toggledNormalBorderColor;
     private Color toggledHoverBorderColor;
     private Color toggledPressedBorderColor;
-    private static final Color defaultToggledNormalFill = ColorUtils.color(70, 130, 200, 255);
-    private static final Color defaultToggledHoverFill = ColorUtils.color(90, 150, 220, 255);
-    private static final Color defaultToggledPressedFill = ColorUtils.color(110, 170, 240, 255);
+    private static final Color defaultToggledNormalFill = ColorUtils.color(120, 120, 120, 255);
+    private static final Color defaultToggledHoverFill = ColorUtils.color(140, 140, 140, 255);
+    private static final Color defaultToggledPressedFill = ColorUtils.color(160, 160, 160, 255);
     private static final Color defaultToggledNormalBorder = ColorUtils.color(20, 20, 20, 255);
     private static final Color defaultToggledHoverBorder = ColorUtils.color(20, 20, 20, 255);
     private static final Color defaultToggledPressedBorder = ColorUtils.color(20, 20, 20, 255);
