@@ -38,12 +38,17 @@ public abstract class Module {
         keybind.setValue(key);
     }
 
-    public void onKeyPressed() {
-        toggle();
+    public void onKeyPressed(boolean messaging) {
+        toggle(messaging);
     }
 
-    public void toggle() {
-        setEnabled(!isEnabled());
+    public void enable(boolean messaging) {}
+
+    public void disable(boolean messaging) {}
+
+    public void toggle(boolean messaging) {
+        if (isEnabled()) disable(messaging);
+        else enable(messaging);
     }
 
     public Map<String, Object> exportSettings() {

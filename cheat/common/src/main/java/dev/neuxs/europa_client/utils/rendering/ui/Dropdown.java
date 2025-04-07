@@ -40,7 +40,6 @@ public class Dropdown {
     private final Color DEFAULT_OPTION_BG_FILL = ColorUtils.color(60, 60, 60, 240);
     private final Color DEFAULT_OPTION_BG_BORDER = ColorUtils.color(30, 30, 30, 255);
     private final Color DEFAULT_INDICATOR_COLOR = ColorUtils.color(200, 200, 200, 255);
-    // TODO: Store these defaults to apply to future addOption calls
     private Color defaultOptionNormalFill = ColorUtils.color(75, 75, 75, 255);
     private Color defaultOptionHoverFill = ColorUtils.color(95, 95, 95, 255);
     private Color defaultOptionPressedFill = ColorUtils.color(115, 115, 115, 255);

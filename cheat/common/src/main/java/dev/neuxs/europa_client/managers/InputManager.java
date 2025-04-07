@@ -32,7 +32,7 @@ public class InputManager {
                 continue;
             }
             if (isFirstFrameKeyDown(key)) {
-                module.onKeyPressed();
+                module.onKeyPressed(true);
             }
         }
 
@@ -42,7 +42,7 @@ public class InputManager {
                 continue;
             }
             if (isFirstFrameKeyDown(key)) {
-                module.onKeyPressed();
+                module.onKeyPressed(true);
             }
         }
     }

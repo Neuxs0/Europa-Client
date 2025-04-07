@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -14,14 +13,12 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.accessor.InGameAccessor;
 import dev.neuxs.europa_client.managers.font.FontManager;
 import dev.neuxs.europa_client.ui.pages.*;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
-import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.GameState;
 
 @SuppressWarnings("DuplicatedCode")
@@ -200,22 +197,8 @@ public class GUI extends GameState implements InputProcessor {
 
     @Override
     public void update(float deltaTime) {
-        if (this.stage != null) {
-            this.stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
-        }
-
-        if (GameState.IN_GAME.isCreated()) {
-            try {
-                InGameAccessor inGameAccessor = (InGameAccessor) GameState.IN_GAME;
-                PlayerController pc = inGameAccessor.europa_client$getPlayerController_accessor();
-                if (pc != null && GameState.IN_GAME.getWorldCamera() instanceof PerspectiveCamera) {
-                    pc.updateCamera((PerspectiveCamera) GameState.IN_GAME.getWorldCamera());
-                }
-            } catch (Exception e) {
-                Client.LOGGER.error("Error updating player controller camera: {}", e.getMessage());
-            }
-        }
-
+        super.update(deltaTime);
+        if (GameState.IN_GAME.isCreated()) GameState.IN_GAME.update(deltaTime);
         currentPage.update(deltaTime);
     }
 

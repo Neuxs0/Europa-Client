@@ -22,6 +22,7 @@ public class Fullbright extends Module {
         super("Fullbright", keybind, defaultEnabled);
     }
 
+    @Override
     public void enable(boolean messaging) {
         setEnabled(true);
         World world = InGame.getWorld();
@@ -54,11 +55,10 @@ public class Fullbright extends Module {
         }
         GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
-        if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
-        }
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
     }
 
+    @Override
     public void disable(boolean messaging) {
         setEnabled(false);
         World world = InGame.getWorld();
@@ -80,25 +80,6 @@ public class Fullbright extends Module {
         }
         GameSingletons.meshGenThread.meshChunks(GameSingletons.zoneRenderer);
 
-        if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
-        }
-    }
-
-    public void toggle(boolean messaging) {
-        if (isEnabled()) {
-            disable(messaging);
-        } else {
-            enable(messaging);
-        }
-    }
-
-    @Override
-    public void onKeyPressed() {
-        if (isEnabled()) {
-            disable(true);
-        } else {
-            enable(true);
-        }
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
     }
 }

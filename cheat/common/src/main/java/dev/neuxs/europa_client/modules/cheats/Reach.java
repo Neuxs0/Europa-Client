@@ -13,6 +13,18 @@ public class Reach extends Module {
         customSettings.put("distance", new Setting<>("distance", 6.0f, value -> value >= 1.0f));
     }
 
+    @Override
+    public void enable(boolean messaging) {
+        setEnabled(true);
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach enabled");
+    }
+
+    @Override
+    public void disable(boolean messaging) {
+        setEnabled(false);
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach disabled");
+    }
+
     public float getReachDistance() {
         Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
         return distanceSetting.getValue();
@@ -22,36 +34,5 @@ public class Reach extends Module {
         Setting<Float> distanceSetting = (Setting<Float>) customSettings.get("distance");
         distanceSetting.setValue(newDistance);
         Client.clientChat.addMessage(null, "Reach set to " + distanceSetting.getValue());
-    }
-
-    public void enable(boolean messaging) {
-        if (!isEnabled()) {
-            setEnabled(true);
-            if (messaging) {
-                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach enabled");
-            }
-        }
-    }
-
-    public void disable(boolean messaging) {
-        if (isEnabled()) {
-            setEnabled(false);
-            if (messaging) {
-                Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Reach disabled");
-            }
-        }
-    }
-
-    public void toggle(boolean messaging) {
-        if (isEnabled()) {
-            disable(messaging);
-        } else {
-            enable(messaging);
-        }
-    }
-
-    @Override
-    public void onKeyPressed() {
-        toggle(true);
     }
 }

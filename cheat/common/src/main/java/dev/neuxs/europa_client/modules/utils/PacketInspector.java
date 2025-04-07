@@ -11,36 +11,15 @@ public class PacketInspector extends Module {
         super("PacketInspector", keybind, defaultEnabled);
     }
 
+    @Override
     public void enable(boolean messaging) {
         setEnabled(true);
-
-        if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Packet Inspector enabled");
-        }
-    }
-
-    public void disable(boolean messaging) {
-        setEnabled(false);
-
-        if (messaging) {
-            Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Packet Inspector disabled");
-        }
-    }
-
-    public void toggle(boolean messaging) {
-        if (isEnabled()) {
-            disable(messaging);
-        } else {
-            enable(messaging);
-        }
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Packet Inspector enabled");
     }
 
     @Override
-    public void onKeyPressed() {
-        if (isEnabled()) {
-            disable(true);
-        } else {
-            enable(true);
-        }
+    public void disable(boolean messaging) {
+        setEnabled(false);
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Packet Inspector disabled");
     }
 }

@@ -36,13 +36,13 @@ public class Button {
     private Color normalBorderColor;
     private Color hoverBorderColor;
     private Color pressedBorderColor;
-    private static final Color DEFAULT_NORMAL_FILL = ColorUtils.color(50, 50, 50, 255);
-    private static final Color DEFAULT_HOVER_FILL = ColorUtils.color(70, 70, 70, 255);
-    private static final Color DEFAULT_PRESSED_FILL = ColorUtils.color(90, 90, 90, 255);
-    private static final Color DEFAULT_NORMAL_BORDER = ColorUtils.color(20, 20, 20, 255);
-    private static final Color DEFAULT_HOVER_BORDER = ColorUtils.color(20, 20, 20, 255);
-    private static final Color DEFAULT_PRESSED_BORDER = ColorUtils.color(20, 20, 20, 255);
-    private static final int DEFAULT_TRIGGER_BUTTON = Input.Buttons.LEFT;
+    private static final Color defaultNormalFill = ColorUtils.color(50, 50, 50, 255);
+    private static final Color defaultHoverFill = ColorUtils.color(70, 70, 70, 255);
+    private static final Color defaultPressedFill = ColorUtils.color(90, 90, 90, 255);
+    private static final Color defaultNormalBorder = ColorUtils.color(20, 20, 20, 255);
+    private static final Color defaultHoverBorder = ColorUtils.color(20, 20, 20, 255);
+    private static final Color defaultPressedBorder = ColorUtils.color(20, 20, 20, 255);
+    private static final int defaultTriggerButton = Input.Buttons.LEFT;
     public enum ButtonState {
         NORMAL, HOVERED, PRESSED
     }
@@ -54,15 +54,15 @@ public class Button {
         this.onClick = (button) -> {};
         this.onHoverEnter = (button) -> {};
         this.onHoverExit = (button) -> {};
-        this.normalFillColor = DEFAULT_NORMAL_FILL.cpy();
-        this.hoverFillColor = DEFAULT_HOVER_FILL.cpy();
-        this.pressedFillColor = DEFAULT_PRESSED_FILL.cpy();
-        this.normalBorderColor = DEFAULT_NORMAL_BORDER.cpy();
-        this.hoverBorderColor = DEFAULT_HOVER_BORDER.cpy();
-        this.pressedBorderColor = DEFAULT_PRESSED_BORDER.cpy();
+        this.normalFillColor = defaultNormalFill.cpy();
+        this.hoverFillColor = defaultHoverFill.cpy();
+        this.pressedFillColor = defaultPressedFill.cpy();
+        this.normalBorderColor = defaultNormalBorder.cpy();
+        this.hoverBorderColor = defaultHoverBorder.cpy();
+        this.pressedBorderColor = defaultPressedBorder.cpy();
         this.currentState = ButtonState.NORMAL;
         this.wasPressed = false;
-        this.triggerButton = DEFAULT_TRIGGER_BUTTON;
+        this.triggerButton = defaultTriggerButton;
         this.boxRenderer.setFillColor(this.normalFillColor);
         this.boxRenderer.setBorderColor(this.normalBorderColor);
         this.boxRenderer.setBorderEnabled(true);
@@ -152,22 +152,22 @@ public class Button {
         this.triggerButton = triggerButton;
     }
     public void setNormalFillColor(Color color) {
-        this.normalFillColor = (color != null) ? color.cpy() : DEFAULT_NORMAL_FILL.cpy();
+        this.normalFillColor = (color != null) ? color.cpy() : defaultNormalFill.cpy();
     }
     public void setNormalBorderColor(Color color) {
-        this.normalBorderColor = (color != null) ? color.cpy() : DEFAULT_NORMAL_BORDER.cpy();
+        this.normalBorderColor = (color != null) ? color.cpy() : defaultNormalBorder.cpy();
     }
     public void setHoverFillColor(Color color) {
-        this.hoverFillColor = (color != null) ? color.cpy() : DEFAULT_HOVER_FILL.cpy();
+        this.hoverFillColor = (color != null) ? color.cpy() : defaultHoverFill.cpy();
     }
     public void setHoverBorderColor(Color color) {
-        this.hoverBorderColor = (color != null) ? color.cpy() : DEFAULT_HOVER_BORDER.cpy();
+        this.hoverBorderColor = (color != null) ? color.cpy() : defaultHoverBorder.cpy();
     }
     public void setPressedFillColor(Color color) {
-        this.pressedFillColor = (color != null) ? color.cpy() : DEFAULT_PRESSED_FILL.cpy();
+        this.pressedFillColor = (color != null) ? color.cpy() : defaultPressedFill.cpy();
     }
     public void setPressedBorderColor(Color color) {
-        this.pressedBorderColor = (color != null) ? color.cpy() : DEFAULT_PRESSED_BORDER.cpy();
+        this.pressedBorderColor = (color != null) ? color.cpy() : defaultPressedBorder.cpy();
     }
     public void setPosition(float x, float y) {
         boxRenderer.setPosition(x, y);
@@ -214,6 +214,4 @@ public class Button {
     public float getY() { return boxRenderer.getPosY(); }
     public float getWidth() { return boxRenderer.getWidth(); }
     public float getHeight() { return boxRenderer.getHeight(); }
-
-
 }

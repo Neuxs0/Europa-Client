@@ -12,6 +12,7 @@ import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
+import dev.neuxs.europa_client.utils.rendering.ui.ToggleButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public class UtilitiesPage extends Page {
     private final BoxRenderer pageContainer;
     private final Button searchInput = new Button(); // TODO: Replace with TextInput
     private final Button sortButton = new Button();
-    private final List<Button> moduleButtons = new ArrayList<>();
+    private final List<ToggleButton> moduleButtons = new ArrayList<>();
     private final TextRenderer leftClickText = new TextRenderer();
     private final TextRenderer rightClickText = new TextRenderer();
     private final float padding = 5f;
@@ -53,9 +54,11 @@ public class UtilitiesPage extends Page {
         sortButton.getTextRenderer().setText("Sort");
 
         for (Module module : Modules.utilModuleList) {
-            Button moduleButton = new Button();
+            ToggleButton moduleButton = new ToggleButton();
             moduleButton.getTextRenderer().setText(module.getId());
             moduleButton.setSize(100, moduleButtonHeight);
+            moduleButton.setOnToggle(button -> {module.toggle(true);});
+            moduleButton.setToggled(module.isEnabled());
             moduleButtons.add(moduleButton);
         }
 
@@ -102,9 +105,14 @@ public class UtilitiesPage extends Page {
             btn.setPosition(buttonX, buttonY);
         }
 
-        float textY = pageDim.y + padding;
-        leftClickText.setPosition(pageDim.x + padding, textY + leftClickText.getHeight(viewport) / 1.5f);
-        rightClickText.setPosition(pageDim.x + pageDim.z - padding, textY + rightClickText.getHeight(viewport) / 1.5f);
+        leftClickText.setPosition(
+                pageDim.x + padding,
+                pageDim.y + padding + leftClickText.getHeight(viewport) / 1.5f
+        );
+        rightClickText.setPosition(
+                pageDim.x + pageDim.z - padding - rightClickText.getWidth(viewport),
+                pageDim.y + padding + rightClickText.getHeight(viewport) / 1.5f
+        );
     }
 
     @Override
@@ -137,9 +145,6 @@ public class UtilitiesPage extends Page {
 
         searchInput.update(viewport);
         sortButton.update(viewport);
-        for (Button btn : moduleButtons) {
-            btn.update(viewport);
-        }
 
     }
 
