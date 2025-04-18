@@ -1,155 +1,84 @@
 plugins {
-    id "java-base"
+    id 'java-base'
+    id 'com.github.johnrengelman.shadow' apply false
 }
 
 allprojects {
-    group = rootProject.property("group")
-    version = rootProject.property("version")
-}
+    apply plugin: 'java'
+    group = rootProject.property('mod_group')
+    version = rootProject.property('mod_version')
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 
-subprojects {
-    apply plugin: "java"
     repositories {
-        maven {
-            name "JitPack"
-            url "https://jitpack.io"
+        mavenLocal(); maven { url = 'https://maven.fabricmc.net/' }; maven { url "https://jitpack.io" }
+        maven { url = 'https://maven.quiltmc.org/repository/release/' }; maven { url = 'https://repo.spongepowered.org/maven/' }
+        mavenCentral()
+        maven { name = "CRModders"; url = "https://maven.codeberg.org/api/v1/groups/CRModders/-/packages/maven" }
+        maven { name = "Puzzle"; url = "https://maven.puzzlemc.org/repository/maven-public/" }
+        ivy {
+            name "Cosmic Reach"; url "https://github.com/CRModders/CosmicArchive/raw/main/versions"
+            patternLayout { artifact "[classifier]/[revision]/client/Cosmic-Reach-[revision].jar" }
+            metadataSources { artifact() }; content { includeModule "finalforeach", "cosmicreach" }
         }
     }
+    tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 }
 
-def mod_id = rootProject.property("id")
-def mod_version = rootProject.property("version")
+tasks.register('baseUniversalJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    description = 'Builds a universal JAR for the base client variant.'
+    group = 'build'
+    dependsOn project(':src:base:common').jar
+    dependsOn project(':src:base:puzzle').processResources, project(':src:base:puzzle').classes
+    dependsOn project(':src:base:quilt').processResources, project(':src:base:quilt').classes
 
-task cleanDist(type: Delete) {
-    delete file("dist")
+    archiveBaseName = rootProject.property('mod_name').replace(' ', '_')
+    archiveVersion = rootProject.property('mod_version')
+    archiveClassifier = 'base-universal' // Combined classifier
+
+    // Explicitly include base variant components
+    from project(':src:base:common').sourceSets.main.output.classesDirs // Base Common Classes
+    from project(':src:base:common').sourceSets.main.resources           // Base Common Resources
+    from project(':src:base:puzzle').sourceSets.main.output.classesDirs  // Base Puzzle Classes
+    from project(':src:base:quilt').sourceSets.main.output.classesDirs   // Base Quilt Classes
+
+    // Include processed metadata from platform projects
+    from(project(':src:base:puzzle').tasks.named('processResources').map { it.destinationDir }) { include 'puzzle.mod.json', '*.manipulator' }
+    from(project(':src:base:quilt').tasks.named('processResources').map { it.destinationDir }) { include 'quilt.mod.json' }
+
+    manifest { attributes('MixinConfigs': "${rootProject.property('mod_id')}.mixins.json") }
+    mergeServiceFiles()
 }
 
-def requiredProjects = [
-        project(":base:puzzle"), project(":base:quilt"),
-        project(":cheat:puzzle"), project(":cheat:quilt")
-]
+tasks.register('cheatUniversalJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    description = 'Builds a universal JAR for the cheat client variant.'
+    group = 'build'
+    dependsOn project(':src:cheat:common').jar
+    dependsOn project(':src:cheat:puzzle').processResources, project(':src:cheat:puzzle').classes
+    dependsOn project(':src:cheat:quilt').processResources, project(':src:cheat:quilt').classes
 
-def bypassPuzzleProject = project.findProject(':bypass:puzzle')
-def bypassQuiltProject = project.findProject(':bypass:quilt')
+    archiveBaseName = rootProject.property('mod_name').replace(' ', '_')
+    archiveVersion = rootProject.property('mod_version')
+    archiveClassifier = 'cheat-universal' // Combined classifier
 
-def allProjectsToPackage = new ArrayList<>(requiredProjects)
-if (bypassPuzzleProject) {
-    allProjectsToPackage.add(bypassPuzzleProject)
-    println "Will package bypass-puzzle JAR"
-}
-if (bypassQuiltProject) {
-    allProjectsToPackage.add(bypassQuiltProject)
-    println "Will package bypass-quilt JAR"
-}
+    // Explicitly include cheat variant components
+    from project(':src:cheat:common').sourceSets.main.output.classesDirs // Cheat Common Classes
+    from project(':src:cheat:common').sourceSets.main.resources           // Cheat Common Resources
+    from project(':src:cheat:puzzle').sourceSets.main.output.classesDirs  // Cheat Puzzle Classes
+    from project(':src:cheat:quilt').sourceSets.main.output.classesDirs   // Cheat Quilt Classes
 
-task packageDist {
-    allProjectsToPackage.each { p ->
-        dependsOn p.tasks.jar
-    }
+    // Include processed metadata from platform projects
+    from(project(':src:cheat:puzzle').tasks.named('processResources').map { it.destinationDir }) { include 'puzzle.mod.json', '*.manipulator' }
+    from(project(':src:cheat:quilt').tasks.named('processResources').map { it.destinationDir }) { include 'quilt.mod.json' }
 
-    dependsOn cleanDist
-    outputs.dir file("dist")
-
-    doLast {
-        def distDir = file("dist")
-        distDir.mkdirs()
-
-        allProjectsToPackage.each { p ->
-            def sourceJarFile = p.tasks.jar.archiveFile.get().asFile
-            if (sourceJarFile.exists()) {
-                copy {
-                    from sourceJarFile
-                    into distDir
-                }
-                logger.lifecycle("Copied ${sourceJarFile.name} to ${distDir.path}")
-            } else {
-                logger.warn("Source JAR not found for ${p.name}, skipped copying: ${sourceJarFile.path}")
-            }
-        }
-    }
+    manifest { attributes('MixinConfigs': "${rootProject.property('mod_id')}.mixins.json") }
+    mergeServiceFiles()
 }
 
-task cleanBuildDirs() {
-    doLast {
-        subprojects.each { subproject ->
-            def buildDir = subproject.buildDir
-            if (buildDir.exists()) {
-                if (buildDir.deleteDir()) {
-                    logger.lifecycle("Deleted build directory for ${subproject.name}: ${buildDir.path}")
-                } else {
-                    logger.error(
-                            "Unable to delete build directory for ${subproject.name}: ${buildDir.path}"
-                    )
-                }
-            }
-        }
-
-        def extraFolders = [
-                // Base paths
-                "base/build", "base/common/build", "base/common/bin",
-                "base/puzzle/build", "base/puzzle/.gradle",
-                "base/quilt/build", "base/quilt/bin",
-                // Cheat paths
-                "cheat/build", "cheat/common/build", "cheat/common/bin",
-                "cheat/puzzle/build", "cheat/puzzle/.gradle",
-                "cheat/quilt/build", "cheat/quilt/bin",
-        ]
-
-        if (file('bypass').isDirectory()) {
-            extraFolders.addAll([
-                    "bypass/build", "bypass/common/build", "bypass/common/bin",
-                    "bypass/puzzle/build", "bypass/puzzle/.gradle",
-                    "bypass/quilt/build", "bypass/quilt/bin"
-            ])
-        }
-
-        // Delete the extra folders
-        extraFolders.each { folderPath ->
-            def folder = file(folderPath)
-            if (folder.exists()) {
-                int attempts = 0
-                boolean deletedSuccessfully = false
-                while (attempts < 5 && !deletedSuccessfully) {
-                    attempts++
-                    try {
-                        deletedSuccessfully = delete(folder)
-                        if (deletedSuccessfully) {
-                            logger.lifecycle("Deleted folder: ${folder.path}")
-                        } else if (folder.exists()) {
-                            logger.lifecycle("Attempt ${attempts}: Gradle delete failed for ${folder.path}, trying deleteDir()...")
-                            deletedSuccessfully = folder.deleteDir()
-                            if (deletedSuccessfully) {
-                                logger.lifecycle("Deleted folder with deleteDir(): ${folder.path}")
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Attempt ${attempts}: Exception during deletion of ${folder.path}: ${e.message}")
-                        Thread.sleep(500)
-                    }
-
-                    if (!deletedSuccessfully && folder.exists() && attempts < 5) {
-                        logger.warn("Attempt ${attempts} failed for ${folder.path}. Retrying...")
-                        Thread.sleep(500)
-                    }
-                }
-                if (!deletedSuccessfully && folder.exists()) {
-                    logger.error(
-                            "ERROR: Could not delete folder: ${folder.path} after ${attempts} attempts. It might be locked."
-                    )
-                } else if (!folder.exists() && !deletedSuccessfully && attempts > 0){
-                    logger.lifecycle("Folder ${folder.path} no longer exists (possibly deleted).")
-                }
-            }
-        }
-    }
+tasks.named('build') {
+    dependsOn baseUniversalJar, project(':src:base:puzzle').tasks.named('shadowJar'), project(':src:base:quilt').tasks.named('jar')
+    dependsOn cheatUniversalJar, project(':src:cheat:puzzle').tasks.named('shadowJar'), project(':src:cheat:quilt').tasks.named('jar')
 }
 
-
-tasks.named("build") {
-    dependsOn packageDist
-    finalizedBy cleanBuildDirs
-}
-
-tasks.named("clean") {
-    dependsOn cleanBuildDirs, cleanDist
-}
+tasks.register('cleanDist', Delete) { delete file('dist') }
+tasks.named('clean') { dependsOn cleanDist }

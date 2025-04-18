@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.neuxs.europa_client.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "UIMixin",
+    "InGameMixin",
+    "EntityMixin",
+    "ChatMenuMixin",
+    "NoClipPacketMixin",
+    "BlockRaycastsMixin",
+    "GamePacketLoggingMixin",
+    "NettyPacketHandlerMixin",
+    "GameSingletonsInterface"
+  ],
+  "client": [
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

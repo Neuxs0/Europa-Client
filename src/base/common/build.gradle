@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'cosmicloom'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+loom {
+
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly loom.cosmicReachClient("alpha", rootProject.property('cosmic_reach_version'))
+    compileOnly loom.cosmicQuilt(rootProject.property('cosmic_quilt_version'))
+
+    implementation "com.google.code.gson:gson:2.8.9"
+}

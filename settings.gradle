@@ -1,43 +1,27 @@
-buildscript() {
+buildscript {
     repositories {
-        maven {
-            name "JitPack"
-            url "https://jitpack.io"
-        }
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
+        maven { url "https://jitpack.io" }
+        maven { url = 'https://maven.fabricmc.net/' }
         mavenCentral()
         gradlePluginPortal()
         mavenLocal()
+        maven {
+            name = "CRModders"
+            url = "https://maven.codeberg.org/api/v1/groups/CRModders/-/packages/maven"
+        }
     }
     dependencies {
-        classpath "org.codeberg.CRModders:cosmic-loom:1.1.1"
-        classpath "com.github.johnrengelman:shadow:8.1.1"
+        classpath "org.codeberg.CRModders:cosmic-loom:$cosmic_loom_gradle_version"
+        classpath "com.github.johnrengelman:shadow:$shadow_gradle_version"
         classpath "com.github.PuzzleLoader:jigsaw:$jigsaw_gradle_version"
     }
 }
 
-include("base")
-include("base:common")
-include("base:quilt")
-include("base:puzzle")
+include ':src:base:common'
+include ':src:base:puzzle'
+include ':src:base:quilt'
+include ':src:cheat:common'
+include ':src:cheat:puzzle'
+include ':src:cheat:quilt'
 
-include("cheat")
-include("cheat:common")
-include("cheat:quilt")
-include("cheat:puzzle")
-
-if (file('bypass').isDirectory()) {
-    println "Including optional 'bypass' project."
-    include("bypass")
-    include("bypass:common")
-    include("bypass:quilt")
-    include("bypass:puzzle")
-} else {
-    println "Optional 'bypass' project not found, skipping include."
-}
-
-
-rootProject.name = "EuropaClient"
+rootProject.name = mod_name

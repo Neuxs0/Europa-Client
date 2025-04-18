@@ -1,25 +1,18 @@
+.gitignore
 .gradle/
-run/
-
+build_archive/
+/dev/
 build/
 test/
-bin/
-/dev/
-/bypass/
-*.gz
-
+gradle/
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### IntelliJ IDEA ###
 .idea/
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+/out/
 
 ### Eclipse ###
 .apt_generated
@@ -29,8 +22,7 @@ out/
 .settings
 .springBeans
 .sts4-cache
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+/bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -41,6 +33,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### Mac OS ###
-.DS_Store

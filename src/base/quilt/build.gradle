@@ -1,0 +1,73 @@
+plugins {
+    id "application"
+    id "cosmicloom"
+}
+
+loom {
+
+}
+
+dependencies {
+    compileOnly loom.cosmicReachClient("alpha", rootProject.property('cosmic_reach_version'))
+    modImplementation loom.cosmicQuilt(rootProject.property('cosmic_quilt_version'))
+
+    implementation project(":src:base:common")
+}
+
+processResources {
+    from project(":src:base:common").sourceSets.main.resources
+
+    inputs.property 'mod_version', rootProject.property('mod_version')
+    inputs.property 'mod_id', rootProject.property('mod_id')
+    inputs.property 'mod_name', rootProject.property('mod_name')
+    inputs.property 'mod_group', rootProject.property('mod_group')
+    inputs.property 'mod_description', rootProject.property('mod_description')
+    inputs.property 'mod_license', rootProject.property('mod_license')
+    inputs.property 'cosmic_reach_dependency', rootProject.property('cosmic_reach_dependency')
+    inputs.property 'cosmic_quilt_dependency', rootProject.property('cosmic_quilt_dependency')
+    inputs.property 'homepage_link', rootProject.property('homepage_link')
+    inputs.property 'issues_link', rootProject.property('issues_link')
+    inputs.property 'sources_link', rootProject.property('sources_link')
+
+    filesMatching('*.json') {
+        expand(
+                'mod_version'               : rootProject.property('mod_version'),
+                'mod_id'                    : rootProject.property('mod_id'),
+                'mod_name'                  : rootProject.property('mod_name'),
+                'mod_group'                 : rootProject.property('mod_group'),
+                'mod_description'           : rootProject.property('mod_description'),
+                'mod_license'               : rootProject.property('mod_license'),
+                'cosmic_reach_dependency'   : rootProject.property('cosmic_reach_dependency'),
+                'cosmic_quilt_dependency'   : rootProject.property('cosmic_quilt_dependency'),
+                'homepage_link'             : rootProject.property('homepage_link'),
+                'issues_link'               : rootProject.property('issues_link'),
+                'sources_link'              : rootProject.property('sources_link')
+        )
+    }
+}
+
+application {
+    mainClass = "org.quiltmc.loader.impl.launch.knot.KnotClient"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+    enabled = true
+    archiveFileName = "${rootProject.property('mod_name').replace(' ', '_')}-quilt-${rootProject.property('mod_version')}-base.jar"
+
+    from project(':src:base:common').sourceSets.main.output
+    from sourceSets.main.output
+
+    from(tasks.named('processResources').map { it.destinationDir }) {
+        include '*.json'
+    }
+
+    manifest {
+        attributes('MixinConfigs': "${rootProject.property('mod_id')}.mixins.json")
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
