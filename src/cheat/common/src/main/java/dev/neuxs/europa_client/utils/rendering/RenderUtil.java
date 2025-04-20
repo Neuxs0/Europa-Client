@@ -71,6 +71,9 @@ public class RenderUtil implements Disposable {
 
     private RenderType beginBatch(RenderType renderType, ShapeRenderer.ShapeType shapeType, Matrix4 projectionMatrix) {
         try {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
             if (renderType == RenderType.SHAPE) {
                 shapeRenderer.setProjectionMatrix(projectionMatrix);
                 shapeRenderer.begin(shapeType);
@@ -81,7 +84,7 @@ public class RenderUtil implements Disposable {
                 return RenderType.SPRITE;
             }
         } catch (IllegalStateException e) {
-            System.err.println("Error beginning batch for type " + renderType + ": " + e.getMessage());
+            Client.LOGGER.error("Error beginning batch for type {}: {}", renderType, e.getMessage());
             if (shapeRenderer.isDrawing()) shapeRenderer.end();
             if (spriteBatch.isDrawing()) spriteBatch.end();
             return RenderType.NONE;
@@ -89,24 +92,12 @@ public class RenderUtil implements Disposable {
         return RenderType.NONE;
     }
 
-    // Inside RenderUtil.endBatch
     private void endBatch(RenderType type) {
         try {
-            boolean blendBeforeEnd = Gdx.gl.glIsEnabled(GL20.GL_BLEND); // Check before end()
-            String rendererClass = "N/A"; // To track which renderer might be causing it
-
             if (type == RenderType.SHAPE && shapeRenderer.isDrawing()) {
-                // Potentially log which element was last rendered before this end call if needed
                 shapeRenderer.end();
             } else if (type == RenderType.SPRITE && spriteBatch.isDrawing()) {
-                // Potentially log which element was last rendered before this end call if needed
                 spriteBatch.end();
-            }
-            boolean blendAfterEnd = Gdx.gl.glIsEnabled(GL20.GL_BLEND); // Check after end()
-
-            // Log ONLY if the state changed from true to false HERE
-            if (blendBeforeEnd && !blendAfterEnd) {
-                Client.LOGGER.warn("Blending disabled during endBatch for type: {}", type);
             }
         } catch (IllegalStateException e) {
             Client.LOGGER.error("Error ending batch for type {}: {}", type, e.getMessage());

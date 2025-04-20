@@ -1,6 +1,5 @@
 package dev.neuxs.europa_client.ui;
 
-// TODO: Fix transparency issues
 // TODO: Figure out how to reproduce and fix issues with side menu opening/closing
 // TODO: Save current page and if side menu is open/closed for re-opening the menu
 
@@ -247,39 +246,38 @@ public class GUI extends GameState {
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         }
 
-        Client.LOGGER.info("GL_BLEND enabled before renderAll and gl states: {}", Gdx.gl.glIsEnabled(GL20.GL_BLEND));
-
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
         viewport.apply();
         Matrix4 uiMatrix = viewport.getCamera().combined;
-
-        Client.LOGGER.info("GL_BLEND enabled before renderAll: {}", Gdx.gl.glIsEnabled(GL20.GL_BLEND));
 
         renderUtil.syncRenderers();
         renderUtil.renderAll(uiMatrix, viewport);
 
         if (this.stage != null) this.stage.draw();
 
-        Client.LOGGER.info("GL_BLEND enabled after renderAll: {}", Gdx.gl.glIsEnabled(GL20.GL_BLEND));
-
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
         Gdx.gl.glCullFace(GL20.GL_BACK);
-
-        Client.LOGGER.info("GL_BLEND enabled after renderAll and gl states: {}", Gdx.gl.glIsEnabled(GL20.GL_BLEND));
 
         if (this.firstFrame) this.firstFrame = false;
     }
 
     @Override
+    public void switchAwayTo(GameState gameState) {
+        Client.LOGGER.info("GUI switchAwayTo called. Disposing GUI resources.");
+        this.dispose();
+        super.switchAwayTo(gameState);
+    }
+
+    @Override
     public void dispose() {
+        Client.LOGGER.info("GUI dispose called. Removing renderers from static RenderUtil.");
         if (currentPage != null) {
             currentPage.dispose(renderUtil);
+            currentPage.removeRenderers(renderUtil);
             currentPage = null;
         }
 
@@ -296,7 +294,6 @@ public class GUI extends GameState {
 
         if (stage != null) {
             stage.dispose();
-            renderUtil.dispose();
             stage = null;
         }
     }
