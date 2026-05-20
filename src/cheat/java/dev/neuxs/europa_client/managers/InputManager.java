@@ -10,6 +10,7 @@ import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.ui.GUI;
+import dev.neuxs.europa_client.utils.KeybindUtil;
 import finalforeach.cosmicreach.gamestates.ChatMenu;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
@@ -306,16 +307,12 @@ public class InputManager extends InputAdapter {
         }
 
         for (Module module : Modules.moduleList) {
-            int key = module.getKeybind();
-            if (isValidModuleKeybind(key) && isFirstFrameKeyDown(key)) {
-                Client.LOGGER.debug("Module key pressed: {} for {}", Input.Keys.toString(key), module.getId());
+            String keybind = module.getKeybindCombo();
+            if (KeybindUtil.isActive(keybind)) {
+                Client.LOGGER.debug("Module keybind pressed: {} for {}", KeybindUtil.format(keybind), module.getId());
                 module.toggle(true);
             }
         }
-    }
-
-    private boolean isValidModuleKeybind(int keycode) {
-        return keycode > 0 && keycode != Input.Keys.UNKNOWN;
     }
 
     public static boolean isKeyDown(int keycode) { return Gdx.input.isKeyPressed(keycode); }

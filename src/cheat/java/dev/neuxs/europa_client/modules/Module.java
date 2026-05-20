@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.modules;
 
 import dev.neuxs.europa_client.settings.Setting;
+import dev.neuxs.europa_client.utils.KeybindUtil;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,13 +9,13 @@ import java.util.Map;
 public abstract class Module {
     protected final String id;
     protected final Setting<Boolean> enabled;
-    protected final Setting<Integer> keybind;
+    protected final Setting<String> keybind;
     protected final Map<String, Setting<?>> customSettings;
 
     public Module(String id, int defaultKeybind, boolean defaultEnabled) {
         this.id = id;
         this.enabled = new Setting<>("enabled", defaultEnabled);
-        this.keybind = new Setting<>("keybind", defaultKeybind);
+        this.keybind = new Setting<>("keybind", KeybindUtil.fromSingleKey(defaultKeybind));
         this.customSettings = new HashMap<>();
     }
 
@@ -31,6 +32,11 @@ public abstract class Module {
     }
 
     public int getKeybind() {
+        java.util.List<Integer> keys = KeybindUtil.parse(keybind.getValue());
+        return keys.isEmpty() ? com.badlogic.gdx.Input.Keys.UNKNOWN : keys.get(keys.size() - 1);
+    }
+
+    public String getKeybindCombo() {
         return keybind.getValue();
     }
 
@@ -39,7 +45,11 @@ public abstract class Module {
     }
 
     public void setKeybind(int key) {
-        keybind.setValue(key);
+        keybind.setValue(KeybindUtil.fromSingleKey(key));
+    }
+
+    public void setKeybind(String keybind) {
+        this.keybind.setValue(keybind == null ? KeybindUtil.UNBOUND : keybind);
     }
 
     public void onKeyPressed(boolean messaging) {
@@ -78,7 +88,9 @@ public abstract class Module {
         if (data.containsKey("keybind")) {
             Object k = data.get("keybind");
             if (k instanceof Number) {
-                keybind.setValue(((Number) k).intValue());
+                keybind.setValue(KeybindUtil.fromSingleKey(((Number) k).intValue()));
+            } else if (k instanceof String) {
+                keybind.setValue((String) k);
             }
         }
         if (data.containsKey("settings")) {

@@ -9,6 +9,7 @@ import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
+import dev.neuxs.europa_client.utils.KeybindUtil;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -450,6 +452,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         private final BoxRenderer settingsBox = new BoxRenderer();
         private final List<Renderer> expandedRenderers = new ArrayList<>();
         private final List<ModuleSettingRow> settingRows = new ArrayList<>();
+        private final ModuleKeybindRow keybindRow;
         private boolean expanded = false;
         private boolean expandedRenderersAdded = false;
         private float height = moduleButtonHeight;
@@ -485,6 +488,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             settingsBox.setTopRightRounded(false);
             settingsBox.setZIndex(4);
             expandedRenderers.add(settingsBox);
+
+            keybindRow = new ModuleKeybindRow(module);
+            expandedRenderers.addAll(keybindRow.getRenderers());
 
             for (Setting<?> setting : module.getCustomSettings().values()) {
                 ModuleSettingRow row = new ModuleSettingRow(setting);
@@ -528,6 +534,8 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             settingsBox.setSize(width, settingsHeight + expandedBoxOverlap);
 
             float currentY = settingsY + settingsHeight - expandedPadding - settingRowHeight;
+            keybindRow.layout(rowX, currentY, rowWidth, settingRowHeight);
+            currentY -= settingRowHeight + elementSpacing;
             for (ModuleSettingRow row : settingRows) {
                 row.layout(rowX, currentY, rowWidth, settingRowHeight);
                 currentY -= settingRowHeight + elementSpacing;
@@ -541,6 +549,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             if (!expanded) {
                 return;
             }
+            keybindRow.update(viewport, deltaTime);
             for (ModuleSettingRow row : settingRows) {
                 row.update(viewport, deltaTime);
             }
@@ -548,6 +557,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
 
         private void syncFromModule() {
             button.setToggled(module.isEnabled());
+            keybindRow.syncFromModule();
             for (ModuleSettingRow row : settingRows) {
                 row.syncFromSetting(false);
             }
@@ -590,6 +600,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             if (!expanded) {
                 return false;
             }
+            if (keybindRow.handleTouchDown(worldX, worldY, button)) {
+                return true;
+            }
             for (ModuleSettingRow row : settingRows) {
                 if (row.handleTouchDown(worldX, worldY, button)) {
                     return true;
@@ -602,6 +615,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             if (!expanded) {
                 return false;
             }
+            if (keybindRow.keyDown(keycode)) {
+                return true;
+            }
             for (ModuleSettingRow row : settingRows) {
                 if (row.keyDown(keycode)) {
                     return true;
@@ -613,6 +629,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         private boolean keyUp(int keycode) {
             if (!expanded) {
                 return false;
+            }
+            if (keybindRow.keyUp(keycode)) {
+                return true;
             }
             for (ModuleSettingRow row : settingRows) {
                 if (row.keyUp(keycode)) {
@@ -635,18 +654,146 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         }
 
         private void clearTextFocus() {
+            keybindRow.cancelListening();
             for (ModuleSettingRow row : settingRows) {
                 row.clearTextFocus();
             }
         }
 
         private float getSettingsBoxHeight() {
-            if (settingRows.isEmpty()) {
-                return expandedPadding * 2f;
-            }
+            int rowCount = settingRows.size() + 1;
             return expandedPadding * 2f
-                    + settingRows.size() * settingRowHeight
-                    + Math.max(0, settingRows.size() - 1) * elementSpacing;
+                    + rowCount * settingRowHeight
+                    + Math.max(0, rowCount - 1) * elementSpacing;
+        }
+    }
+
+    private class ModuleKeybindRow {
+        private final Module module;
+        private final TextRenderer labelText = new TextRenderer();
+        private final Button keybindButton = new Button();
+        private final List<Renderer> renderers = new ArrayList<>();
+        private final LinkedHashSet<Integer> capturedKeys = new LinkedHashSet<>();
+        private boolean listening;
+        private float controlX;
+        private float controlY;
+        private float controlWidth;
+        private float controlHeight;
+
+        private ModuleKeybindRow(Module module) {
+            this.module = module;
+
+            labelText.setText("Keybind");
+            labelText.setTextColor(ColorUtils.color(255, 255, 255, 255));
+            labelText.setZIndex(10);
+            renderers.add(labelText);
+
+            keybindButton.setBorderWidth(1.5f);
+            keybindButton.setBorderRadius(7.5f);
+            keybindButton.setZIndex(10);
+            renderers.add(keybindButton);
+
+            syncFromModule();
+        }
+
+        private void layout(float x, float y, float width, float height) {
+            float labelWidth = Math.min(90f, Math.max(55f, width * 0.36f));
+            controlX = x + labelWidth + elementSpacing;
+            controlY = y + (height - topBarHeight) / 2f;
+            controlWidth = Math.max(0f, width - labelWidth - elementSpacing);
+            controlHeight = topBarHeight;
+
+            labelText.setPos(x, y + (height - labelText.getTextHeight(viewport)) / 2f);
+            keybindButton.setSize(controlWidth, topBarHeight);
+            keybindButton.setPos(controlX, controlY);
+        }
+
+        private void update(Viewport viewport, float deltaTime) {
+            keybindButton.update(viewport);
+            syncFromModule();
+        }
+
+        private void syncFromModule() {
+            if (!listening) {
+                keybindButton.setText(KeybindUtil.format(module.getKeybindCombo()));
+            }
+        }
+
+        private boolean handleTouchDown(float worldX, float worldY, int button) {
+            if (button != Input.Buttons.LEFT || !containsControlPoint(worldX, worldY)) {
+                return false;
+            }
+
+            startListening();
+            return true;
+        }
+
+        private boolean keyDown(int keycode) {
+            if (!listening) {
+                return false;
+            }
+
+            if (keycode == Input.Keys.ESCAPE) {
+                cancelListening();
+                return true;
+            }
+            if (keycode == Input.Keys.BACKSPACE || keycode == Input.Keys.FORWARD_DEL) {
+                saveModuleChange(() -> module.setKeybind(KeybindUtil.UNBOUND));
+                cancelListening();
+                return true;
+            }
+
+            capturedKeys.clear();
+            capturedKeys.addAll(KeybindUtil.captureCurrentCombination(keycode));
+            keybindButton.setText(KeybindUtil.format(KeybindUtil.serialize(capturedKeys)));
+
+            if (KeybindUtil.containsNonModifier(capturedKeys)) {
+                applyCapturedKeybind();
+            }
+            return true;
+        }
+
+        private boolean keyUp(int keycode) {
+            if (!listening) {
+                return false;
+            }
+
+            if (!capturedKeys.isEmpty() && !KeybindUtil.containsNonModifier(capturedKeys)) {
+                applyCapturedKeybind();
+            }
+            return true;
+        }
+
+        private void startListening() {
+            listening = true;
+            capturedKeys.clear();
+            keybindButton.setText("Press keys...");
+        }
+
+        private void cancelListening() {
+            if (!listening) {
+                return;
+            }
+            listening = false;
+            capturedKeys.clear();
+            syncFromModule();
+        }
+
+        private void applyCapturedKeybind() {
+            String keybind = KeybindUtil.serialize(capturedKeys);
+            saveModuleChange(() -> module.setKeybind(keybind));
+            listening = false;
+            capturedKeys.clear();
+            syncFromModule();
+        }
+
+        private boolean containsControlPoint(float worldX, float worldY) {
+            return worldX >= controlX && worldX <= controlX + controlWidth
+                    && worldY >= controlY && worldY <= controlY + controlHeight;
+        }
+
+        private List<Renderer> getRenderers() {
+            return renderers;
         }
     }
 
