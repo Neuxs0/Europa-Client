@@ -8,6 +8,10 @@ import dev.neuxs.europa_client.Client;
 @SuppressWarnings("unused")
 public class BoxRenderer extends Renderer {
     private int roundedCornerSegments;
+    private boolean topLeftRounded = true;
+    private boolean topRightRounded = true;
+    private boolean bottomLeftRounded = true;
+    private boolean bottomRightRounded = true;
 
     public BoxRenderer() {
         this.roundedCornerSegments = 20; // Higher = smoother & less performance.
@@ -45,10 +49,12 @@ public class BoxRenderer extends Renderer {
 
         if (hasShadow) {
             drawRoundedRect(posX + getShadowOffsetX(), posY + getShadowOffsetY(), width, height, effectiveRadius, shadowColor);
+            drawSquareCornerPatches(posX + getShadowOffsetX(), posY + getShadowOffsetY(), width, height, effectiveRadius, shadowColor);
         }
 
         if (hasBorder) {
             drawRoundedRect(posX, posY, width, height, effectiveRadius, borderColor);
+            drawSquareCornerPatches(posX, posY, width, height, effectiveRadius, borderColor);
         }
 
         if (hasFill) {
@@ -59,9 +65,11 @@ public class BoxRenderer extends Renderer {
 
                 if (innerWidth > 0 && innerHeight > 0) {
                     drawRoundedRect(posX + borderWidth, posY + borderWidth, innerWidth, innerHeight, innerRadius, fillColor);
+                    drawSquareCornerPatches(posX + borderWidth, posY + borderWidth, innerWidth, innerHeight, innerRadius, fillColor);
                 }
             } else {
                 drawRoundedRect(posX, posY, width, height, effectiveRadius, fillColor);
+                drawSquareCornerPatches(posX, posY, width, height, effectiveRadius, fillColor);
             }
         }
     }
@@ -70,10 +78,49 @@ public class BoxRenderer extends Renderer {
         SdfRenderer.get().drawRoundedRect(x, y, width, height, radius, color);
     }
 
+    private void drawSquareCornerPatches(float x, float y, float width, float height, float radius, Color color) {
+        if (radius <= 0f || areAllCornersRounded()) {
+            return;
+        }
+
+        if (!bottomLeftRounded) {
+            drawRoundedRect(x, y, radius, radius, 0f, color);
+        }
+        if (!bottomRightRounded) {
+            drawRoundedRect(x + width - radius, y, radius, radius, 0f, color);
+        }
+        if (!topLeftRounded) {
+            drawRoundedRect(x, y + height - radius, radius, radius, 0f, color);
+        }
+        if (!topRightRounded) {
+            drawRoundedRect(x + width - radius, y + height - radius, radius, radius, 0f, color);
+        }
+    }
+
+    private boolean areAllCornersRounded() {
+        return topLeftRounded && topRightRounded && bottomLeftRounded && bottomRightRounded;
+    }
+
     public int getRoundedCornerSegments() {
         return roundedCornerSegments;
     }
     public void setRoundedCornerSegments(int roundedCornerSegments) {
         if (roundedCornerSegments > 0) this.roundedCornerSegments = roundedCornerSegments;
+    }
+
+    public void setTopLeftRounded(boolean topLeftRounded) {
+        this.topLeftRounded = topLeftRounded;
+    }
+
+    public void setTopRightRounded(boolean topRightRounded) {
+        this.topRightRounded = topRightRounded;
+    }
+
+    public void setBottomLeftRounded(boolean bottomLeftRounded) {
+        this.bottomLeftRounded = bottomLeftRounded;
+    }
+
+    public void setBottomRightRounded(boolean bottomRightRounded) {
+        this.bottomRightRounded = bottomRightRounded;
     }
 }

@@ -34,6 +34,10 @@ public abstract class Module {
         return keybind.getValue();
     }
 
+    public Map<String, Setting<?>> getCustomSettings() {
+        return customSettings;
+    }
+
     public void setKeybind(int key) {
         keybind.setValue(key);
     }
