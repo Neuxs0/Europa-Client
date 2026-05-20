@@ -1,84 +1,123 @@
 plugins {
-    id 'java-base'
-    id 'com.github.johnrengelman.shadow' apply false
+    id 'java'
+    id 'jigsaw-cosmic-reach'
 }
 
-allprojects {
-    apply plugin: 'java'
-    group = rootProject.property('mod_group')
-    version = rootProject.property('mod_version')
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+group = mod_group
+version = mod_version
 
-    repositories {
-        mavenLocal(); maven { url = 'https://maven.fabricmc.net/' }; maven { url "https://jitpack.io" }
-        maven { url = 'https://maven.quiltmc.org/repository/release/' }; maven { url = 'https://repo.spongepowered.org/maven/' }
-        mavenCentral()
-        maven { name = "CRModders"; url = "https://maven.codeberg.org/api/v1/groups/CRModders/-/packages/maven" }
-        maven { name = "Puzzle"; url = "https://maven.puzzlemc.org/repository/maven-public/" }
-        ivy {
-            name "Cosmic Reach"; url "https://github.com/CRModders/CosmicArchive/raw/main/versions"
-            patternLayout { artifact "[classifier]/[revision]/client/Cosmic-Reach-[revision].jar" }
-            metadataSources { artifact() }; content { includeModule "finalforeach", "cosmicreach" }
-        }
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(24) }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url "https://jitpack.io" }
+    maven { url = 'https://maven.puzzleshq.dev/releases/' }
+    maven { url = 'https://maven.puzzleshq.dev/snapshots/' }
+}
+
+def localGameJars = files(
+    "dev/cosmic-reach-client-${cosmic_reach_version}.jar",
+    "dev/cosmic-reach-server-${cosmic_reach_version}.jar"
+)
+
+def puzzleApiJars = [
+    "dev.puzzleshq:puzzle-loader-core:${puzzle_loader_core_version}:common",
+    "dev.puzzleshq:puzzle-loader-core:${puzzle_loader_core_version}:client",
+    "net.fabricmc:sponge-mixin:0.16.5+mixin.0.8.7"
+]
+
+// 1. Define Dependencies on the standard 'implementation' configuration
+dependencies {
+    puzzleLoader "dev.puzzleshq:puzzle-loader-core:${puzzle_loader_core_version}"
+    puzzleLoader "dev.puzzleshq:puzzle-loader-cosmic:${puzzle_loader_cosmic_version}"
+    cosmicReach "finalforeach:cosmic-reach:${cosmic_reach_version}"
+    
+    // Core libs
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
+
+// 2. Define Custom SourceSets
+sourceSets {
+    base {
+        java.srcDirs = ['src/base/java']
+        resources.srcDirs = ['src/base/resources']
     }
-    tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+    cheat {
+        java.srcDirs = ['src/cheat/java']
+        resources.srcDirs = ['src/cheat/resources']
+    }
 }
 
-tasks.register('baseUniversalJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    description = 'Builds a universal JAR for the base client variant.'
-    group = 'build'
-    dependsOn project(':src:base:common').jar
-    dependsOn project(':src:base:puzzle').processResources, project(':src:base:puzzle').classes
-    dependsOn project(':src:base:quilt').processResources, project(':src:base:quilt').classes
+// 3. THE FIX: Use 'afterEvaluate' to copy classpath LATE
+// We wait for Jigsaw to finish setting up 'main', then we steal its classpath.
+afterEvaluate {
+    // Fix Compile Classpath (fixes "package does not exist")
+    sourceSets.base.compileClasspath += sourceSets.main.compileClasspath
+    sourceSets.cheat.compileClasspath += sourceSets.main.compileClasspath
 
-    archiveBaseName = rootProject.property('mod_name').replace(' ', '_')
-    archiveVersion = rootProject.property('mod_version')
-    archiveClassifier = 'base-universal' // Combined classifier
-
-    // Explicitly include base variant components
-    from project(':src:base:common').sourceSets.main.output.classesDirs // Base Common Classes
-    from project(':src:base:common').sourceSets.main.resources           // Base Common Resources
-    from project(':src:base:puzzle').sourceSets.main.output.classesDirs  // Base Puzzle Classes
-    from project(':src:base:quilt').sourceSets.main.output.classesDirs   // Base Quilt Classes
-
-    // Include processed metadata from platform projects
-    from(project(':src:base:puzzle').tasks.named('processResources').map { it.destinationDir }) { include 'puzzle.mod.json', '*.manipulator' }
-    from(project(':src:base:quilt').tasks.named('processResources').map { it.destinationDir }) { include 'quilt.mod.json' }
-
-    manifest { attributes('MixinConfigs': "${rootProject.property('mod_id')}.mixins.json") }
-    mergeServiceFiles()
+    // Fix Runtime Classpath (fixes running the client)
+    sourceSets.base.runtimeClasspath += sourceSets.main.runtimeClasspath
+    sourceSets.cheat.runtimeClasspath += sourceSets.main.runtimeClasspath
 }
 
-tasks.register('cheatUniversalJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    description = 'Builds a universal JAR for the cheat client variant.'
+// 4. Jigsaw Configuration
+jigsawGame {
+    splitSourceSets()
+}
+
+jigsawInject {
+    // Inject the Cheat version for standard './gradlew runClient'
+    setModJson(file("src/cheat/resources/puzzle.mod.json"))
+}
+
+// 5. Metadata Expansion
+def puzzleModExpandProps = [
+    "mod_version": mod_version,
+    "mod_id": mod_id,
+    "mod_name": mod_name,
+    "mod_description": mod_description,
+    "mod_group": mod_group,
+    "mod_license": mod_license,
+    "mod_author": mod_author,
+    "cosmic_reach_dependency": cosmic_reach_dependency,
+    "puzzle_loader_cosmic_version": puzzle_loader_cosmic_version
+]
+
+tasks.withType(org.gradle.language.jvm.tasks.ProcessResources).configureEach {
+    inputs.properties puzzleModExpandProps
+    filesMatching("*.json") { expand puzzleModExpandProps }
+}
+
+// 6. Jar Tasks
+tasks.register('baseJar', Jar) {
     group = 'build'
-    dependsOn project(':src:cheat:common').jar
-    dependsOn project(':src:cheat:puzzle').processResources, project(':src:cheat:puzzle').classes
-    dependsOn project(':src:cheat:quilt').processResources, project(':src:cheat:quilt').classes
+    description = 'Assembles the Base (No-Cheat) client jar.'
+    archiveClassifier.set('base')
+    from sourceSets.base.output
+}
 
-    archiveBaseName = rootProject.property('mod_name').replace(' ', '_')
-    archiveVersion = rootProject.property('mod_version')
-    archiveClassifier = 'cheat-universal' // Combined classifier
+tasks.register('cheatJar', Jar) {
+    group = 'build'
+    description = 'Assembles the Cheat client jar.'
+    archiveClassifier.set('cheat')
+    from sourceSets.cheat.output
+}
 
-    // Explicitly include cheat variant components
-    from project(':src:cheat:common').sourceSets.main.output.classesDirs // Cheat Common Classes
-    from project(':src:cheat:common').sourceSets.main.resources           // Cheat Common Resources
-    from project(':src:cheat:puzzle').sourceSets.main.output.classesDirs  // Cheat Puzzle Classes
-    from project(':src:cheat:quilt').sourceSets.main.output.classesDirs   // Cheat Quilt Classes
-
-    // Include processed metadata from platform projects
-    from(project(':src:cheat:puzzle').tasks.named('processResources').map { it.destinationDir }) { include 'puzzle.mod.json', '*.manipulator' }
-    from(project(':src:cheat:quilt').tasks.named('processResources').map { it.destinationDir }) { include 'quilt.mod.json' }
-
-    manifest { attributes('MixinConfigs': "${rootProject.property('mod_id')}.mixins.json") }
-    mergeServiceFiles()
+// 7. Ensure dependencies are hooked up for running
+dependencies {
+    runtimeOnly sourceSets.cheat.output
+    baseCompileOnly localGameJars
+    baseRuntimeOnly localGameJars
+    baseCompileOnly puzzleApiJars
+    cheatCompileOnly localGameJars
+    cheatRuntimeOnly localGameJars
+    cheatCompileOnly puzzleApiJars
 }
 
 tasks.named('build') {
-    dependsOn baseUniversalJar, project(':src:base:puzzle').tasks.named('shadowJar'), project(':src:base:quilt').tasks.named('jar')
-    dependsOn cheatUniversalJar, project(':src:cheat:puzzle').tasks.named('shadowJar'), project(':src:cheat:quilt').tasks.named('jar')
+    dependsOn tasks.named('baseJar')
+    dependsOn tasks.named('cheatJar')
 }
-
-tasks.register('cleanDist', Delete) { delete file('dist') }
-tasks.named('clean') { dependsOn cleanDist }

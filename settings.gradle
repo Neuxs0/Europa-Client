@@ -1,27 +1,22 @@
-buildscript {
+pluginManagement {
     repositories {
-        maven { url "https://jitpack.io" }
-        maven { url = 'https://maven.fabricmc.net/' }
         mavenCentral()
         gradlePluginPortal()
-        mavenLocal()
-        maven {
-            name = "CRModders"
-            url = "https://maven.codeberg.org/api/v1/groups/CRModders/-/packages/maven"
-        }
-    }
-    dependencies {
-        classpath "org.codeberg.CRModders:cosmic-loom:$cosmic_loom_gradle_version"
-        classpath "com.github.johnrengelman:shadow:$shadow_gradle_version"
-        classpath "com.github.PuzzleLoader:jigsaw:$jigsaw_gradle_version"
+        maven { url = "https://maven.puzzleshq.dev/releases/" }
+        maven { url = "https://maven.puzzleshq.dev/snapshots/" }
     }
 }
 
-include ':src:base:common'
-include ':src:base:puzzle'
-include ':src:base:quilt'
-include ':src:cheat:common'
-include ':src:cheat:puzzle'
-include ':src:cheat:quilt'
+buildscript {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url = "https://maven.puzzleshq.dev/releases/" }
+        maven { url = "https://maven.puzzleshq.dev/snapshots/" }
+    }
+    dependencies {
+        classpath "dev.puzzleshq:jigsaw-suite:${puzzle_jigsaw_suite}"
+    }
+}
 
 rootProject.name = mod_name
