@@ -19,6 +19,10 @@ public class Client {
     public static String VERSION = "2.0.0";
     public static IChat clientChat = Chat.MAIN_CLIENT_CHAT;
 
+    public static String getNetworkIdentifier() {
+        return MOD_NAME + " " + CLIENT_TYPE + "/" + VERSION;
+    }
+
     public static void init() {
         LOGGER.info("{} Initializing...", MOD_NAME);
 
