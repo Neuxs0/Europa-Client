@@ -1,13 +1,13 @@
 package dev.neuxs.europa_client.mixins;
 
 import dev.neuxs.europa_client.modules.Modules;
-import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.entities.GameEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @SuppressWarnings({"DuplicatedCode", "unused", "ConstantConditions"})
-@Mixin(Entity.class)
+@Mixin(GameEntity.class)
 public abstract class EntityMixin {
 
     @ModifyArg(
@@ -20,7 +20,7 @@ public abstract class EntityMixin {
             index = 0
     )
     private float modifyPosDiffX(float x) {
-        Entity self = (Entity) (Object) this;
+        GameEntity self = (GameEntity) (Object) this;
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();
@@ -41,7 +41,7 @@ public abstract class EntityMixin {
             index = 1
     )
     private float modifyPosDiffY(float y) {
-        Entity self = (Entity) (Object) this;
+        GameEntity self = (GameEntity) (Object) this;
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();
@@ -59,7 +59,7 @@ public abstract class EntityMixin {
             index = 2
     )
     private float modifyPosDiffZ(float z) {
-        Entity self = (Entity) (Object) this;
+        GameEntity self = (GameEntity) (Object) this;
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();

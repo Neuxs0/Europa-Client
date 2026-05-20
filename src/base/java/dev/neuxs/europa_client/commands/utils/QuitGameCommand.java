@@ -14,7 +14,7 @@ public class QuitGameCommand extends ClientCommand {
         Gdx.app.postRunnable(() -> {
             if (Gdx.input.isCursorCatched()) Gdx.input.setCursorCatched(false);
 
-            if (GameSingletons.isHost) {
+            if (GameSingletons.isHost()) {
                 ChunkSaver.saveWorld(InGame.getWorld());
             } else {
                 try {

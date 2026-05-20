@@ -9,7 +9,6 @@ public class SyncModules {
 
     public static void Sync() {
         syncNoClip();
-        syncFullbright();
     }
 
     public static void syncNoClip() {
@@ -22,14 +21,6 @@ public class SyncModules {
 
                 Client.LOGGER.info("Synced no-clip setting from world: {}", worldNoClipState);
             }
-        }
-    }
-
-    public static void syncFullbright() {
-        if (Modules.fullbright.isEnabled()) {
-            Client.LOGGER.debug("Fullbright is enabled.");
-        } else {
-            Client.LOGGER.debug("Fullbright is disabled.");
         }
     }
 }

@@ -39,7 +39,15 @@ public class InputManager extends InputAdapter {
         if (GameState.currentGameState instanceof ChatMenu) {
             return;
         }
-        if (Gdx.input.getInputProcessor() != this) Gdx.input.setInputProcessor(this);
+
+        if (GameState.currentGameState instanceof InGame) {
+            processInGameKeybinds();
+            return;
+        }
+
+        if (GameState.currentGameState instanceof GUI && Gdx.input.getInputProcessor() != this) {
+            Gdx.input.setInputProcessor(this);
+        }
     }
 
     public void startTextInput(Object requester, Consumer<String> onEnter, Runnable onCancel, String initialText) {
@@ -256,6 +264,22 @@ public class InputManager extends InputAdapter {
         for (Module module : Modules.moduleList) {
             if (module.getKeybind() == keycode && keycode != 0) {
                 Client.LOGGER.debug("Module key pressed: {} for {}", Input.Keys.toString(keycode), module.getId());
+                module.toggle(true);
+            }
+        }
+    }
+
+    private void processInGameKeybinds() {
+        if (isFirstFrameKeyDown(Input.Keys.GRAVE)) {
+            Gdx.input.setCursorCatched(false);
+            GameState.switchToGameState(new GUI(GameState.currentGameState));
+            return;
+        }
+
+        for (Module module : Modules.moduleList) {
+            int key = module.getKeybind();
+            if (key != 0 && isFirstFrameKeyDown(key)) {
+                Client.LOGGER.debug("Module key pressed: {} for {}", Input.Keys.toString(key), module.getId());
                 module.toggle(true);
             }
         }
