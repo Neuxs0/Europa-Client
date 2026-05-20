@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.ui.pages.*;
+import dev.neuxs.europa_client.utils.rendering.BackgroundBlurRenderer;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
@@ -36,6 +37,7 @@ public class GUI extends GameState {
     private final Color mainBorderColor = ColorUtils.color(60, 60, 60, 255);
 
     private final GameState previousGamestate;
+    private final BackgroundBlurRenderer backgroundBlurRenderer = new BackgroundBlurRenderer();
     private Viewport viewport;
     private float screenW;
     private float screenH;
@@ -233,18 +235,7 @@ public class GUI extends GameState {
             return;
         }
 
-        try {
-            if (previousGamestate.isCreated()) previousGamestate.render();
-            else {
-                Client.LOGGER.error("Previous GameState is not created! Falling back to empty background.");
-                Gdx.gl.glClearColor(0, 0, 0, 1);
-                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-            }
-        } catch (Exception e) {
-            Client.LOGGER.error("Error rendering previous GameState! Falling back to empty background.\n{}\n\n{}", e.getMessage(), e);
-            Gdx.gl.glClearColor(0, 0, 0, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        }
+        renderBackground();
 
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glDisable(GL20.GL_CULL_FACE);
@@ -292,6 +283,7 @@ public class GUI extends GameState {
         renderUtil.removeRenderer(cheatsButton);
         renderUtil.removeRenderer(profilesButton);
         renderUtil.removeRenderer(settingsButton);
+        backgroundBlurRenderer.dispose();
 
         if (stage != null) {
             stage.dispose();
@@ -373,6 +365,31 @@ public class GUI extends GameState {
         backgroundDim.setFillColor(ClientSettings.isGuiBackgroundDimEnabled()
                 ? mainDimColor
                 : ColorUtils.TRANSPARENT);
+    }
+
+    private void renderBackground() {
+        if (!previousGamestate.isCreated()) {
+            Client.LOGGER.error("Previous GameState is not created! Falling back to empty background.");
+            clearBackground();
+            return;
+        }
+
+        if (ClientSettings.isGuiBackgroundBlurEnabled()) {
+            backgroundBlurRenderer.render(previousGamestate, this::clearBackground, ClientSettings.getGuiBackgroundBlurStrength());
+            return;
+        }
+
+        try {
+            previousGamestate.render();
+        } catch (Exception e) {
+            Client.LOGGER.error("Error rendering previous GameState! Falling back to empty background.\n{}\n\n{}", e.getMessage(), e);
+            clearBackground();
+        }
+    }
+
+    private void clearBackground() {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
     }
 
     private Page getPageByTitle(String pageTitle) {

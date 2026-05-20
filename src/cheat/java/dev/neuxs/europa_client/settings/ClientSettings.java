@@ -42,6 +42,22 @@ public class ClientSettings {
             .withDisplayName("Dim Background")
             .withDescription("Dim the game behind the Europa Client menu");
 
+    public static final Setting<Boolean> GUI_BACKGROUND_BLUR = new Setting<>(
+            "guiBackgroundBlur",
+            true
+    )
+            .withDisplayName("Blur Background")
+            .withDescription("Blur the game behind the Europa Client menu");
+
+    public static final Setting<Float> GUI_BACKGROUND_BLUR_STRENGTH = new Setting<>(
+            "guiBackgroundBlurStrength",
+            0.5f
+    )
+            .withDisplayName("Blur Strength")
+            .withDescription("Strength of the game background blur")
+            .withRange(0.25f, 8f)
+            .withStep(0.25f);
+
     private static final Map<String, Setting<?>> SETTINGS = new LinkedHashMap<>();
 
     static {
@@ -49,6 +65,8 @@ public class ClientSettings {
         register(COMMAND_PREFIX);
         register(CLIENT_CHAT_PREFIX);
         register(GUI_BACKGROUND_DIM);
+        register(GUI_BACKGROUND_BLUR);
+        register(GUI_BACKGROUND_BLUR_STRENGTH);
     }
 
     private static void register(Setting<?> setting) {
@@ -144,5 +162,14 @@ public class ClientSettings {
 
     public static boolean isGuiBackgroundDimEnabled() {
         return GUI_BACKGROUND_DIM.getValue();
+    }
+
+    public static boolean isGuiBackgroundBlurEnabled() {
+        return GUI_BACKGROUND_BLUR.getValue();
+    }
+
+    public static float getGuiBackgroundBlurStrength() {
+        Float strength = GUI_BACKGROUND_BLUR_STRENGTH.getValue();
+        return strength == null ? GUI_BACKGROUND_BLUR_STRENGTH.getDefaultValue() : strength;
     }
 }
