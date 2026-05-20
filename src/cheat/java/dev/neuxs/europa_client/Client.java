@@ -9,7 +9,6 @@ import dev.neuxs.europa_client.utils.SyncModules;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 
-// TODO GUI: Add Cheat page
 // TODO SETTINGS: Add support for custom profiles
 // TODO GUI: Add Profiles page
 // TODO SETTINGS: Add support for more custom settings
