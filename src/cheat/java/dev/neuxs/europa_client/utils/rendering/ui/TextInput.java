@@ -25,6 +25,10 @@ public class TextInput extends Renderer implements InputProcessor {
     private static final float DEFAULT_PADDING = 5f;
     private static final float DEFAULT_BLINK_INTERVAL = 0.5f;
     private static final float DEFAULT_CURSOR_WIDTH = 1f;
+    private static final float KEY_REPEAT_DELAY = 0.5f;
+    private static final float KEY_REPEAT_INTERVAL = 0.05f;
+    private static final float KEY_RELEASE_GRACE = 0.075f;
+    private static final float MAX_KEY_REPEAT_DELTA = 0.1f;
 
     private static final Color DEFAULT_FILL_COLOR = ColorUtils.color(50, 50, 50, 255);
     private static final Color DEFAULT_TEXT_COLOR = ColorUtils.color(255, 255, 255, 255);
@@ -32,6 +36,7 @@ public class TextInput extends Renderer implements InputProcessor {
     private static final Color DEFAULT_UNFOCUSED_BORDER = ColorUtils.color(20, 20, 20, 255);
     private static final Color DEFAULT_CURSOR_COLOR = ColorUtils.color(240, 240, 240, 255);
     private static final Color DEFAULT_PLACEHOLDER_COLOR = ColorUtils.color(150, 150, 150, 255);
+    private static final Color DEFAULT_SELECTION_COLOR = ColorUtils.color(70, 120, 215, 160);
 
     private final BoxRenderer boxRenderer;
     private final TextRenderer textRenderer;
@@ -42,12 +47,19 @@ public class TextInput extends Renderer implements InputProcessor {
 
     private String placeholder;
     private int cursorPosition;
+    private int selectionAnchor;
+    private boolean selectingWithKeyboard;
     private boolean focused;
     private float blinkTimer;
     private boolean showCursor;
     private float blinkInterval;
     private float cursorWidth;
     private float padding;
+    private int repeatingKeycode;
+    private float keyRepeatTimer;
+    private long lastKeyRepeatNanos;
+    private boolean keyReleasePending;
+    private float keyReleaseTimer;
 
     private Consumer<String> onEnterPressed;
     private Consumer<String> onFocusLost;
@@ -57,6 +69,7 @@ public class TextInput extends Renderer implements InputProcessor {
     private Color unfocusedBorderColor;
     private Color cursorColor;
     private Color placeholderColor;
+    private Color selectionColor;
 
     public TextInput() {
         this.boxRenderer = new BoxRenderer();
@@ -68,12 +81,19 @@ public class TextInput extends Renderer implements InputProcessor {
 
         this.placeholder = "";
         this.cursorPosition = 0;
+        this.selectionAnchor = 0;
+        this.selectingWithKeyboard = false;
         this.focused = false;
         this.blinkTimer = 0f;
         this.showCursor = false;
         this.blinkInterval = DEFAULT_BLINK_INTERVAL;
         this.cursorWidth = DEFAULT_CURSOR_WIDTH;
         this.padding = DEFAULT_PADDING;
+        this.repeatingKeycode = Input.Keys.UNKNOWN;
+        this.keyRepeatTimer = 0f;
+        this.lastKeyRepeatNanos = 0L;
+        this.keyReleasePending = false;
+        this.keyReleaseTimer = 0f;
 
         this.onEnterPressed = (value) -> {};
         this.onFocusLost = (value) -> {};
@@ -83,6 +103,7 @@ public class TextInput extends Renderer implements InputProcessor {
         this.unfocusedBorderColor = DEFAULT_UNFOCUSED_BORDER.cpy();
         this.cursorColor = DEFAULT_CURSOR_COLOR.cpy();
         this.placeholderColor = DEFAULT_PLACEHOLDER_COLOR.cpy();
+        this.selectionColor = DEFAULT_SELECTION_COLOR.cpy();
 
         setRenderType(RenderUtil.RenderType.SHAPE_SPRITE);
         setShapeType(ShapeRenderer.ShapeType.Filled);
@@ -109,13 +130,19 @@ public class TextInput extends Renderer implements InputProcessor {
         updateMousePosition(viewport);
 
         updateCursorBlink(delta);
+        updateKeyRepeat();
         syncBoxRenderer();
     }
 
     @Override
     public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
+        updateKeyRepeat();
         syncBoxRenderer();
         boxRenderer.renderShape(viewport, shapeRenderer);
+
+        if (focused && hasSelection()) {
+            renderSelection(shapeRenderer);
+        }
 
         if (focused && showCursor) {
             renderCursor(shapeRenderer);
@@ -148,6 +175,9 @@ public class TextInput extends Renderer implements InputProcessor {
 
         boolean mouseOver = isMouseOver(worldX, worldY);
         setFocus(mouseOver);
+        if (mouseOver) {
+            moveCursorTo(getCursorPositionFromX(worldX), false);
+        }
         return mouseOver;
     }
 
@@ -168,6 +198,67 @@ public class TextInput extends Renderer implements InputProcessor {
     private void resetCursorBlink() {
         blinkTimer = 0f;
         showCursor = focused;
+    }
+
+    private void updateKeyRepeat() {
+        if (!focused || repeatingKeycode == Input.Keys.UNKNOWN) {
+            stopKeyRepeat();
+            return;
+        }
+
+        long now = System.nanoTime();
+        if (lastKeyRepeatNanos == 0L) {
+            lastKeyRepeatNanos = now;
+            return;
+        }
+
+        float delta = Math.min((now - lastKeyRepeatNanos) / 1_000_000_000f, MAX_KEY_REPEAT_DELTA);
+        lastKeyRepeatNanos = now;
+        updateKeyRepeat(delta);
+    }
+
+    private void updateKeyRepeat(float delta) {
+        if (!focused || repeatingKeycode == Input.Keys.UNKNOWN) {
+            stopKeyRepeat();
+            return;
+        }
+
+        keyRepeatTimer -= Math.max(0f, delta);
+        if (keyReleasePending) {
+            keyReleaseTimer -= Math.max(0f, delta);
+            if (keyReleaseTimer <= 0f) {
+                stopKeyRepeat();
+                return;
+            }
+        }
+
+        while (keyRepeatTimer <= 0f) {
+            handleEditingKeyDown(repeatingKeycode);
+            keyRepeatTimer += KEY_REPEAT_INTERVAL;
+        }
+    }
+
+    private void startKeyRepeat(int keycode) {
+        if (!isRepeatableKey(keycode)) {
+            stopKeyRepeat();
+            return;
+        }
+
+        if (repeatingKeycode != keycode) {
+            repeatingKeycode = keycode;
+            keyRepeatTimer = KEY_REPEAT_DELAY;
+            lastKeyRepeatNanos = System.nanoTime();
+        }
+        keyReleasePending = false;
+        keyReleaseTimer = 0f;
+    }
+
+    private void stopKeyRepeat() {
+        repeatingKeycode = Input.Keys.UNKNOWN;
+        keyRepeatTimer = 0f;
+        lastKeyRepeatNanos = 0L;
+        keyReleasePending = false;
+        keyReleaseTimer = 0f;
     }
 
     private void syncBoxRenderer() {
@@ -195,6 +286,26 @@ public class TextInput extends Renderer implements InputProcessor {
 
         shapeRenderer.setColor(cursorColor);
         shapeRenderer.rectLine(cursorX, cursorY, cursorX, cursorY + cursorHeight, cursorWidth);
+    }
+
+    private void renderSelection(ShapeRenderer shapeRenderer) {
+        if (shapeRenderer == null || textRenderer.getFont() == null || text.isEmpty()) {
+            return;
+        }
+
+        int selectionStart = getSelectionStart();
+        int selectionEnd = getSelectionEnd();
+        float startX = getTextStartX() + getTextWidth(0, selectionStart);
+        float endX = getTextStartX() + getTextWidth(0, selectionEnd);
+        float selectionY = getPosY() + padding;
+        float selectionHeight = Math.max(0f, getHeight() - padding * 2f);
+
+        if (selectionHeight <= 0f || endX <= startX) {
+            return;
+        }
+
+        shapeRenderer.setColor(selectionColor);
+        shapeRenderer.rect(startX, selectionY, endX - startX, selectionHeight);
     }
 
     private void renderText(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
@@ -233,33 +344,215 @@ public class TextInput extends Renderer implements InputProcessor {
         return glyphLayout.width;
     }
 
+    private float getTextWidth(int startInclusive, int endExclusive) {
+        BitmapFont font = textRenderer.getFont();
+        if (font == null || startInclusive >= endExclusive || text.isEmpty()) {
+            return 0f;
+        }
+
+        int start = MathUtils.clamp(startInclusive, 0, text.length());
+        int end = MathUtils.clamp(endExclusive, start, text.length());
+        glyphLayout.setText(font, text.substring(start, end));
+        return glyphLayout.width;
+    }
+
+    private int getCursorPositionFromX(float worldX) {
+        BitmapFont font = textRenderer.getFont();
+        if (font == null || text.isEmpty()) {
+            return 0;
+        }
+
+        float localX = Math.max(0f, worldX - getTextStartX());
+        int closestPosition = 0;
+        float closestDistance = Float.MAX_VALUE;
+
+        for (int i = 0; i <= text.length(); i++) {
+            float cursorX = getTextWidth(0, i);
+            float distance = Math.abs(localX - cursorX);
+            if (distance < closestDistance) {
+                closestPosition = i;
+                closestDistance = distance;
+            }
+        }
+
+        return closestPosition;
+    }
+
     private void insertText(String value) {
         if (value == null || value.isEmpty()) {
             return;
         }
 
+        value = sanitizeInputText(value);
+        if (value.isEmpty()) {
+            return;
+        }
+
+        deleteSelection();
         text.insert(cursorPosition, value);
         cursorPosition += value.length();
+        clearSelection();
         notifyTextChanged();
     }
 
     private void deletePreviousCharacter() {
+        if (deleteSelection()) {
+            return;
+        }
+
         if (cursorPosition <= 0) {
             return;
         }
 
         text.deleteCharAt(cursorPosition - 1);
         cursorPosition--;
+        clearSelection();
         notifyTextChanged();
     }
 
     private void deleteNextCharacter() {
+        if (deleteSelection()) {
+            return;
+        }
+
         if (cursorPosition >= text.length()) {
             return;
         }
 
         text.deleteCharAt(cursorPosition);
+        clearSelection();
         notifyTextChanged();
+    }
+
+    private void deletePreviousWord() {
+        if (deleteSelection()) {
+            return;
+        }
+
+        int previousWordPosition = findPreviousWordBoundary(cursorPosition);
+        if (previousWordPosition == cursorPosition) {
+            return;
+        }
+
+        text.delete(previousWordPosition, cursorPosition);
+        cursorPosition = previousWordPosition;
+        clearSelection();
+        notifyTextChanged();
+    }
+
+    private void deleteNextWord() {
+        if (deleteSelection()) {
+            return;
+        }
+
+        int nextWordPosition = findNextWordBoundary(cursorPosition);
+        if (nextWordPosition == cursorPosition) {
+            return;
+        }
+
+        text.delete(cursorPosition, nextWordPosition);
+        clearSelection();
+        notifyTextChanged();
+    }
+
+    private boolean deleteSelection() {
+        if (!hasSelection()) {
+            return false;
+        }
+
+        int selectionStart = getSelectionStart();
+        int selectionEnd = getSelectionEnd();
+        text.delete(selectionStart, selectionEnd);
+        cursorPosition = selectionStart;
+        clearSelection();
+        notifyTextChanged();
+        return true;
+    }
+
+    private String sanitizeInputText(String value) {
+        StringBuilder sanitized = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            if (character == '\r' || character == '\n') {
+                sanitized.append(' ');
+            } else if (!Character.isISOControl(character) && character != 127) {
+                sanitized.append(character);
+            }
+        }
+        return sanitized.toString();
+    }
+
+    private void copySelectionToClipboard() {
+        if (hasSelection()) {
+            Gdx.app.getClipboard().setContents(text.substring(getSelectionStart(), getSelectionEnd()));
+        }
+    }
+
+    private void cutSelectionToClipboard() {
+        if (!hasSelection()) {
+            return;
+        }
+
+        copySelectionToClipboard();
+        deleteSelection();
+    }
+
+    private void selectAll() {
+        selectionAnchor = 0;
+        cursorPosition = text.length();
+    }
+
+    private boolean hasSelection() {
+        return selectionAnchor != cursorPosition;
+    }
+
+    private int getSelectionStart() {
+        return Math.min(selectionAnchor, cursorPosition);
+    }
+
+    private int getSelectionEnd() {
+        return Math.max(selectionAnchor, cursorPosition);
+    }
+
+    private void clearSelection() {
+        selectionAnchor = cursorPosition;
+        selectingWithKeyboard = false;
+    }
+
+    private void moveCursorTo(int position, boolean selecting) {
+        int oldPosition = cursorPosition;
+        cursorPosition = MathUtils.clamp(position, 0, text.length());
+        if (selecting) {
+            if (!selectingWithKeyboard) {
+                selectionAnchor = oldPosition;
+                selectingWithKeyboard = true;
+            }
+        } else {
+            clearSelection();
+        }
+        resetCursorBlink();
+    }
+
+    private int findPreviousWordBoundary(int position) {
+        int index = MathUtils.clamp(position, 0, text.length());
+        while (index > 0 && Character.isWhitespace(text.charAt(index - 1))) {
+            index--;
+        }
+        while (index > 0 && !Character.isWhitespace(text.charAt(index - 1))) {
+            index--;
+        }
+        return index;
+    }
+
+    private int findNextWordBoundary(int position) {
+        int index = MathUtils.clamp(position, 0, text.length());
+        while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        while (index < text.length() && !Character.isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        return index;
     }
 
     private void notifyTextChanged() {
@@ -275,17 +568,33 @@ public class TextInput extends Renderer implements InputProcessor {
             return false;
         }
 
+        if (keycode == repeatingKeycode && isRepeatableKey(keycode)) {
+            keyReleasePending = false;
+            keyReleaseTimer = 0f;
+            return true;
+        }
+
+        boolean handled = handleEditingKeyDown(keycode);
+        if (handled) {
+            startKeyRepeat(keycode);
+        }
+
+        return handled;
+    }
+
+    private boolean handleEditingKeyDown(int keycode) {
         if (isControlPressed()) {
             return handleControlKeyDown(keycode);
         }
 
+        boolean shiftPressed = isShiftPressed();
         switch (keycode) {
             case Input.Keys.BACKSPACE -> deletePreviousCharacter();
             case Input.Keys.FORWARD_DEL -> deleteNextCharacter();
-            case Input.Keys.LEFT -> cursorPosition = Math.max(0, cursorPosition - 1);
-            case Input.Keys.RIGHT -> cursorPosition = Math.min(text.length(), cursorPosition + 1);
-            case Input.Keys.HOME -> cursorPosition = 0;
-            case Input.Keys.END -> cursorPosition = text.length();
+            case Input.Keys.LEFT -> moveCursorTo(!shiftPressed && hasSelection() ? getSelectionStart() : cursorPosition - 1, shiftPressed);
+            case Input.Keys.RIGHT -> moveCursorTo(!shiftPressed && hasSelection() ? getSelectionEnd() : cursorPosition + 1, shiftPressed);
+            case Input.Keys.HOME -> moveCursorTo(0, shiftPressed);
+            case Input.Keys.END -> moveCursorTo(text.length(), shiftPressed);
             case Input.Keys.ENTER, Input.Keys.NUMPAD_ENTER -> {
                 if (onEnterPressed != null) {
                     onEnterPressed.accept(text.toString());
@@ -302,9 +611,18 @@ public class TextInput extends Renderer implements InputProcessor {
     }
 
     private boolean handleControlKeyDown(int keycode) {
+        boolean shiftPressed = isShiftPressed();
         switch (keycode) {
-            case Input.Keys.A -> cursorPosition = text.length();
+            case Input.Keys.A -> selectAll();
+            case Input.Keys.C -> copySelectionToClipboard();
+            case Input.Keys.X -> cutSelectionToClipboard();
             case Input.Keys.V -> insertText(Gdx.app.getClipboard().getContents());
+            case Input.Keys.BACKSPACE -> deletePreviousWord();
+            case Input.Keys.FORWARD_DEL -> deleteNextWord();
+            case Input.Keys.LEFT -> moveCursorTo(!shiftPressed && hasSelection() ? getSelectionStart() : findPreviousWordBoundary(cursorPosition), shiftPressed);
+            case Input.Keys.RIGHT -> moveCursorTo(!shiftPressed && hasSelection() ? getSelectionEnd() : findNextWordBoundary(cursorPosition), shiftPressed);
+            case Input.Keys.HOME -> moveCursorTo(0, shiftPressed);
+            case Input.Keys.END -> moveCursorTo(text.length(), shiftPressed);
             default -> {
                 return false;
             }
@@ -318,8 +636,28 @@ public class TextInput extends Renderer implements InputProcessor {
         return Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT);
     }
 
+    private boolean isShiftPressed() {
+        return Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
+    }
+
+    private boolean isRepeatableKey(int keycode) {
+        return switch (keycode) {
+            case Input.Keys.BACKSPACE,
+                 Input.Keys.FORWARD_DEL,
+                 Input.Keys.LEFT,
+                 Input.Keys.RIGHT,
+                 Input.Keys.HOME,
+                 Input.Keys.END -> true;
+            default -> false;
+        };
+    }
+
     @Override
     public boolean keyUp(int keycode) {
+        if (keycode == repeatingKeycode && isRepeatableKey(keycode)) {
+            keyReleasePending = true;
+            keyReleaseTimer = KEY_RELEASE_GRACE;
+        }
         return focused;
     }
 
@@ -457,6 +795,7 @@ public class TextInput extends Renderer implements InputProcessor {
             this.text.append(text);
         }
         cursorPosition = MathUtils.clamp(cursorPosition, 0, this.text.length());
+        clearSelection();
         notifyTextChanged();
     }
 
@@ -466,6 +805,7 @@ public class TextInput extends Renderer implements InputProcessor {
             this.text.append(text);
         }
         cursorPosition = MathUtils.clamp(cursorPosition, 0, this.text.length());
+        clearSelection();
         resetCursorBlink();
     }
 
@@ -498,8 +838,11 @@ public class TextInput extends Renderer implements InputProcessor {
         focused = focus;
         if (focused) {
             cursorPosition = text.length();
+            clearSelection();
             resetCursorBlink();
         } else {
+            clearSelection();
+            stopKeyRepeat();
             showCursor = false;
             blinkTimer = 0f;
             if (onFocusLost != null) {
@@ -516,6 +859,7 @@ public class TextInput extends Renderer implements InputProcessor {
 
     public void setCursorPosition(int cursorPosition) {
         this.cursorPosition = MathUtils.clamp(cursorPosition, 0, text.length());
+        clearSelection();
         resetCursorBlink();
     }
 
@@ -585,6 +929,10 @@ public class TextInput extends Renderer implements InputProcessor {
         placeholderRenderer.setTextColor(placeholderColor);
     }
 
+    public void setSelectionColor(Color color) {
+        selectionColor = color != null ? color.cpy() : DEFAULT_SELECTION_COLOR.cpy();
+    }
+
     public Consumer<String> getOnEnterPressed() {
         return onEnterPressed;
     }
@@ -611,6 +959,10 @@ public class TextInput extends Renderer implements InputProcessor {
 
     public Color getPlaceholderColor() {
         return placeholderColor.cpy();
+    }
+
+    public Color getSelectionColor() {
+        return selectionColor.cpy();
     }
 
     public BoxRenderer getBoxRenderer() {
