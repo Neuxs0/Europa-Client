@@ -1,206 +1,359 @@
 package dev.neuxs.europa_client.utils.rendering.ui;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.CircleRenderer;
+import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class Toggle {
+public class Toggle extends Renderer {
+    private static final Color DEFAULT_BACKGROUND_OFF = ColorUtils.color(80, 80, 80, 255);
+    private static final Color DEFAULT_BACKGROUND_ON = ColorUtils.color(70, 130, 200, 255);
+    private static final Color DEFAULT_HANDLE_OFF = ColorUtils.color(150, 150, 150, 255);
+    private static final Color DEFAULT_HANDLE_ON = ColorUtils.color(220, 220, 220, 255);
+    private static final Color DEFAULT_HOVER_MULTIPLIER = new Color(1.1f, 1.1f, 1.1f, 1f);
+
     private final Button interactionButton;
     private final BoxRenderer backgroundRenderer;
     private final CircleRenderer handleRenderer;
-    private boolean isToggled;
+    private final Vector2 mousePos;
+
+    private boolean toggled;
     private Consumer<Boolean> onValueChanged;
-    private float padding = 2f;
+    private float padding;
+
     private Color backgroundOffColor;
     private Color backgroundOnColor;
     private Color handleOffColor;
     private Color handleOnColor;
-    private Color backgroundHoverColorMultiplier = new Color(1.1f, 1.1f, 1.1f, 1f);
-    private Color handleHoverColorMultiplier = new Color(1.1f, 1.1f, 1.1f, 1f);
-    private float handleCurrentX;
+    private Color backgroundHoverColorMultiplier;
+    private Color handleHoverColorMultiplier;
     private Color currentBackgroundColor;
     private Color currentHandleColor;
-    private final Color defaultBgOff = ColorUtils.color(80, 80, 80, 255);
-    private final Color defaultBgOn = ColorUtils.color(70, 130, 200, 255);
-    private final Color defaultHandleOff = ColorUtils.color(150, 150, 150, 255);
-    private final Color defaultHandleOn = ColorUtils.color(220, 220, 220, 255);
 
     public Toggle() {
         this.interactionButton = new Button();
         this.backgroundRenderer = new BoxRenderer();
         this.handleRenderer = new CircleRenderer();
-        this.isToggled = false;
+        this.mousePos = new Vector2();
+
+        this.toggled = false;
         this.onValueChanged = (state) -> {};
-        this.backgroundOffColor = defaultBgOff.cpy();
-        this.backgroundOnColor = defaultBgOn.cpy();
-        this.handleOffColor = defaultHandleOff.cpy();
-        this.handleOnColor = defaultHandleOn.cpy();
+        this.padding = 2f;
 
-        Color transparent = new Color(0, 0, 0, 0);
-        this.interactionButton.setFillColor(transparent);
-        this.interactionButton.setHoverFillColor(transparent);
-        this.interactionButton.setPressedFillColor(transparent);
-        this.interactionButton.getBoxRenderer().setBorder(false);
+        this.backgroundOffColor = DEFAULT_BACKGROUND_OFF.cpy();
+        this.backgroundOnColor = DEFAULT_BACKGROUND_ON.cpy();
+        this.handleOffColor = DEFAULT_HANDLE_OFF.cpy();
+        this.handleOnColor = DEFAULT_HANDLE_ON.cpy();
+        this.backgroundHoverColorMultiplier = DEFAULT_HOVER_MULTIPLIER.cpy();
+        this.handleHoverColorMultiplier = DEFAULT_HOVER_MULTIPLIER.cpy();
+        this.currentBackgroundColor = backgroundOffColor.cpy();
+        this.currentHandleColor = handleOffColor.cpy();
 
-        this.backgroundRenderer.setBorder(false);
-        this.handleRenderer.setBorder(false);
+        setRenderType(RenderUtil.RenderType.SHAPE);
+        setShapeType(ShapeRenderer.ShapeType.Filled);
+        setSize(40f, 20f);
 
-        updateTargetPositionAndColors();
-        this.handleCurrentX = calculateTargetX();
-        this.currentBackgroundColor = this.isToggled ? this.backgroundOnColor : this.backgroundOffColor;
-        this.currentHandleColor = this.isToggled ? this.handleOnColor : this.handleOffColor;
-        updateComponentPositions();
+        backgroundRenderer.setBorder(false);
+        handleRenderer.setBorder(false);
+        configureInteractionButton();
+        updateGeometry();
+        updateVisuals(false);
     }
 
-    public void toggleState() {
-        this.isToggled = !this.isToggled;
-        updateTargetPositionAndColors();
-        if (this.onValueChanged != null) {
-            this.onValueChanged.accept(this.isToggled);
-        }
-    }
-
-    private float calculateTargetX() {
-        float handleRadius = handleRenderer.getRadius();
-        float trackWidth = backgroundRenderer.getWidth();
-        float trackX = backgroundRenderer.getPosX();
-
-        return this.isToggled
-                ? trackX + trackWidth - handleRadius - padding
-                : trackX + handleRadius + padding;
-    }
-
-    private void updateTargetPositionAndColors() {
-        this.handleCurrentX = calculateTargetX();
-        handleRenderer.setPosX(this.handleCurrentX);
-
-        Color targetBgColor = isToggled ? backgroundOnColor : backgroundOffColor;
-        Color targetHandleColor = isToggled ? handleOnColor : handleOffColor;
-
-        if (interactionButton.getState() == Renderer.State.HOVERED ||
-                interactionButton.getState() == Renderer.State.PRESSED) {
-            targetBgColor = targetBgColor.cpy().mul(backgroundHoverColorMultiplier);
-            targetHandleColor = targetHandleColor.cpy().mul(handleHoverColorMultiplier);
-        }
-
-        currentBackgroundColor = targetBgColor;
-        currentHandleColor = targetHandleColor;
-    }
-
-    private void updateComponentPositions() {
-        float x = backgroundRenderer.getPosX();
-        float y = backgroundRenderer.getPosY();
-        float width = backgroundRenderer.getWidth();
-        float height = backgroundRenderer.getHeight();
-
-        interactionButton.setPos(x, y);
-        interactionButton.setSize(width, height);
-
-        float handleRadius = Math.max(0, (height / 2f) - padding);
-        handleRenderer.setRadius(handleRadius);
-        handleRenderer.setPosY(y + height / 2f);
-
-        this.handleCurrentX = calculateTargetX();
-        handleRenderer.setPosX(this.handleCurrentX);
-
-        backgroundRenderer.setBorderRadius(height / 2f);
-    }
-
-
+    @Override
     public void update(Viewport viewport) {
+        if (viewport == null) {
+            return;
+        }
+
+        updateMousePosition(viewport);
+        boolean mouseOver = isMouseOver(mousePos.x, mousePos.y);
+        updateState(mouseOver);
+
         interactionButton.update(viewport);
-        updateTargetPositionAndColors();
+
+        if (mouseOver && InputManager.isFirstFrameMouseButtonDown(Input.Buttons.LEFT)) {
+            toggleState();
+        } else {
+            updateVisuals(mouseOver);
+        }
+    }
+
+    @Override
+    public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
+        backgroundRenderer.setFillColor(currentBackgroundColor);
+        handleRenderer.setFillColor(currentHandleColor);
+
+        backgroundRenderer.renderShape(viewport, shapeRenderer);
+        handleRenderer.renderShape(viewport, shapeRenderer);
+    }
+
+    @Override
+    public void renderSprite(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
+    }
+
+    public void render(Viewport viewport, ShapeRenderer shapeRenderer) {
+        renderShape(viewport, shapeRenderer);
     }
 
     public void render(ShapeRenderer shapeRenderer) {
-        backgroundRenderer.setFillColor(currentBackgroundColor);
-//        backgroundRenderer.render(shapeRenderer);
+    }
 
-        handleRenderer.setFillColor(currentHandleColor);
-//        handleRenderer.render(shapeRenderer);
+    public void toggleState() {
+        setEnabled(!toggled);
+    }
+
+    private void configureInteractionButton() {
+        Color transparent = new Color(0f, 0f, 0f, 0f);
+        interactionButton.setFillColor(transparent);
+        interactionButton.setHoverFillColor(transparent);
+        interactionButton.setPressedFillColor(transparent);
+        interactionButton.getBoxRenderer().setBorder(false);
+        syncInteractionButton();
+    }
+
+    private void updateMousePosition(Viewport viewport) {
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mousePos);
+    }
+
+    private boolean isMouseOver(float x, float y) {
+        return x >= getPosX() && x <= getPosX() + getWidth()
+                && y >= getPosY() && y <= getPosY() + getHeight();
+    }
+
+    private void updateState(boolean mouseOver) {
+        if (mouseOver && InputManager.isMouseButtonDown(Input.Buttons.LEFT)) {
+            setState(State.PRESSED);
+        } else if (mouseOver) {
+            setState(toggled ? State.HOVER_TOGGLED : State.HOVERED);
+        } else {
+            setState(toggled ? State.TOGGLED : State.NORMAL);
+        }
+    }
+
+    private void updateGeometry() {
+        float width = getWidth();
+        float height = getHeight();
+        if (width <= 0f || height <= 0f) {
+            return;
+        }
+
+        backgroundRenderer.setPos(getPos());
+        backgroundRenderer.setSize(width, height);
+        backgroundRenderer.setBorderRadius(height / 2f);
+
+        float handleRadius = Math.max(0f, height / 2f - padding);
+        handleRenderer.setRadius(handleRadius);
+        handleRenderer.setPos(calculateHandleX(), getPosY() + height / 2f);
+
+        syncInteractionButton();
+    }
+
+    private float calculateHandleX() {
+        float handleRadius = handleRenderer.getRadius();
+        return toggled
+                ? getPosX() + getWidth() - handleRadius - padding
+                : getPosX() + handleRadius + padding;
+    }
+
+    private void updateVisuals(boolean hovered) {
+        currentBackgroundColor = (toggled ? backgroundOnColor : backgroundOffColor).cpy();
+        currentHandleColor = (toggled ? handleOnColor : handleOffColor).cpy();
+
+        if (hovered || getState() == State.PRESSED || getState() == State.HOVER_TOGGLED) {
+            currentBackgroundColor.mul(backgroundHoverColorMultiplier);
+            currentHandleColor.mul(handleHoverColorMultiplier);
+        }
+
+        handleRenderer.setPosX(calculateHandleX());
+    }
+
+    private void syncInteractionButton() {
+        interactionButton.setPos(getPos());
+        interactionButton.setSize(getSize());
+    }
+
+    @Override
+    public void setPos(Vector3 pos) {
+        super.setPos(pos);
+        updateGeometry();
+    }
+
+    @Override
+    public void setPos(Vector2 pos) {
+        super.setPos(pos);
+        updateGeometry();
+    }
+
+    @Override
+    public void setPos(float x, float y, int z) {
+        super.setPos(x, y, z);
+        updateGeometry();
+    }
+
+    @Override
+    public void setPos(float x, float y) {
+        super.setPos(x, y);
+        updateGeometry();
     }
 
     public void setPosition(float x, float y) {
-        backgroundRenderer.setPos(x, y);
-        updateComponentPositions();
+        setPos(x, y);
     }
+
+    @Override
+    public void setSize(Vector2 size) {
+        if (size != null) {
+            setSize(size.x, size.y);
+        }
+    }
+
+    @Override
     public void setSize(float width, float height) {
-        backgroundRenderer.setSize(width, height);
-        if (width < height * 2) {
-            width = height * 2;
-            backgroundRenderer.setWidth(width);
-        }
-        updateComponentPositions();
+        float effectiveHeight = Math.max(1f, height);
+        float effectiveWidth = Math.max(effectiveHeight * 2f, width);
+        super.setSize(effectiveWidth, effectiveHeight);
+        updateGeometry();
     }
+
+    @Override
+    public void setWidth(float width) {
+        setSize(width, getHeight());
+    }
+
+    @Override
+    public void setHeight(float height) {
+        setSize(getWidth(), height);
+    }
+
     public void setEnabled(boolean enabled) {
-        if (this.isToggled != enabled) {
-            this.isToggled = enabled;
-            updateTargetPositionAndColors();
-            if (this.onValueChanged != null) {
-                this.onValueChanged.accept(this.isToggled);
-            }
-        } else {
-            updateTargetPositionAndColors();
+        setEnabled(enabled, true);
+    }
+
+    public void setEnabledSilent(boolean enabled) {
+        setEnabled(enabled, false);
+    }
+
+    private void setEnabled(boolean enabled, boolean triggerCallback) {
+        boolean changed = toggled != enabled;
+        toggled = enabled;
+        updateState(false);
+        updateGeometry();
+        updateVisuals(false);
+
+        if (changed && triggerCallback && onValueChanged != null) {
+            onValueChanged.accept(toggled);
         }
     }
+
     public void setPadding(float padding) {
-        this.padding = Math.max(0, padding);
-        updateComponentPositions();
+        this.padding = Math.max(0f, padding);
+        updateGeometry();
+        updateVisuals(false);
     }
+
     public boolean isToggled() {
-        return isToggled;
+        return toggled;
     }
+
     public Consumer<Boolean> getOnValueChanged() {
         return onValueChanged;
     }
+
     public void setOnValueChanged(Consumer<Boolean> onValueChanged) {
         this.onValueChanged = onValueChanged != null ? onValueChanged : (state) -> {};
     }
+
     public void setBackgroundOffColor(Color color) {
-        this.backgroundOffColor = (color != null) ? color.cpy() : defaultBgOff.cpy();
+        backgroundOffColor = color != null ? color.cpy() : DEFAULT_BACKGROUND_OFF.cpy();
+        updateVisuals(false);
     }
+
     public void setBackgroundOnColor(Color color) {
-        this.backgroundOnColor = (color != null) ? color.cpy() : defaultBgOn.cpy();
+        backgroundOnColor = color != null ? color.cpy() : DEFAULT_BACKGROUND_ON.cpy();
+        updateVisuals(false);
     }
+
     public void setHandleOffColor(Color color) {
-        this.handleOffColor = (color != null) ? color.cpy() : defaultHandleOff.cpy();
+        handleOffColor = color != null ? color.cpy() : DEFAULT_HANDLE_OFF.cpy();
+        updateVisuals(false);
     }
+
     public void setHandleOnColor(Color color) {
-        this.handleOnColor = (color != null) ? color.cpy() : defaultHandleOn.cpy();
+        handleOnColor = color != null ? color.cpy() : DEFAULT_HANDLE_ON.cpy();
+        updateVisuals(false);
     }
+
     public void setBackgroundHoverColorMultiplier(Color color) {
-        this.backgroundHoverColorMultiplier = (color != null) ? color.cpy() : new Color(1.1f, 1.1f, 1.1f, 1f);
+        backgroundHoverColorMultiplier = color != null ? color.cpy() : DEFAULT_HOVER_MULTIPLIER.cpy();
+        updateVisuals(false);
     }
+
     public void setHandleHoverColorMultiplier(Color color) {
-        this.handleHoverColorMultiplier = (color != null) ? color.cpy() : new Color(1.1f, 1.1f, 1.1f, 1f);
+        handleHoverColorMultiplier = color != null ? color.cpy() : DEFAULT_HOVER_MULTIPLIER.cpy();
+        updateVisuals(false);
+    }
+
+    public float getPadding() {
+        return padding;
+    }
+
+    public Color getBackgroundOffColor() {
+        return backgroundOffColor.cpy();
+    }
+
+    public Color getBackgroundOnColor() {
+        return backgroundOnColor.cpy();
+    }
+
+    public Color getHandleOffColor() {
+        return handleOffColor.cpy();
+    }
+
+    public Color getHandleOnColor() {
+        return handleOnColor.cpy();
+    }
+
+    public Color getBackgroundHoverColorMultiplier() {
+        return backgroundHoverColorMultiplier.cpy();
+    }
+
+    public Color getHandleHoverColorMultiplier() {
+        return handleHoverColorMultiplier.cpy();
     }
 
     public BoxRenderer getBackgroundRenderer() {
         return backgroundRenderer;
     }
+
     public CircleRenderer getHandleRenderer() {
         return handleRenderer;
     }
+
     public Button getInteractionButton() {
         return interactionButton;
     }
+
     public float getX() {
-        return backgroundRenderer.getPosX();
+        return getPosX();
     }
+
     public float getY() {
-        return backgroundRenderer.getPosY();
-    }
-    public float getWidth() {
-        return backgroundRenderer.getWidth();
-    }
-    public float getHeight() {
-        return backgroundRenderer.getHeight();
+        return getPosY();
     }
 }
