@@ -325,26 +325,29 @@ public class GUI extends GameState {
 
     public Renderer.OnClick createToggleSideMenuAction() {
         return (renderer, button) -> {
-            sideMenuCollapsed = !sideMenuCollapsed;
-            Client.LOGGER.info("Queueing side menu toggle, collapsed: {}", sideMenuCollapsed);
+            boolean nextSideMenuCollapsed = !sideMenuCollapsed;
+            Client.LOGGER.info("Queueing side menu toggle, collapsed: {}", nextSideMenuCollapsed);
 
-            collapseSideMenuButton.getTextRenderer().setText(sideMenuCollapsed ? ">" : "<");
+            Gdx.app.postRunnable(() -> {
+                sideMenuCollapsed = nextSideMenuCollapsed;
 
-            if (sideMenuCollapsed) {
-                renderUtil.removeRenderer(sideMenu);
-                renderUtil.removeRenderer(utilitiesButton);
-                renderUtil.removeRenderer(cheatsButton);
-                renderUtil.removeRenderer(profilesButton);
-                renderUtil.removeRenderer(settingsButton);
-            } else {
-                renderUtil.addRenderer(sideMenu);
-                renderUtil.addRenderer(utilitiesButton);
-                renderUtil.addRenderer(cheatsButton);
-                renderUtil.addRenderer(profilesButton);
-                renderUtil.addRenderer(settingsButton);
-            }
+                if (sideMenuCollapsed) {
+                    renderUtil.removeRenderer(sideMenu);
+                    renderUtil.removeRenderer(utilitiesButton);
+                    renderUtil.removeRenderer(cheatsButton);
+                    renderUtil.removeRenderer(profilesButton);
+                    renderUtil.removeRenderer(settingsButton);
+                } else {
+                    renderUtil.addRenderer(sideMenu);
+                    renderUtil.addRenderer(utilitiesButton);
+                    renderUtil.addRenderer(cheatsButton);
+                    renderUtil.addRenderer(profilesButton);
+                    renderUtil.addRenderer(settingsButton);
+                }
 
-            Gdx.app.postRunnable(() -> resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
+                resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                collapseSideMenuButton.getTextRenderer().setText(sideMenuCollapsed ? ">" : "<");
+            });
         };
     }
 
