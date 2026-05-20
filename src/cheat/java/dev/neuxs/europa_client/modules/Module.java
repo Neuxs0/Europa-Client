@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.modules;
 
 import dev.neuxs.europa_client.settings.Setting;
+import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.utils.KeybindUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,8 +62,20 @@ public abstract class Module {
     public void disable(boolean messaging) {}
 
     public void toggle(boolean messaging) {
-        if (isEnabled()) disable(messaging);
-        else enable(messaging);
+        boolean wasEnabled = isEnabled();
+        boolean previousAutoSave = SettingsManager.isAutoSaveEnabled();
+
+        SettingsManager.setAutoSaveEnabled(false);
+        try {
+            if (wasEnabled) disable(messaging);
+            else enable(messaging);
+        } finally {
+            SettingsManager.setAutoSaveEnabled(previousAutoSave);
+        }
+
+        if (previousAutoSave && !SettingsManager.isReloading() && wasEnabled != isEnabled()) {
+            SettingsManager.saveSettings();
+        }
     }
 
     public Map<String, Object> exportSettings() {

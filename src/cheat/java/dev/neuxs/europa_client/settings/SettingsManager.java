@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.modules.Modules;
+import finalforeach.cosmicreach.util.SaveLocation;
 
 import java.io.File;
 import java.io.FileReader;
@@ -24,21 +25,27 @@ public class SettingsManager {
     private static String cheatConfigDir = "config/europaclient";
     private static String cheatFileName = "cheat-settings.json";
     private static String utilityFileName = "utility-settings.json";
+    private static String uiFileName = "ui-settings.json";
     private static String clientFileName = "settings.json";
     private static Path cheatFilePath = Paths.get(cheatConfigDir, cheatFileName);
     private static Path utilityFilePath = Paths.get(cheatConfigDir, utilityFileName);
+    private static Path uiFilePath = Paths.get(cheatConfigDir, uiFileName);
     private static Path clientFilePath = Paths.get(cheatConfigDir, clientFileName);
     private static boolean autoSaveEnabled = true;
     private static volatile boolean internalUpdate = false;
     private static volatile boolean reloading = false;
     private static volatile long lastCheatSaveTime = 0;
     private static volatile long lastUtilitySaveTime = 0;
+    private static volatile long lastUiSaveTime = 0;
     private static volatile long lastClientSaveTime = 0;
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     public static synchronized void saveSettings() {
+        refreshConfigPathsFromGameDirectory();
+
         Map<String, Object> cheatSettingsMap = new HashMap<>();
         Map<String, Object> utilitySettingsMap = new HashMap<>();
+        Map<String, Object> uiSettingsMap = new HashMap<>();
 
         for (Module module : Modules.cheatModuleList) {
             if (module != null) {
@@ -52,8 +59,15 @@ public class SettingsManager {
             }
         }
 
+        for (Module module : Modules.uiModuleList) {
+            if (module != null) {
+                uiSettingsMap.put(module.getId(), module.exportSettings());
+            }
+        }
+
         File cheatFile = cheatFilePath.toFile();
         File utilityFile = utilityFilePath.toFile();
+        File uiFile = uiFilePath.toFile();
         File parentDir = cheatFilePath.getParent().toFile();
 
         try {
@@ -82,11 +96,19 @@ public class SettingsManager {
                 Client.LOGGER.error("Error saving utility settings to {}: {}", utilityFilePath, e.getMessage(), e);
             }
 
+            try (FileWriter writer = new FileWriter(uiFile)) {
+                PRETTY_GSON.toJson(uiSettingsMap, writer);
+                Client.LOGGER.info("Saved UI settings to {}", uiFilePath);
+            } catch (IOException e) {
+                Client.LOGGER.error("Error saving UI settings to {}: {}", uiFilePath, e.getMessage(), e);
+            }
+
             writeClientSettingsFile();
 
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
             if (cheatFile.exists()) lastCheatSaveTime = cheatFile.lastModified();
             if (utilityFile.exists()) lastUtilitySaveTime = utilityFile.lastModified();
+            if (uiFile.exists()) lastUiSaveTime = uiFile.lastModified();
 
         } catch (Exception e) {
             Client.LOGGER.error("An unexpected error occurred during settings save: {}", e.getMessage(), e);
@@ -96,12 +118,16 @@ public class SettingsManager {
     }
 
     public static synchronized void loadSettings() {
+        refreshConfigPathsFromGameDirectory();
+
         File cheatFile = cheatFilePath.toFile();
         File utilityFile = utilityFilePath.toFile();
+        File uiFile = uiFilePath.toFile();
         File clientFile = clientFilePath.toFile();
         Map<String, Object> cheatSettingsMap = new HashMap<>();
         Map<String, Object> utilitySettingsMap = new HashMap<>();
-        boolean shouldSaveAfterLoad = !cheatFile.exists() || !utilityFile.exists() || !clientFile.exists();
+        Map<String, Object> uiSettingsMap = new HashMap<>();
+        boolean shouldSaveAfterLoad = !cheatFile.exists() || !utilityFile.exists() || !uiFile.exists() || !clientFile.exists();
 
         if (cheatFile.exists()) {
             try (FileReader reader = new FileReader(cheatFile)) {
@@ -133,15 +159,33 @@ public class SettingsManager {
             Client.LOGGER.warn("Utility settings file not found. Defaults will be saved to {}", utilityFilePath);
         }
 
+        if (uiFile.exists()) {
+            try (FileReader reader = new FileReader(uiFile)) {
+                Map<String, Object> loadedUiMap = GSON.fromJson(reader, MAP_TYPE);
+                if (loadedUiMap != null) {
+                    uiSettingsMap = loadedUiMap;
+                }
+                lastUiSaveTime = uiFile.lastModified();
+            } catch (IOException | com.google.gson.JsonSyntaxException e) {
+                Client.LOGGER.error("Error loading UI settings from {}: {}", uiFilePath, e.getMessage(), e);
+            }
+        } else {
+            Client.LOGGER.warn("UI settings file not found. Defaults will be saved to {}", uiFilePath);
+            copyModuleSettings(utilitySettingsMap, uiSettingsMap, Modules.uiModuleList);
+        }
+
+        shouldSaveAfterLoad = shouldSaveAfterLoad
+                || isMissingModuleSettings(cheatSettingsMap, Modules.cheatModuleList)
+                || isMissingModuleSettings(utilitySettingsMap, Modules.utilModuleList)
+                || isMissingModuleSettings(uiSettingsMap, Modules.uiModuleList);
+
         loadClientSettings();
 
         setReloading(true);
         try {
-            Map<String, Object> combinedSettingsMap = new HashMap<>();
-            combinedSettingsMap.putAll(cheatSettingsMap);
-            combinedSettingsMap.putAll(utilitySettingsMap);
-
-            SettingsLoader.loadModules(combinedSettingsMap);
+            SettingsLoader.loadModules(cheatSettingsMap);
+            SettingsLoader.loadModules(utilitySettingsMap);
+            SettingsLoader.loadModules(uiSettingsMap);
 
             Client.LOGGER.info("Applied loaded settings.");
 
@@ -158,6 +202,8 @@ public class SettingsManager {
     }
 
     public static synchronized void saveClientSettings() {
+        refreshConfigPathsFromGameDirectory();
+
         try {
             internalUpdate = true;
             ensureConfigDirectory();
@@ -170,6 +216,8 @@ public class SettingsManager {
     }
 
     public static synchronized void loadClientSettings() {
+        refreshConfigPathsFromGameDirectory();
+
         File clientFile = clientFilePath.toFile();
         if (!clientFile.exists()) {
             Client.LOGGER.warn("Client settings file not found. Defaults will be saved to {}", clientFilePath.toAbsolutePath());
@@ -197,6 +245,8 @@ public class SettingsManager {
     }
 
     public static void reloadClientSettingsIfChanged() {
+        refreshConfigPathsFromGameDirectory();
+
         if (internalUpdate) {
             return;
         }
@@ -230,7 +280,47 @@ public class SettingsManager {
         lastClientSaveTime = clientFile.lastModified();
     }
 
+    private static synchronized void refreshConfigPathsFromGameDirectory() {
+        try {
+            Path configDir = Paths.get(SaveLocation.getSaveFolderLocation(), "config", "europaclient");
+            String resolvedConfigDir = configDir.toString();
+            if (resolvedConfigDir.equals(cheatConfigDir)) {
+                return;
+            }
+
+            cheatConfigDir = resolvedConfigDir;
+            cheatFilePath = configDir.resolve(cheatFileName);
+            utilityFilePath = configDir.resolve(utilityFileName);
+            uiFilePath = configDir.resolve(uiFileName);
+            clientFilePath = configDir.resolve(clientFileName);
+        } catch (Exception e) {
+        }
+    }
+
+    private static boolean isMissingModuleSettings(Map<String, Object> settingsMap, Iterable<Module> modules) {
+        for (Module module : modules) {
+            if (module != null && !settingsMap.containsKey(module.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void copyModuleSettings(
+            Map<String, Object> source,
+            Map<String, Object> destination,
+            Iterable<Module> modules
+    ) {
+        for (Module module : modules) {
+            if (module != null && source.containsKey(module.getId()) && !destination.containsKey(module.getId())) {
+                destination.put(module.getId(), source.get(module.getId()));
+            }
+        }
+    }
+
     public static void startFileWatcher() {
+        refreshConfigPathsFromGameDirectory();
+
         Thread watcherThread = new Thread(() -> {
             Path dirToWatch = Paths.get(cheatConfigDir);
             WatchService watchService = null;
@@ -282,9 +372,10 @@ public class SettingsManager {
 
                             boolean isCheatFile = changedFileName.equals(cheatFileName);
                             boolean isUtilityFile = changedFileName.equals(utilityFileName);
+                            boolean isUiFile = changedFileName.equals(uiFileName);
                             boolean isClientFile = changedFileName.equals(clientFileName);
 
-                            if (isCheatFile || isUtilityFile || isClientFile) {
+                            if (isCheatFile || isUtilityFile || isUiFile || isClientFile) {
                                 if (internalUpdate) {
                                     Client.LOGGER.debug("Ignoring internal modification of {}", changedFileName);
                                     continue;
@@ -298,7 +389,7 @@ public class SettingsManager {
                                 long currentModTime = changedFile.lastModified();
                                 long lastKnownSaveTime = isCheatFile
                                         ? lastCheatSaveTime
-                                        : isUtilityFile ? lastUtilitySaveTime : lastClientSaveTime;
+                                        : isUtilityFile ? lastUtilitySaveTime : isUiFile ? lastUiSaveTime : lastClientSaveTime;
 
                                 if (currentModTime != lastKnownSaveTime && currentModTime != 0) {
                                     Client.LOGGER.info("External modification detected for {}. Reloading settings...", changedFileName);
@@ -354,11 +445,16 @@ public class SettingsManager {
         cheatFileName = cheatFilePath.getFileName().toString();
         cheatConfigDir = cheatFilePath.getParent().toString();
         utilityFilePath = Paths.get(cheatConfigDir, utilityFileName);
+        uiFilePath = Paths.get(cheatConfigDir, uiFileName);
         clientFilePath = Paths.get(cheatConfigDir, clientFileName);
     }
     public static void setUtilityFilePath(String path) {
         utilityFilePath = Paths.get(path);
         utilityFileName = utilityFilePath.getFileName().toString();
+    }
+    public static void setUiFilePath(String path) {
+        uiFilePath = Paths.get(path);
+        uiFileName = uiFilePath.getFileName().toString();
     }
     public static void setClientFilePath(String path) {
         clientFilePath = Paths.get(path);

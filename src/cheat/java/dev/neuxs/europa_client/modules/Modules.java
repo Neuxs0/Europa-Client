@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
+import dev.neuxs.europa_client.modules.ui.FpsCounter;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
 import dev.neuxs.europa_client.modules.utils.NoFog;
 import dev.neuxs.europa_client.modules.utils.PacketInspector;
@@ -20,9 +21,12 @@ public class Modules {
     public static Speed speed;
     public static Reach reach;
 
+    public static FpsCounter fpsCounter;
+
     public static List<Module> moduleList = new ArrayList<>();
     public static List<Module> utilModuleList = new ArrayList<>();
     public static List<Module> cheatModuleList = new ArrayList<>();
+    public static List<Module> uiModuleList = new ArrayList<>();
     private static boolean initialized;
 
     static {
@@ -37,6 +41,7 @@ public class Modules {
         moduleList.clear();
         utilModuleList.clear();
         cheatModuleList.clear();
+        uiModuleList.clear();
 
         int unknown = Input.Keys.UNKNOWN;
 
@@ -62,6 +67,12 @@ public class Modules {
         cheatModuleList.add(reach);
 
         moduleList.addAll(cheatModuleList);
+
+        // UI
+        fpsCounter = new FpsCounter(unknown, false);
+        uiModuleList.add(fpsCounter);
+
+        moduleList.addAll(uiModuleList);
     }
 
     public static Module getModuleById(String id) {
@@ -69,6 +80,9 @@ public class Modules {
             if (m.getId().equals(id)) return m;
         }
         for (Module m : utilModuleList) {
+            if (m.getId().equals(id)) return m;
+        }
+        for (Module m : uiModuleList) {
             if (m.getId().equals(id)) return m;
         }
         return null;

@@ -1,10 +1,12 @@
 package dev.neuxs.europa_client.mixins;
 
 import com.badlogic.gdx.Gdx;
+import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.ui.GUI;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.*;
+import finalforeach.cosmicreach.ui.UI;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +28,17 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
                 Gdx.input.setInputProcessor(null);
             }
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "render", at = @At("TAIL"))
+    private void renderEuropaHud(CallbackInfo ci) {
+        if (UI.renderDebugInfo) {
+            return;
+        }
+
+        if (Modules.fpsCounter != null) {
+            Modules.fpsCounter.render(this.newUiViewport);
         }
     }
 

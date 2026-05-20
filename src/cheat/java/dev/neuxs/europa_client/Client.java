@@ -18,17 +18,23 @@ public class Client {
     public static ClientLogger LOGGER = new ClientLogger("EuropaClient");
     public static String VERSION = "2.0.0";
     public static IChat clientChat = Chat.MAIN_CLIENT_CHAT;
+    private static boolean initialized = false;
 
     public static String getNetworkIdentifier() {
         return MOD_NAME + " " + CLIENT_TYPE + "/" + VERSION;
     }
 
     public static void init() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+
         LOGGER.info("{} Initializing...", MOD_NAME);
 
         Modules.initModules();
-        SettingsManager.loadSettings();
         ProfileManager.initialize();
+        SettingsManager.loadSettings();
         SettingsManager.loadClientSettings();
         SettingsManager.startFileWatcher();
         ClientCommandRegistry.registerClientCommands();
@@ -38,6 +44,7 @@ public class Client {
 
     // Called every frame
     public static void render() {
+        init();
         SettingsManager.reloadClientSettingsIfChanged();
         SyncModules.Sync();
         InputManager.getInstance().initialize();

@@ -26,6 +26,7 @@ public class GUI extends GameState {
     private static final RenderUtil renderUtil = new RenderUtil();
     private static final String PAGE_HOME = "Home";
     private static final String PAGE_UTILITIES = "Utilities";
+    private static final String PAGE_UI = "UI";
     private static final String PAGE_CHEATS = "Cheats";
     private static final String PAGE_PROFILES = "Profiles";
     private static final String PAGE_SETTINGS = "Settings";
@@ -49,12 +50,14 @@ public class GUI extends GameState {
     private final TextRenderer pageTitle = new TextRenderer();
     private final Button collapseSideMenuButton = new Button();
     private final Button utilitiesButton = new Button();
+    private final Button uiButton = new Button();
     private final Button cheatsButton = new Button();
     private final Button profilesButton = new Button();
     private final Button settingsButton = new Button();
 
     private final HomePage homePage = new HomePage(contentMenu);
     private final UtilitiesPage utilitiesPage = new UtilitiesPage(contentMenu);
+    private final UIPage uiPage = new UIPage(contentMenu);
     private final CheatsPage cheatsPage = new CheatsPage(contentMenu);
     private final ProfilesPage profilesPage = new ProfilesPage(contentMenu);
     private final SettingsPage settingsPage = new SettingsPage(contentMenu);
@@ -63,9 +66,10 @@ public class GUI extends GameState {
     public Vector2 menuSize = new Vector2(0, 0);
     public float menuPadding = 7.5f;
     public boolean sideMenuCollapsed = false;
-    public float sideMenuWidth = 110f;
-    public float sideMenuButtonPadding = 10f;
-    public float sideMenuButtonBorderRadius = 7.5f;
+    public float sideMenuWidth = 108f;
+    public float sideMenuButtonPadding = 8f;
+    public float sideMenuButtonBorderRadius = 5f;
+    public float sideMenuButtonHeight = 34f;
 
     public GUI(GameState previousGamestate) {
         this.previousGamestate = previousGamestate;
@@ -102,6 +106,7 @@ public class GUI extends GameState {
         collapseSideMenuButton.setOnClickUp(createToggleSideMenuAction());
 
         configureSideMenuButton(utilitiesButton, "Utilities", createSwitchPageAction(utilitiesPage));
+        configureSideMenuButton(uiButton, "UI", createSwitchPageAction(uiPage));
         configureSideMenuButton(cheatsButton, "Cheats", createSwitchPageAction(cheatsPage));
         configureSideMenuButton(profilesButton, "Profiles", createSwitchPageAction(profilesPage));
         configureSideMenuButton(settingsButton, "Settings", createSwitchPageAction(settingsPage));
@@ -115,6 +120,7 @@ public class GUI extends GameState {
         if (!sideMenuCollapsed) {
             renderUtil.addRenderer(sideMenu);
             renderUtil.addRenderer(utilitiesButton);
+            renderUtil.addRenderer(uiButton);
             renderUtil.addRenderer(cheatsButton);
             renderUtil.addRenderer(profilesButton);
             renderUtil.addRenderer(settingsButton);
@@ -190,6 +196,9 @@ public class GUI extends GameState {
 
             currentY -= utilitiesButton.getHeight();
             utilitiesButton.setPos(sideMenuButtonX, currentY);
+
+            currentY -= (sideMenuButtonPadding + uiButton.getHeight());
+            uiButton.setPos(sideMenuButtonX, currentY);
 
             currentY -= (sideMenuButtonPadding + cheatsButton.getHeight());
             cheatsButton.setPos(sideMenuButtonX, currentY);
@@ -280,6 +289,7 @@ public class GUI extends GameState {
         renderUtil.removeRenderer(collapseSideMenuButton);
         renderUtil.removeRenderer(sideMenu);
         renderUtil.removeRenderer(utilitiesButton);
+        renderUtil.removeRenderer(uiButton);
         renderUtil.removeRenderer(cheatsButton);
         renderUtil.removeRenderer(profilesButton);
         renderUtil.removeRenderer(settingsButton);
@@ -292,7 +302,7 @@ public class GUI extends GameState {
     }
 
     private void configureSideMenuButton(Button button, String text, Renderer.OnClick onClickAction) {
-        button.setSize(sideMenuWidth - sideMenuButtonPadding * 2, 50);
+        button.setSize(sideMenuWidth - sideMenuButtonPadding * 2, sideMenuButtonHeight);
         button.setText(text);
         button.setBorderWidth(1.5f);
         button.setBorderRadius(sideMenuButtonBorderRadius);
@@ -335,12 +345,14 @@ public class GUI extends GameState {
                 if (sideMenuCollapsed) {
                     renderUtil.removeRenderer(sideMenu);
                     renderUtil.removeRenderer(utilitiesButton);
+                    renderUtil.removeRenderer(uiButton);
                     renderUtil.removeRenderer(cheatsButton);
                     renderUtil.removeRenderer(profilesButton);
                     renderUtil.removeRenderer(settingsButton);
                 } else {
                     renderUtil.addRenderer(sideMenu);
                     renderUtil.addRenderer(utilitiesButton);
+                    renderUtil.addRenderer(uiButton);
                     renderUtil.addRenderer(cheatsButton);
                     renderUtil.addRenderer(profilesButton);
                     renderUtil.addRenderer(settingsButton);
@@ -395,6 +407,7 @@ public class GUI extends GameState {
     private Page getPageByTitle(String pageTitle) {
         return switch (pageTitle) {
             case PAGE_UTILITIES -> utilitiesPage;
+            case PAGE_UI -> uiPage;
             case PAGE_CHEATS -> cheatsPage;
             case PAGE_PROFILES -> profilesPage;
             case PAGE_SETTINGS -> settingsPage;
