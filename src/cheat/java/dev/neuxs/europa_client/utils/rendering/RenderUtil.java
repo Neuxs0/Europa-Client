@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
@@ -23,6 +24,7 @@ public class RenderUtil implements Disposable {
     private final List<Renderer> toAdd = new ArrayList<>();
     private final List<Renderer> toRemove = new ArrayList<>();
     private final Comparator<Renderer> zIndexComparator = Comparator.comparingInt(Renderer::getZIndex);
+    private final Vector2 mousePos = new Vector2();
     private boolean needsSync = false;
     public enum RenderType {
         NONE, SHAPE, SPRITE, SHAPE_SPRITE
@@ -35,11 +37,12 @@ public class RenderUtil implements Disposable {
     }
 
     public void renderAll(Matrix4 projectionMatrix, Viewport viewport) {
-        elements.sort(zIndexComparator);
+        List<Renderer> renderers = getSortedRenderersSnapshot();
+        updateMouseTarget(viewport, renderers);
 
         RenderType currentBatchType = RenderType.NONE;
 
-        for (Renderer element : elements) {
+        for (Renderer element : renderers) {
             RenderType requiredType = element.getRenderType();
 
             if (requiredType != currentBatchType && requiredType != RenderType.SHAPE_SPRITE) {
@@ -107,15 +110,44 @@ public class RenderUtil implements Disposable {
     public void syncRenderers() {
         if (!needsSync) return;
 
-        synchronized (toAdd) {
-            elements.addAll(toAdd);
-            toAdd.clear();
-        }
-        synchronized (toRemove) {
-            elements.removeAll(toRemove);
-            toRemove.clear();
+        synchronized (elements) {
+            synchronized (toRemove) {
+                elements.removeAll(toRemove);
+                toRemove.clear();
+            }
+            synchronized (toAdd) {
+                for (Renderer renderer : toAdd) {
+                    if (!elements.contains(renderer)) {
+                        elements.add(renderer);
+                    }
+                }
+                toAdd.clear();
+            }
         }
         needsSync = false;
+    }
+
+    public void updateMouseTarget(Viewport viewport) {
+        updateMouseTarget(viewport, getSortedRenderersSnapshot());
+    }
+
+    private void updateMouseTarget(Viewport viewport, List<Renderer> renderers) {
+        if (viewport == null) {
+            Renderer.setMouseTarget(null);
+            return;
+        }
+
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mousePos);
+
+        Renderer topTarget = null;
+        for (Renderer element : renderers) {
+            if (element != null && element.blocksMouseAt(mousePos.x, mousePos.y)) {
+                topTarget = element;
+            }
+        }
+
+        Renderer.setMouseTarget(topTarget);
     }
 
     @Override
@@ -131,19 +163,41 @@ public class RenderUtil implements Disposable {
         return elements;
     }
 
+    public List<Renderer> getRenderersSnapshot() {
+        synchronized (elements) {
+            return new ArrayList<>(elements);
+        }
+    }
+
+    private List<Renderer> getSortedRenderersSnapshot() {
+        List<Renderer> renderers = getRenderersSnapshot();
+        renderers.sort(zIndexComparator);
+        return renderers;
+    }
+
     public void addRenderer(Renderer renderer) {
         if (renderer != null) {
+            synchronized (toRemove) {
+                toRemove.remove(renderer);
+            }
             synchronized (toAdd) {
-                toAdd.add(renderer);
-                needsSync = true;
+                if (!elements.contains(renderer) && !toAdd.contains(renderer)) {
+                    toAdd.add(renderer);
+                    needsSync = true;
+                }
             }
         }
     }
     public void removeRenderer(Renderer renderer) {
         if (renderer != null) {
+            synchronized (toAdd) {
+                toAdd.remove(renderer);
+            }
             synchronized (toRemove) {
-                toRemove.add(renderer);
-                needsSync = true;
+                if (elements.contains(renderer) && !toRemove.contains(renderer)) {
+                    toRemove.add(renderer);
+                    needsSync = true;
+                }
             }
         }
     }

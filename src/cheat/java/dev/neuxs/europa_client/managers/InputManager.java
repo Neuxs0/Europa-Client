@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.managers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import dev.neuxs.europa_client.Client;
@@ -13,6 +14,8 @@ import finalforeach.cosmicreach.gamestates.ChatMenu;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -32,6 +35,7 @@ public class InputManager extends InputAdapter {
     private Runnable textInputCancelAction = null;
     private Object textInputRequester = null;
     private Vector2 mousePos = new Vector2(0, 0);
+    private static final Set<Integer> consumedMouseButtons = new HashSet<>();
 
     private InputManager() {}
 
@@ -140,6 +144,11 @@ public class InputManager extends InputAdapter {
             return false;
 
         } else if (currentState instanceof GUI) {
+            Object currentPage = ((GUI) currentState).getCurrentPage();
+            if (currentPage instanceof InputProcessor inputProcessor && inputProcessor.keyDown(keycode)) {
+                return true;
+            }
+
             if (keycode == Input.Keys.ESCAPE) {
                 if (currentStage == null || currentStage.getKeyboardFocus() == null) {
                     GameState previousState = GameState.IN_GAME;
@@ -171,6 +180,13 @@ public class InputManager extends InputAdapter {
         Stage currentStage = getCurrentStage();
 
         if (currentState instanceof GUI || currentState instanceof ChatMenu) {
+            if (currentState instanceof GUI) {
+                Object currentPage = ((GUI) currentState).getCurrentPage();
+                if (currentPage instanceof InputProcessor inputProcessor && inputProcessor.keyUp(keycode)) {
+                    return true;
+                }
+            }
+
             if (currentStage != null) {
                 return currentStage.keyUp(keycode);
             }
@@ -192,6 +208,13 @@ public class InputManager extends InputAdapter {
         }
 
         if (currentState instanceof GUI || currentState instanceof ChatMenu) {
+            if (currentState instanceof GUI) {
+                Object currentPage = ((GUI) currentState).getCurrentPage();
+                if (currentPage instanceof InputProcessor inputProcessor && inputProcessor.keyTyped(character)) {
+                    return true;
+                }
+            }
+
             if (currentStage != null) {
                 return currentStage.keyTyped(character);
             }
@@ -205,8 +228,20 @@ public class InputManager extends InputAdapter {
         Stage currentStage = getCurrentStage();
 
         if (currentState instanceof GUI || currentState instanceof ChatMenu) {
+            if (currentState instanceof GUI) {
+                Object currentPage = ((GUI) currentState).getCurrentPage();
+                if (currentPage instanceof InputProcessor inputProcessor && inputProcessor.touchDown(screenX, screenY, pointer, button)) {
+                    consumedMouseButtons.add(button);
+                    return true;
+                }
+            }
+
             if (currentStage != null) {
-                return currentStage.touchDown(screenX, screenY, pointer, button);
+                boolean handled = currentStage.touchDown(screenX, screenY, pointer, button);
+                if (handled) {
+                    consumedMouseButtons.add(button);
+                }
+                return handled;
             }
         }
 
@@ -215,6 +250,7 @@ public class InputManager extends InputAdapter {
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         Stage currentStage = getCurrentStage();
+        consumedMouseButtons.remove(button);
         if (currentStage != null) {
             return currentStage.touchUp(screenX, screenY, pointer, button);
         }
@@ -225,6 +261,15 @@ public class InputManager extends InputAdapter {
         Stage currentStage = getCurrentStage();
         if (currentStage != null) {
             return currentStage.touchDragged(screenX, screenY, pointer);
+        }
+        return false;
+    }
+    @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        consumedMouseButtons.remove(button);
+        Stage currentStage = getCurrentStage();
+        if (currentStage != null) {
+            return currentStage.touchCancelled(screenX, screenY, pointer, button);
         }
         return false;
     }
@@ -290,7 +335,12 @@ public class InputManager extends InputAdapter {
     public static boolean isFirstFrameKeyDown(int keycode) { return Gdx.input.isKeyJustPressed(keycode); }
     public static boolean isMouseButtonDown(int keycode) { return Gdx.input.isButtonPressed(keycode); }
     public static boolean isMouseButtonUp(int keycode) { return !Gdx.input.isButtonPressed(keycode); }
-    public static boolean isFirstFrameMouseButtonDown(int keycode) { return Gdx.input.isButtonJustPressed(keycode); }
+    public static boolean isFirstFrameMouseButtonDown(int keycode) {
+        if (!Gdx.input.isButtonPressed(keycode)) {
+            consumedMouseButtons.remove(keycode);
+        }
+        return Gdx.input.isButtonJustPressed(keycode) && !consumedMouseButtons.contains(keycode);
+    }
 
     public Vector2 getMousePos() {
         return this.mousePos;

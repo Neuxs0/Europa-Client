@@ -44,6 +44,9 @@ public abstract class Renderer {
     private State state = State.NORMAL;
     private State toggleState = State.NORMAL;
     private int clickButton = -1;
+    private static Renderer clickOwner = null;
+    private static int clickOwnerButton = -1;
+    private static Renderer mouseTarget = null;
     public enum State {
         NORMAL, HOVERED, PRESSED,
         TOGGLED, HOVER_TOGGLED, HOVER_PRESSED
@@ -83,25 +86,32 @@ public abstract class Renderer {
         boolean wasPressed = state == State.PRESSED;
 
         if (clickButton == -1 && mouseOver) {
+            int pressedButton = -1;
             if (InputManager.isFirstFrameMouseButtonDown(Input.Buttons.LEFT)) {
-                clickButton = Input.Buttons.LEFT;
-                state = State.PRESSED;
+                pressedButton = Input.Buttons.LEFT;
             } else if (InputManager.isFirstFrameMouseButtonDown(Input.Buttons.RIGHT)) {
-                clickButton = Input.Buttons.RIGHT;
+                pressedButton = Input.Buttons.RIGHT;
+            }
+
+            if (pressedButton != -1 && canClaimClick(pressedButton)) {
+                clickOwner = this;
+                clickOwnerButton = pressedButton;
+                clickButton = pressedButton;
                 state = State.PRESSED;
             }
         }
 
         if (clickButton != -1) {
             boolean isClickButtonStillDown = InputManager.isMouseButtonDown(clickButton);
+            boolean ownsClick = clickOwner == this && clickOwnerButton == clickButton;
 
             if (isClickButtonStillDown) {
-                state = mouseOver ? State.PRESSED : State.NORMAL;
-                if (mouseOver && onClickDown != null) {
+                state = mouseOver && ownsClick ? State.PRESSED : State.NORMAL;
+                if (mouseOver && ownsClick && onClickDown != null) {
                     onClickDown.handle(this, clickButton);
                 }
             } else {
-                if (mouseOver && wasPressed) {
+                if (mouseOver && wasPressed && ownsClick) {
                     if (toggleState == State.TOGGLED || toggleState == State.HOVER_TOGGLED) {
                         toggleState = State.HOVERED;
                     } else {
@@ -111,6 +121,11 @@ public abstract class Renderer {
                     if (onClickUp != null) {
                         onClickUp.handle(this, clickButton);
                     }
+                }
+
+                if (ownsClick) {
+                    clickOwner = null;
+                    clickOwnerButton = -1;
                 }
 
                 state = mouseOver ? State.HOVERED : State.NORMAL;
@@ -134,6 +149,14 @@ public abstract class Renderer {
         } else if (!isHoveringNow && wasHoveringBefore && onHoverExit != null) {
             onHoverExit.accept(this);
         }
+    }
+
+    private boolean canClaimClick(int button) {
+        if (clickOwner == null || clickOwnerButton == -1 || !InputManager.isMouseButtonDown(clickOwnerButton)) {
+            return true;
+        }
+
+        return clickOwnerButton == button && getZIndex() >= clickOwner.getZIndex();
     }
 
     private boolean isToggled() {
@@ -254,8 +277,20 @@ public abstract class Renderer {
         Vector2 mousePos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
         viewport.unproject(mousePos);
 
-        return mousePos.x >= this.pos.x && mousePos.x <= this.pos.x + this.size.x &&
-                mousePos.y >= this.pos.y && mousePos.y <= this.pos.y + this.size.y;
+        return isMouseTarget() && containsPoint(mousePos.x, mousePos.y);
+    }
+    public boolean containsPoint(float x, float y) {
+        return x >= this.pos.x && x <= this.pos.x + this.size.x &&
+                y >= this.pos.y && y <= this.pos.y + this.size.y;
+    }
+    public boolean blocksMouseAt(float x, float y) {
+        return containsPoint(x, y);
+    }
+    public boolean isMouseTarget() {
+        return mouseTarget == this;
+    }
+    public static void setMouseTarget(Renderer renderer) {
+        mouseTarget = renderer;
     }
     public OnClick getOnClickDown() {
         return onClickDown;

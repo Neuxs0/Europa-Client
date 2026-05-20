@@ -132,8 +132,7 @@ public class Toggle extends Renderer {
     }
 
     private boolean isMouseOver(float x, float y) {
-        return x >= getPosX() && x <= getPosX() + getWidth()
-                && y >= getPosY() && y <= getPosY() + getHeight();
+        return isMouseTarget() && containsPoint(x, y);
     }
 
     private void updateState(boolean mouseOver) {

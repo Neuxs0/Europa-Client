@@ -12,7 +12,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
@@ -109,10 +108,6 @@ public class TextInput extends Renderer implements InputProcessor {
 
         updateMousePosition(viewport);
 
-        if (InputManager.isFirstFrameMouseButtonDown(Input.Buttons.LEFT)) {
-            setFocus(isMouseOver(mousePos.x, mousePos.y));
-        }
-
         updateCursorBlink(delta);
         syncBoxRenderer();
     }
@@ -144,6 +139,16 @@ public class TextInput extends Renderer implements InputProcessor {
     private boolean isMouseOver(float x, float y) {
         return x >= getPosX() && x <= getPosX() + getWidth()
                 && y >= getPosY() && y <= getPosY() + getHeight();
+    }
+
+    public boolean handleTouchDown(float worldX, float worldY, int button) {
+        if (button != Input.Buttons.LEFT) {
+            return false;
+        }
+
+        boolean mouseOver = isMouseOver(worldX, worldY);
+        setFocus(mouseOver);
+        return mouseOver;
     }
 
     private void updateCursorBlink(float delta) {

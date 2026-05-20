@@ -205,11 +205,9 @@ public class GUI extends GameState {
             GameState.IN_GAME.update(deltaTime);
         }
 
-        List<Renderer> elementsToUpdate;
-        synchronized (renderUtil.getRenderers()) {
-            elementsToUpdate = new ArrayList<>(renderUtil.getRenderers());
-        }
+        List<Renderer> elementsToUpdate = renderUtil.getRenderersSnapshot();
 
+        renderUtil.updateMouseTarget(viewport);
         for (Renderer element : elementsToUpdate) {
             if (element != null) {
                 element.update(viewport);
@@ -356,5 +354,9 @@ public class GUI extends GameState {
 
     public Stage getStage() {
         return this.stage;
+    }
+
+    public Page getCurrentPage() {
+        return this.currentPage;
     }
 }

@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
@@ -101,34 +100,16 @@ public class Dropdown extends Renderer {
         }
 
         updateMousePosition(viewport);
-        hoveredOptionIndex = open ? getOptionIndexAt(mousePos.x, mousePos.y) : -1;
+        boolean mouseTarget = isMouseTarget();
+        hoveredOptionIndex = open && mouseTarget ? getOptionIndexAt(mousePos.x, mousePos.y) : -1;
 
-        boolean mouseOverHeader = isMouseOverHeader(mousePos.x, mousePos.y);
+        boolean mouseOverHeader = mouseTarget && isMouseOverHeader(mousePos.x, mousePos.y);
         if (mouseOverHeader) {
             setState(open ? State.HOVER_TOGGLED : State.HOVERED);
         } else {
             setState(open ? State.TOGGLED : State.NORMAL);
         }
 
-        if (!InputManager.isFirstFrameMouseButtonDown(Input.Buttons.LEFT)) {
-            return;
-        }
-
-        if (mouseOverHeader) {
-            open = !open;
-            setState(open ? State.HOVER_TOGGLED : State.HOVERED);
-            return;
-        }
-
-        if (open && hoveredOptionIndex >= 0) {
-            selectOption(hoveredOptionIndex, true);
-            open = false;
-            setState(State.NORMAL);
-            return;
-        }
-
-        open = false;
-        setState(State.NORMAL);
     }
 
     @Override
@@ -140,7 +121,8 @@ public class Dropdown extends Renderer {
             return;
         }
 
-        for (int i = 0; i < options.size(); i++) {
+        List<String> visibleOptions = getVisibleOptions();
+        for (int i = 0; i < visibleOptions.size(); i++) {
             syncOptionRenderer(i);
             optionRenderer.renderShape(viewport, shapeRenderer);
         }
@@ -154,8 +136,9 @@ public class Dropdown extends Renderer {
             return;
         }
 
-        for (int i = 0; i < options.size(); i++) {
-            renderText(viewport, spriteBatch, glyphLayout, options.get(i), getOptionX(), getOptionY(i), getOptionWidth(), getOptionHeight(), false);
+        List<String> visibleOptions = getVisibleOptions();
+        for (int i = 0; i < visibleOptions.size(); i++) {
+            renderText(viewport, spriteBatch, glyphLayout, visibleOptions.get(i), getOptionX(), getOptionY(i), getOptionWidth(), getOptionHeight(), false);
         }
     }
 
@@ -174,7 +157,8 @@ public class Dropdown extends Renderer {
             return -1;
         }
 
-        for (int i = 0; i < options.size(); i++) {
+        int visibleOptionCount = getVisibleOptions().size();
+        for (int i = 0; i < visibleOptionCount; i++) {
             float optionY = getOptionY(i);
             if (y >= optionY && y <= optionY + getOptionHeight()) {
                 return i;
@@ -182,6 +166,39 @@ public class Dropdown extends Renderer {
         }
 
         return -1;
+    }
+
+    @Override
+    public boolean blocksMouseAt(float x, float y) {
+        return isMouseOverHeader(x, y) || (open && getOptionIndexAt(x, y) >= 0);
+    }
+
+    public boolean handleTouchDown(float worldX, float worldY, int button) {
+        if (button != Input.Buttons.LEFT) {
+            return false;
+        }
+
+        hoveredOptionIndex = open ? getOptionIndexAt(worldX, worldY) : -1;
+        if (isMouseOverHeader(worldX, worldY)) {
+            open = !open;
+            setState(open ? State.HOVER_TOGGLED : State.HOVERED);
+            return true;
+        }
+
+        if (open && hoveredOptionIndex >= 0) {
+            selectOption(hoveredOptionIndex, true);
+            open = false;
+            setState(State.NORMAL);
+            return true;
+        }
+
+        if (open) {
+            open = false;
+            setState(State.NORMAL);
+            return true;
+        }
+
+        return false;
     }
 
     private void syncHeaderRenderer() {
@@ -259,11 +276,18 @@ public class Dropdown extends Renderer {
     }
 
     private void selectOption(int index, boolean triggerCallback) {
-        if (index < 0 || index >= options.size()) {
+        List<String> visibleOptions = getVisibleOptions();
+        if (index < 0 || index >= visibleOptions.size()) {
             return;
         }
 
-        setSelectedOption(options.get(index), triggerCallback);
+        setSelectedOption(visibleOptions.get(index), triggerCallback);
+    }
+
+    private List<String> getVisibleOptions() {
+        List<String> visibleOptions = new ArrayList<>(options);
+        visibleOptions.remove(selectedOption);
+        return visibleOptions;
     }
 
     private void setSelectedOption(String option, boolean triggerCallback) {

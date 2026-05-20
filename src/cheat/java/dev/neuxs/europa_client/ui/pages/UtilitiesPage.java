@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.ui.pages;
 
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.modules.Module;
@@ -23,10 +24,13 @@ public class UtilitiesPage extends Page implements InputProcessor {
     private final BoxRenderer pageContainer;
     private final TextInput searchInput = new TextInput();
     private final Dropdown sortDropdown = new Dropdown();
+    private final Vector2 touchPos = new Vector2();
     private final List<Button> moduleButtons = new ArrayList<>();
     private final List<Button> filteredAndSortedButtons = new ArrayList<>();
     private final TextRenderer leftClickText = new TextRenderer();
     private final TextRenderer rightClickText = new TextRenderer();
+    private RenderUtil renderUtil;
+    private boolean renderersAdded = false;
     private final float padding = 5f;
     private final float elementSpacing = 5f;
     private final float topBarHeight = 25f;
@@ -38,7 +42,7 @@ public class UtilitiesPage extends Page implements InputProcessor {
     }
     private SortType currentSortType = SortType.A_Z;
     private String previousSearchText = "";
-    private final Map<String, SortType> sortDisplayMap = new HashMap<>();
+    private final Map<String, SortType> sortDisplayMap = new LinkedHashMap<>();
 
     public UtilitiesPage(BoxRenderer pageContainer) {
         super("Utilities", pageContainer);
@@ -54,20 +58,22 @@ public class UtilitiesPage extends Page implements InputProcessor {
 
         searchInput.setSize(150, topBarHeight);
         searchInput.setPlaceholder("Search...");
-        searchInput.getTextRenderer().setPosX(searchInput.getX() + 5f);
-//        sortDropdown.setSize(sortButtonWidth, topBarHeight);
-//        sortDropdown.setPlaceholderText(getSortDisplayName(currentSortType));
-//        sortDropdown.setPadding(3f);
-//        for (String displayName : sortDisplayMap.keySet()) {
-//            sortDropdown.addOption(displayName);
-//        }
+        searchInput.setOnTextChanged(text -> {
+            previousSearchText = text;
+            applyFiltersAndSort();
+        });
+        searchInput.setOnFocusLost(text -> previousSearchText = text);
 
-//        sortDropdown.setOnSelectionChanged(selectedDisplayName -> {
-//            SortType newSortType = sortDisplayMap.getOrDefault(selectedDisplayName, SortType.A_Z);
-//            setSortType(newSortType);
-//            sortDropdown.setPlaceholderText(getSortDisplayName(newSortType));
-//        });
+        sortDropdown.setSize(sortButtonWidth, topBarHeight);
+        sortDropdown.setPlaceholderText(getSortDisplayName(currentSortType));
+        sortDropdown.setPadding(3f);
+        sortDropdown.setOptions(new ArrayList<>(sortDisplayMap.keySet()));
+        sortDropdown.setSelectedOptionSilent(getSortDisplayName(currentSortType));
 
+        sortDropdown.setOnSelectionChanged(selectedDisplayName -> {
+            SortType newSortType = sortDisplayMap.getOrDefault(selectedDisplayName, SortType.A_Z);
+            setSortType(newSortType);
+        });
 
         for (Module module : Modules.utilModuleList) {
             Button moduleButton = getButton(module);
@@ -94,14 +100,12 @@ public class UtilitiesPage extends Page implements InputProcessor {
 
         float searchWidth = pageDim.z - padding * 2 - sortButtonWidth - elementSpacing;
         searchInput.setSize(searchWidth, topBarHeight);
-//        searchInput.setPosition(currentX, currentY);
-        searchInput.getTextRenderer().setPos(
-                searchInput.getX() + 5f,
-                searchInput.getY() + (searchInput.getHeight() / 2f) + (searchInput.getTextHeight(viewport) / 2f)
-        );
+        searchInput.setPosition(currentX, currentY);
+        searchInput.setZIndex(10);
 
         currentX += searchWidth + elementSpacing;
-//        sortDropdown.setPosition(currentX, currentY);
+        sortDropdown.setPosition(currentX, currentY);
+        sortDropdown.setZIndex(20);
 
         repositionButtons();
 
@@ -117,17 +121,22 @@ public class UtilitiesPage extends Page implements InputProcessor {
 
     @Override
     public void addRenderers(RenderUtil renderUtil) {
-//        renderUtil.addRenderer(searchInput);
-//        renderUtil.addRenderer(sortDropdown);
+        this.renderUtil = renderUtil;
+        this.renderersAdded = true;
+
+        renderUtil.addRenderer(searchInput);
         for (Button btn : filteredAndSortedButtons) {
             renderUtil.addRenderer(btn);
         }
+        renderUtil.addRenderer(sortDropdown);
         renderUtil.addRenderer(leftClickText);
         renderUtil.addRenderer(rightClickText);
     }
 
     @Override
     public void removeRenderers(RenderUtil renderUtil) {
+        this.renderersAdded = false;
+
         renderUtil.removeRenderer(searchInput);
         renderUtil.removeRenderer(sortDropdown);
         for (Button btn : filteredAndSortedButtons) {
@@ -209,6 +218,7 @@ public class UtilitiesPage extends Page implements InputProcessor {
 
     private void applyFiltersAndSort() {
         String searchTerm = searchInput.getText().toLowerCase();
+        List<Button> previousButtons = new ArrayList<>(filteredAndSortedButtons);
 
         List<Button> filtered = moduleButtons.stream()
                 .filter(button -> {
@@ -241,12 +251,34 @@ public class UtilitiesPage extends Page implements InputProcessor {
         filteredAndSortedButtons.addAll(filtered);
 
         repositionButtons();
+        syncFilteredButtonRenderers(previousButtons);
     }
 
     public void setSortType(SortType type) {
         if (this.currentSortType != type) {
             this.currentSortType = type;
+            sortDropdown.setSelectedOptionSilent(getSortDisplayName(type));
             applyFiltersAndSort();
+        }
+    }
+
+    private void syncFilteredButtonRenderers(List<Button> previousButtons) {
+        if (!renderersAdded || renderUtil == null) {
+            return;
+        }
+
+        Set<Button> previousButtonSet = new HashSet<>(previousButtons);
+        Set<Button> currentButtonSet = new HashSet<>(filteredAndSortedButtons);
+
+        for (Button button : previousButtons) {
+            if (!currentButtonSet.contains(button)) {
+                renderUtil.removeRenderer(button);
+            }
+        }
+        for (Button button : filteredAndSortedButtons) {
+            if (!previousButtonSet.contains(button)) {
+                renderUtil.addRenderer(button);
+            }
         }
     }
 
@@ -259,8 +291,20 @@ public class UtilitiesPage extends Page implements InputProcessor {
     @Override public boolean keyTyped(char character) {
         return searchInput.keyTyped(character);
     }
-    @Override public boolean touchDown(int i, int i1, int i2, int i3) {
-        return false;
+    @Override public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (viewport == null) {
+            return false;
+        }
+
+        touchPos.set(screenX, screenY);
+        viewport.unproject(touchPos);
+
+        if (sortDropdown.handleTouchDown(touchPos.x, touchPos.y, button)) {
+            searchInput.setFocus(false);
+            return true;
+        }
+
+        return searchInput.handleTouchDown(touchPos.x, touchPos.y, button);
     }
     @Override public boolean touchUp(int i, int i1, int i2, int i3) {
         return false;
