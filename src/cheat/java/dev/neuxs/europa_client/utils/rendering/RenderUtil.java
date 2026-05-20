@@ -72,6 +72,17 @@ public class RenderUtil implements Disposable {
         endBatch(currentBatchType);
     }
 
+    public void updateAll(Viewport viewport) {
+        List<Renderer> renderers = getSortedRenderersSnapshot();
+        updateMouseTarget(viewport, renderers);
+
+        for (Renderer element : renderers) {
+            if (element != null) {
+                element.update(viewport);
+            }
+        }
+    }
+
     private RenderType beginBatch(RenderType renderType, ShapeRenderer.ShapeType shapeType, Matrix4 projectionMatrix) {
         try {
             Gdx.gl.glEnable(GL20.GL_BLEND);

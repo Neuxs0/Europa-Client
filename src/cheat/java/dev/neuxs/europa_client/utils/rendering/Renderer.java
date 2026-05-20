@@ -427,6 +427,10 @@ public abstract class Renderer {
     public void setToggleEnabled(boolean enabled) {
         if (enabled != this.toggleEnabled) this.toggleEnabled = enabled;
     }
+    public void setToggled(boolean toggled) {
+        setToggleEnabled(true);
+        this.toggleState = toggled ? State.TOGGLED : State.NORMAL;
+    }
     public void setState(State state) {
         if (state != null && (state != this.state || state != this.toggleState)) {
             if (toggleEnabled) this.toggleState = state;

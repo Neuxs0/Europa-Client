@@ -134,13 +134,6 @@ public class InputManager extends InputAdapter {
         }
 
         if (currentState instanceof InGame) {
-            if (keycode == Input.Keys.GRAVE) {
-                Gdx.input.setCursorCatched(false);
-                GameState.switchToGameState(new GUI(currentState));
-                return true;
-            }
-
-            processModuleKeyPress(keycode);
             return false;
 
         } else if (currentState instanceof GUI) {
@@ -305,15 +298,6 @@ public class InputManager extends InputAdapter {
         return null;
     }
 
-    private void processModuleKeyPress(int keycode) {
-        for (Module module : Modules.moduleList) {
-            if (module.getKeybind() == keycode && keycode != 0) {
-                Client.LOGGER.debug("Module key pressed: {} for {}", Input.Keys.toString(keycode), module.getId());
-                module.toggle(true);
-            }
-        }
-    }
-
     private void processInGameKeybinds() {
         if (isFirstFrameKeyDown(Input.Keys.GRAVE)) {
             Gdx.input.setCursorCatched(false);
@@ -323,11 +307,15 @@ public class InputManager extends InputAdapter {
 
         for (Module module : Modules.moduleList) {
             int key = module.getKeybind();
-            if (key != 0 && isFirstFrameKeyDown(key)) {
+            if (isValidModuleKeybind(key) && isFirstFrameKeyDown(key)) {
                 Client.LOGGER.debug("Module key pressed: {} for {}", Input.Keys.toString(key), module.getId());
                 module.toggle(true);
             }
         }
+    }
+
+    private boolean isValidModuleKeybind(int keycode) {
+        return keycode > 0 && keycode != Input.Keys.UNKNOWN;
     }
 
     public static boolean isKeyDown(int keycode) { return Gdx.input.isKeyPressed(keycode); }

@@ -28,13 +28,17 @@ public class InputManager {
 
         for (Module module : Modules.moduleList) {
             int key = module.getKeybind();
-            if (key == 0) {
+            if (!isValidModuleKeybind(key)) {
                 continue;
             }
             if (isFirstFrameKeyDown(key)) {
                 module.onKeyPressed();
             }
         }
+    }
+
+    private static boolean isValidModuleKeybind(int keycode) {
+        return keycode > 0 && keycode != Input.Keys.UNKNOWN;
     }
 
     public static boolean isKeyDown(int keycode) {

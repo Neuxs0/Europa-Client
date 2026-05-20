@@ -19,9 +19,6 @@ import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import finalforeach.cosmicreach.gamestates.GameState;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @SuppressWarnings({"DuplicatedCode"})
 public class GUI extends GameState {
     private static final RenderUtil renderUtil = new RenderUtil();
@@ -205,15 +202,6 @@ public class GUI extends GameState {
             GameState.IN_GAME.update(deltaTime);
         }
 
-        List<Renderer> elementsToUpdate = renderUtil.getRenderersSnapshot();
-
-        renderUtil.updateMouseTarget(viewport);
-        for (Renderer element : elementsToUpdate) {
-            if (element != null) {
-                element.update(viewport);
-            }
-        }
-
         if (this.stage != null) {
             this.stage.act(deltaTime);
         }
@@ -251,6 +239,7 @@ public class GUI extends GameState {
         Matrix4 uiMatrix = viewport.getCamera().combined;
 
         renderUtil.syncRenderers();
+        renderUtil.updateAll(viewport);
         renderUtil.renderAll(uiMatrix, viewport);
 
         if (this.stage != null) this.stage.draw();

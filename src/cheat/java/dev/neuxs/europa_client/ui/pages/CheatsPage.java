@@ -178,7 +178,7 @@ public class CheatsPage extends Page implements InputProcessor {
                 applyFiltersAndSort();
             }
         });
-        moduleButton.setToggleEnabled(module.isEnabled());
+        moduleButton.setToggled(module.isEnabled());
         return moduleButton;
     }
 
@@ -228,7 +228,7 @@ public class CheatsPage extends Page implements InputProcessor {
                     boolean nameMatch = module.getId().toLowerCase().contains(searchTerm);
                     if (!nameMatch) return false;
 
-                    button.setToggleEnabled(module.isEnabled());
+                    button.setToggled(module.isEnabled());
 
                     return true;
                 })

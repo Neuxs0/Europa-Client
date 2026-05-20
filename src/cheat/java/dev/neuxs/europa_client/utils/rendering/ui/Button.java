@@ -46,8 +46,6 @@ public class Button extends Renderer {
 
     @Override
     public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
-        update(viewport);
-
         Color fillColor;
         Color borderColor = switch (getState()) {
             case HOVERED -> {
