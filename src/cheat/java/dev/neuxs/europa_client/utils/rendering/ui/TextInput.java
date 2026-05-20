@@ -8,214 +8,309 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
+import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
+import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
+import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
-import dev.neuxs.europa_client.managers.FontManager;
 
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class TextInput extends Renderer implements InputProcessor {
+    private static final float DEFAULT_PADDING = 5f;
+    private static final float DEFAULT_BLINK_INTERVAL = 0.5f;
+    private static final float DEFAULT_CURSOR_WIDTH = 1f;
+
+    private static final Color DEFAULT_FILL_COLOR = ColorUtils.color(50, 50, 50, 255);
+    private static final Color DEFAULT_TEXT_COLOR = ColorUtils.color(255, 255, 255, 255);
+    private static final Color DEFAULT_FOCUSED_BORDER = ColorUtils.color(20, 20, 20, 255);
+    private static final Color DEFAULT_UNFOCUSED_BORDER = ColorUtils.color(20, 20, 20, 255);
+    private static final Color DEFAULT_CURSOR_COLOR = ColorUtils.color(240, 240, 240, 255);
+    private static final Color DEFAULT_PLACEHOLDER_COLOR = ColorUtils.color(150, 150, 150, 255);
 
     private final BoxRenderer boxRenderer;
     private final TextRenderer textRenderer;
     private final TextRenderer placeholderRenderer;
-    private final FontManager fontManager;
-    private final GlyphLayout glyphLayout = new GlyphLayout();
+    private final GlyphLayout glyphLayout;
+    private final Vector2 mousePos;
+    private final StringBuilder text;
 
-    private StringBuilder text = new StringBuilder();
-    private String placeholder = "";
-    private int cursorPosition = 0;
-    private boolean focused = false;
-    private float blinkTimer = 0f;
-    private boolean showCursor = true;
-    private final float blinkInterval = 0.5f;
-    private final float cursorWidth = 1f;
+    private String placeholder;
+    private int cursorPosition;
+    private boolean focused;
+    private float blinkTimer;
+    private boolean showCursor;
+    private float blinkInterval;
+    private float cursorWidth;
+    private float padding;
 
-    private Consumer<String> onEnterPressed = (text) -> {};
-    private Consumer<String> onFocusLost = (text) -> {};
-    private Consumer<String> onTextChanged = (text) -> {};
-
-    private final Vector2 mousePos = new Vector2();
-    private InputProcessor previousInputProcessor = null;
+    private Consumer<String> onEnterPressed;
+    private Consumer<String> onFocusLost;
+    private Consumer<String> onTextChanged;
 
     private Color focusedBorderColor;
     private Color unfocusedBorderColor;
     private Color cursorColor;
     private Color placeholderColor;
-    private static final Color defaultFocusedBorder = ColorUtils.color(20, 20, 20, 255);
-    private static final Color defaultUnfocusedBorder = ColorUtils.color(20, 20, 20, 255);
-    private static final Color defaultCursorColor = ColorUtils.color(240, 240, 240, 255);
-    private static final Color defaultPlaceholderColor = ColorUtils.color(150, 150, 150, 255);
 
     public TextInput() {
         this.boxRenderer = new BoxRenderer();
         this.textRenderer = new TextRenderer();
         this.placeholderRenderer = new TextRenderer();
-        this.fontManager = new FontManager();
-        this.boxRenderer.setBorder(true);
-        this.boxRenderer.setFillColor(ColorUtils.color(50, 50, 50, 255));
-        this.unfocusedBorderColor = defaultUnfocusedBorder.cpy();
-        this.focusedBorderColor = defaultFocusedBorder.cpy();
-        this.cursorColor = defaultCursorColor.cpy();
-        this.placeholderColor = defaultPlaceholderColor.cpy();
-        this.boxRenderer.setBorderColor(this.unfocusedBorderColor);
-        this.textRenderer.setFillColor(ColorUtils.color(255, 255, 255, 255));
-        this.placeholderRenderer.setFillColor(this.placeholderColor);
-        this.placeholderRenderer.setFont(this.textRenderer.getFont());
+        this.glyphLayout = new GlyphLayout();
+        this.mousePos = new Vector2();
+        this.text = new StringBuilder();
+
+        this.placeholder = "";
+        this.cursorPosition = 0;
+        this.focused = false;
+        this.blinkTimer = 0f;
+        this.showCursor = false;
+        this.blinkInterval = DEFAULT_BLINK_INTERVAL;
+        this.cursorWidth = DEFAULT_CURSOR_WIDTH;
+        this.padding = DEFAULT_PADDING;
+
+        this.onEnterPressed = (value) -> {};
+        this.onFocusLost = (value) -> {};
+        this.onTextChanged = (value) -> {};
+
+        this.focusedBorderColor = DEFAULT_FOCUSED_BORDER.cpy();
+        this.unfocusedBorderColor = DEFAULT_UNFOCUSED_BORDER.cpy();
+        this.cursorColor = DEFAULT_CURSOR_COLOR.cpy();
+        this.placeholderColor = DEFAULT_PLACEHOLDER_COLOR.cpy();
+
+        setRenderType(RenderUtil.RenderType.SHAPE_SPRITE);
+        setShapeType(ShapeRenderer.ShapeType.Filled);
+        setFillColor(DEFAULT_FILL_COLOR);
+        setTextColor(DEFAULT_TEXT_COLOR);
+        setBorder(true);
+        setBorderWidth(1f);
+        setBorderColor(unfocusedBorderColor);
+
+        boxRenderer.setBorder(true);
+        placeholderRenderer.setTextColor(placeholderColor);
+    }
+
+    @Override
+    public void update(Viewport viewport) {
+        update(viewport, Gdx.graphics.getDeltaTime());
     }
 
     public void update(Viewport viewport, float delta) {
-        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
-        viewport.unproject(mousePos);
-
-        boolean mouseOver = mousePos.x >= boxRenderer.getPosX() && mousePos.x <= boxRenderer.getPosX() + boxRenderer.getWidth() &&
-                mousePos.y >= boxRenderer.getPosY() && mousePos.y <= boxRenderer.getPosY() + boxRenderer.getHeight();
-
-//        if (InputManager.isMouseButtonDown(Input.Buttons.LEFT)) {
-//            boolean previouslyFocused = this.focused;
-//            this.focused = mouseOver;
-//
-//            if (previouslyFocused && !this.focused) {
-//                if (onFocusLost != null) {
-//                    onFocusLost.accept(text.toString());
-//                }
-//                if (Gdx.input.getInputProcessor() == this) {
-//                    Gdx.input.setInputProcessor(previousInputProcessor);
-//                }
-//            } else if (!previouslyFocused && this.focused) {
-//                previousInputProcessor = Gdx.input.getInputProcessor();
-//                Gdx.input.setInputProcessor(this);
-//                cursorPosition = text.length();
-//                blinkTimer = 0f;
-//                showCursor = true;
-//            } else if (this.focused) {
-//                cursorPosition = text.length();
-//                blinkTimer = 0f;
-//                showCursor = true;
-//            }
-//        }
-
-        boxRenderer.setBorderColor(focused ? focusedBorderColor : unfocusedBorderColor);
-
-        if (focused) {
-            blinkTimer += delta;
-            if (blinkTimer >= blinkInterval) {
-                blinkTimer -= blinkInterval;
-                showCursor = !showCursor;
-            }
-        } else {
-            showCursor = false;
-            if (Gdx.input.getInputProcessor() == this) {
-                Gdx.input.setInputProcessor(previousInputProcessor);
-            }
-        }
-    }
-
-    public void renderShape(ShapeRenderer shapeRenderer, Viewport viewport) {
-//        boxRenderer.render(shapeRenderer);
-
-        if (focused && showCursor) {
-            BitmapFont font = textRenderer.getFont();
-            if (font != null) {
-                shapeRenderer.setColor(cursorColor);
-
-                float textX = boxRenderer.getPosX() + 5f;
-                float cursorXOffset = 0;
-                if (cursorPosition > 0 && !text.isEmpty()) {
-                    glyphLayout.setText(font, text.substring(0, cursorPosition));
-                    cursorXOffset = glyphLayout.width;
-                }
-
-                float cursorRenderX = textX + cursorXOffset;
-                float cursorRenderY = boxRenderer.getPosY() + 4f;
-                float cursorHeight = boxRenderer.getHeight() - 8f;
-
-                shapeRenderer.rectLine(cursorRenderX, cursorRenderY, cursorRenderX, cursorRenderY + cursorHeight, cursorWidth);
-            }
-        }
-    }
-
-    public void renderText(SpriteBatch spriteBatch, GlyphLayout glyphLayout, Viewport viewport) {
-        BitmapFont font = textRenderer.getFont();
-        if (font == null) {
+        if (viewport == null) {
             return;
         }
 
-//        if (text.isEmpty() && !placeholder.isEmpty() && !focused) {
-//            placeholderRenderer.setPosition(
-//                    boxRenderer.getPosX() + 5f,
-//                    boxRenderer.getPosY() + (boxRenderer.getHeight() - placeholderRenderer.getHeight(viewport)) / 2f
-//            );
-//            placeholderRenderer.render(spriteBatch, glyphLayout, viewport);
-//        } else {
-//            textRenderer.setText(text.toString());
-//            textRenderer.setPosition(
-//                    boxRenderer.getPosX() + 5f,
-//                    boxRenderer.getPosY() + (boxRenderer.getHeight() - textRenderer.getHeight(viewport)) / 2f
-//            );
-//            textRenderer.render(spriteBatch, glyphLayout, viewport);
-//        }
+        updateMousePosition(viewport);
+
+        if (InputManager.isFirstFrameMouseButtonDown(Input.Buttons.LEFT)) {
+            setFocus(isMouseOver(mousePos.x, mousePos.y));
+        }
+
+        updateCursorBlink(delta);
+        syncBoxRenderer();
     }
 
+    @Override
+    public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
+        syncBoxRenderer();
+        boxRenderer.renderShape(viewport, shapeRenderer);
+
+        if (focused && showCursor) {
+            renderCursor(shapeRenderer);
+        }
+    }
+
+    @Override
+    public void renderSprite(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
+        if (text.isEmpty() && !placeholder.isEmpty() && !focused) {
+            renderPlaceholder(viewport, spriteBatch, glyphLayout);
+        } else {
+            renderText(viewport, spriteBatch, glyphLayout);
+        }
+    }
+
+    private void updateMousePosition(Viewport viewport) {
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mousePos);
+    }
+
+    private boolean isMouseOver(float x, float y) {
+        return x >= getPosX() && x <= getPosX() + getWidth()
+                && y >= getPosY() && y <= getPosY() + getHeight();
+    }
+
+    private void updateCursorBlink(float delta) {
+        if (!focused) {
+            showCursor = false;
+            blinkTimer = 0f;
+            return;
+        }
+
+        blinkTimer += Math.max(0f, delta);
+        while (blinkTimer >= blinkInterval) {
+            blinkTimer -= blinkInterval;
+            showCursor = !showCursor;
+        }
+    }
+
+    private void resetCursorBlink() {
+        blinkTimer = 0f;
+        showCursor = focused;
+    }
+
+    private void syncBoxRenderer() {
+        boxRenderer.setPos(getPos());
+        boxRenderer.setSize(getSize());
+        boxRenderer.setFillColor(getFillColor());
+        boxRenderer.setBorder(isBorder());
+        boxRenderer.setBorderWidth(getBorderWidth());
+        boxRenderer.setBorderRadius(getBorderRadius());
+        boxRenderer.setBorderColor(focused ? focusedBorderColor : unfocusedBorderColor);
+    }
+
+    private void renderCursor(ShapeRenderer shapeRenderer) {
+        if (shapeRenderer == null || textRenderer.getFont() == null) {
+            return;
+        }
+
+        float cursorX = getTextStartX() + getCursorTextWidth();
+        float cursorY = getPosY() + padding;
+        float cursorHeight = Math.max(0f, getHeight() - padding * 2f);
+
+        if (cursorHeight <= 0f) {
+            return;
+        }
+
+        shapeRenderer.setColor(cursorColor);
+        shapeRenderer.rectLine(cursorX, cursorY, cursorX, cursorY + cursorHeight, cursorWidth);
+    }
+
+    private void renderText(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
+        if (text.isEmpty()) {
+            return;
+        }
+
+        textRenderer.setText(text.toString());
+        textRenderer.setTextColor(getTextColor());
+        textRenderer.setPos(getTextStartX(), getTextY(viewport, textRenderer));
+        textRenderer.renderSprite(viewport, spriteBatch, glyphLayout);
+    }
+
+    private void renderPlaceholder(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
+        placeholderRenderer.setText(placeholder);
+        placeholderRenderer.setTextColor(placeholderColor);
+        placeholderRenderer.setPos(getTextStartX(), getTextY(viewport, placeholderRenderer));
+        placeholderRenderer.renderSprite(viewport, spriteBatch, glyphLayout);
+    }
+
+    private float getTextStartX() {
+        return getPosX() + padding;
+    }
+
+    private float getTextY(Viewport viewport, TextRenderer renderer) {
+        return getPosY() + (getHeight() - renderer.getTextHeight(viewport)) / 2f;
+    }
+
+    private float getCursorTextWidth() {
+        BitmapFont font = textRenderer.getFont();
+        if (font == null || cursorPosition <= 0 || text.isEmpty()) {
+            return 0f;
+        }
+
+        glyphLayout.setText(font, text.substring(0, cursorPosition));
+        return glyphLayout.width;
+    }
+
+    private void insertText(String value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+
+        text.insert(cursorPosition, value);
+        cursorPosition += value.length();
+        notifyTextChanged();
+    }
+
+    private void deletePreviousCharacter() {
+        if (cursorPosition <= 0) {
+            return;
+        }
+
+        text.deleteCharAt(cursorPosition - 1);
+        cursorPosition--;
+        notifyTextChanged();
+    }
+
+    private void deleteNextCharacter() {
+        if (cursorPosition >= text.length()) {
+            return;
+        }
+
+        text.deleteCharAt(cursorPosition);
+        notifyTextChanged();
+    }
+
+    private void notifyTextChanged() {
+        resetCursorBlink();
+        if (onTextChanged != null) {
+            onTextChanged.accept(text.toString());
+        }
+    }
 
     @Override
     public boolean keyDown(int keycode) {
-        if (!focused) return false;
+        if (!focused) {
+            return false;
+        }
 
-        blinkTimer = 0f;
-        showCursor = true;
-
-        boolean textChanged = false;
+        if (isControlPressed()) {
+            return handleControlKeyDown(keycode);
+        }
 
         switch (keycode) {
-            case Input.Keys.BACKSPACE:
-                if (cursorPosition > 0) {
-                    text.deleteCharAt(cursorPosition - 1);
-                    cursorPosition--;
-                    textChanged = true;
-                }
-                break;
-            case Input.Keys.FORWARD_DEL:
-                if (cursorPosition < text.length()) {
-                    text.deleteCharAt(cursorPosition);
-                    textChanged = true;
-                }
-                break;
-            case Input.Keys.LEFT:
-                if (cursorPosition > 0) {
-                    cursorPosition--;
-                }
-                break;
-            case Input.Keys.RIGHT:
-                if (cursorPosition < text.length()) {
-                    cursorPosition++;
-                }
-                break;
-            case Input.Keys.HOME:
-                cursorPosition = 0;
-                break;
-            case Input.Keys.END:
-                cursorPosition = text.length();
-                break;
-            case Input.Keys.ENTER:
+            case Input.Keys.BACKSPACE -> deletePreviousCharacter();
+            case Input.Keys.FORWARD_DEL -> deleteNextCharacter();
+            case Input.Keys.LEFT -> cursorPosition = Math.max(0, cursorPosition - 1);
+            case Input.Keys.RIGHT -> cursorPosition = Math.min(text.length(), cursorPosition + 1);
+            case Input.Keys.HOME -> cursorPosition = 0;
+            case Input.Keys.END -> cursorPosition = text.length();
+            case Input.Keys.ENTER, Input.Keys.NUMPAD_ENTER -> {
                 if (onEnterPressed != null) {
                     onEnterPressed.accept(text.toString());
                 }
-                return true;
-            default:
+            }
+            case Input.Keys.ESCAPE -> setFocus(false);
+            default -> {
                 return false;
+            }
         }
 
-        if (textChanged && onTextChanged != null) {
-            onTextChanged.accept(text.toString());
-        }
-
+        resetCursorBlink();
         return true;
+    }
+
+    private boolean handleControlKeyDown(int keycode) {
+        switch (keycode) {
+            case Input.Keys.A -> cursorPosition = text.length();
+            case Input.Keys.V -> insertText(Gdx.app.getClipboard().getContents());
+            default -> {
+                return false;
+            }
+        }
+
+        resetCursorBlink();
+        return true;
+    }
+
+    private boolean isControlPressed() {
+        return Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT);
     }
 
     @Override
@@ -225,26 +320,12 @@ public class TextInput extends Renderer implements InputProcessor {
 
     @Override
     public boolean keyTyped(char character) {
-        if (!focused) return false;
-
-        if (Character.isISOControl(character)) {
-            if (character == '\r' || character == '\n' || character == '\b') {
-                return false;
-            }
+        if (!focused || Character.isISOControl(character) || character == 127) {
+            return false;
         }
 
-        if (character >= 32 && character != 127) {
-            text.insert(cursorPosition, character);
-            cursorPosition++;
-            if (onTextChanged != null) {
-                onTextChanged.accept(text.toString());
-            }
-            blinkTimer = 0f;
-            showCursor = true;
-            return true;
-        }
-
-        return false;
+        insertText(String.valueOf(character));
+        return true;
     }
 
     @Override
@@ -277,18 +358,110 @@ public class TextInput extends Renderer implements InputProcessor {
         return false;
     }
 
+    @Override
+    public void setPos(Vector3 pos) {
+        super.setPos(pos);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setPos(Vector2 pos) {
+        super.setPos(pos);
+        syncBoxRenderer();
+    }
+
+    public void setPosition(float x, float y) {
+        setPos(x, y);
+    }
+
+    @Override
+    public void setPos(float x, float y, int z) {
+        super.setPos(x, y, z);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setPos(float x, float y) {
+        super.setPos(x, y);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setSize(Vector2 size) {
+        super.setSize(size);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setSize(float width, float height) {
+        super.setSize(Math.max(0f, width), Math.max(1f, height));
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setWidth(float width) {
+        super.setWidth(Math.max(0f, width));
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setHeight(float height) {
+        super.setHeight(Math.max(1f, height));
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setFillColor(Color color) {
+        super.setFillColor(color != null ? color : DEFAULT_FILL_COLOR);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setBorder(boolean enabled) {
+        super.setBorder(enabled);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setBorderWidth(float width) {
+        super.setBorderWidth(width);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setBorderRadius(float radius) {
+        super.setBorderRadius(radius);
+        syncBoxRenderer();
+    }
+
+    @Override
+    public void setTextColor(Color color) {
+        super.setTextColor(color != null ? color : DEFAULT_TEXT_COLOR);
+        textRenderer.setTextColor(getTextColor());
+    }
+
+    @Override
     public String getText() {
         return text.toString();
     }
 
+    @Override
     public void setText(String text) {
-        this.text = new StringBuilder(text != null ? text : "");
-        this.cursorPosition = Math.min(this.cursorPosition, this.text.length());
-        if (onTextChanged != null) {
-            onTextChanged.accept(this.text.toString());
+        this.text.setLength(0);
+        if (text != null) {
+            this.text.append(text);
         }
-        blinkTimer = 0f;
-        showCursor = true;
+        cursorPosition = MathUtils.clamp(cursorPosition, 0, this.text.length());
+        notifyTextChanged();
+    }
+
+    public void setTextSilent(String text) {
+        this.text.setLength(0);
+        if (text != null) {
+            this.text.append(text);
+        }
+        cursorPosition = MathUtils.clamp(cursorPosition, 0, this.text.length());
+        resetCursorBlink();
     }
 
     public String getPlaceholder() {
@@ -297,101 +470,142 @@ public class TextInput extends Renderer implements InputProcessor {
 
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder != null ? placeholder : "";
-        this.placeholderRenderer.setText(this.placeholder);
+        placeholderRenderer.setText(this.placeholder);
     }
 
-//    public void setPosition(float x, float y) {
-//        boxRenderer.setPosition(x, y);
-//    }
-
-    public void setSize(float width, float height) {
-        boxRenderer.setSize(width, height);
+    public float getX() {
+        return getPosX();
     }
 
-    public float getX() { return boxRenderer.getPosX(); }
-    public float getY() { return boxRenderer.getPosY(); }
-    public float getWidth() { return boxRenderer.getWidth(); }
-    public float getHeight() { return boxRenderer.getHeight(); }
+    public float getY() {
+        return getPosY();
+    }
 
     public boolean isFocused() {
         return focused;
     }
 
     public void setFocus(boolean focus) {
-        if (this.focused == focus) return;
+        if (focused == focus) {
+            return;
+        }
 
-        if (focus) {
-            this.focused = true;
-            previousInputProcessor = Gdx.input.getInputProcessor();
-            Gdx.input.setInputProcessor(this);
+        focused = focus;
+        if (focused) {
             cursorPosition = text.length();
-            blinkTimer = 0f;
-            showCursor = true;
-            boxRenderer.setBorderColor(focusedBorderColor);
+            resetCursorBlink();
         } else {
-            this.focused = false;
-            if (Gdx.input.getInputProcessor() == this) {
-                Gdx.input.setInputProcessor(previousInputProcessor);
-            }
+            showCursor = false;
+            blinkTimer = 0f;
             if (onFocusLost != null) {
                 onFocusLost.accept(text.toString());
             }
-            showCursor = false;
-            boxRenderer.setBorderColor(unfocusedBorderColor);
         }
+
+        syncBoxRenderer();
+    }
+
+    public int getCursorPosition() {
+        return cursorPosition;
+    }
+
+    public void setCursorPosition(int cursorPosition) {
+        this.cursorPosition = MathUtils.clamp(cursorPosition, 0, text.length());
+        resetCursorBlink();
+    }
+
+    public float getPadding() {
+        return padding;
+    }
+
+    public void setPadding(float padding) {
+        this.padding = Math.max(0f, padding);
+    }
+
+    public float getBlinkInterval() {
+        return blinkInterval;
+    }
+
+    public void setBlinkInterval(float blinkInterval) {
+        this.blinkInterval = Math.max(0.05f, blinkInterval);
+        resetCursorBlink();
+    }
+
+    public float getCursorWidth() {
+        return cursorWidth;
+    }
+
+    public void setCursorWidth(float cursorWidth) {
+        this.cursorWidth = Math.max(0.1f, cursorWidth);
     }
 
     public void setOnEnterPressed(Consumer<String> onEnterPressed) {
-        this.onEnterPressed = onEnterPressed != null ? onEnterPressed : (t) -> {};
+        this.onEnterPressed = onEnterPressed != null ? onEnterPressed : (value) -> {};
     }
 
     public void setOnFocusLost(Consumer<String> onFocusLost) {
-        this.onFocusLost = onFocusLost != null ? onFocusLost : (t) -> {};
+        this.onFocusLost = onFocusLost != null ? onFocusLost : (value) -> {};
     }
 
     public void setOnTextChanged(Consumer<String> onTextChanged) {
-        this.onTextChanged = onTextChanged != null ? onTextChanged : (t) -> {};
+        this.onTextChanged = onTextChanged != null ? onTextChanged : (value) -> {};
     }
 
     public void setFont(BitmapFont font) {
-        this.textRenderer.setFont(font);
-        this.placeholderRenderer.setFont(font);
+        textRenderer.setFont(font);
+        placeholderRenderer.setFont(font);
     }
 
     public void setFont(String fontName) {
-        this.textRenderer.setFont(fontName);
-        this.placeholderRenderer.setFont(fontName);
-    }
-
-//    public void setTextColor(Color color) {
-//        this.textRenderer.setColor(color);
-//    }
-//
-//    public void setPlaceholderColor(Color color) {
-//        this.placeholderColor = (color != null) ? color.cpy() : defaultPlaceholderColor.cpy();
-//        this.placeholderRenderer.setColor(this.placeholderColor);
-//    }
-
-    public void setFillColor(Color color) {
-        this.boxRenderer.setFillColor(color);
+        textRenderer.setFont(fontName);
+        placeholderRenderer.setFont(fontName);
     }
 
     public void setFocusedBorderColor(Color color) {
-        this.focusedBorderColor = (color != null) ? color.cpy() : defaultFocusedBorder.cpy();
-        if (focused) boxRenderer.setBorderColor(this.focusedBorderColor);
+        focusedBorderColor = color != null ? color.cpy() : DEFAULT_FOCUSED_BORDER.cpy();
+        syncBoxRenderer();
     }
 
     public void setUnfocusedBorderColor(Color color) {
-        this.unfocusedBorderColor = (color != null) ? color.cpy() : defaultUnfocusedBorder.cpy();
-        if (!focused) boxRenderer.setBorderColor(this.unfocusedBorderColor);
+        unfocusedBorderColor = color != null ? color.cpy() : DEFAULT_UNFOCUSED_BORDER.cpy();
+        syncBoxRenderer();
     }
 
     public void setCursorColor(Color color) {
-        this.cursorColor = (color != null) ? color.cpy() : defaultCursorColor.cpy();
+        cursorColor = color != null ? color.cpy() : DEFAULT_CURSOR_COLOR.cpy();
     }
 
-    public void setBorderRadius(float radius) {
-        this.boxRenderer.setBorderRadius(radius);
+    public void setPlaceholderColor(Color color) {
+        placeholderColor = color != null ? color.cpy() : DEFAULT_PLACEHOLDER_COLOR.cpy();
+        placeholderRenderer.setTextColor(placeholderColor);
+    }
+
+    public Consumer<String> getOnEnterPressed() {
+        return onEnterPressed;
+    }
+
+    public Consumer<String> getOnFocusLost() {
+        return onFocusLost;
+    }
+
+    public Consumer<String> getOnTextChanged() {
+        return onTextChanged;
+    }
+
+    public Color getFocusedBorderColor() {
+        return focusedBorderColor.cpy();
+    }
+
+    public Color getUnfocusedBorderColor() {
+        return unfocusedBorderColor.cpy();
+    }
+
+    public Color getCursorColor() {
+        return cursorColor.cpy();
+    }
+
+    public Color getPlaceholderColor() {
+        return placeholderColor.cpy();
     }
 
     public BoxRenderer getBoxRenderer() {
@@ -400,5 +614,9 @@ public class TextInput extends Renderer implements InputProcessor {
 
     public TextRenderer getTextRenderer() {
         return textRenderer;
+    }
+
+    public TextRenderer getPlaceholderRenderer() {
+        return placeholderRenderer;
     }
 }
