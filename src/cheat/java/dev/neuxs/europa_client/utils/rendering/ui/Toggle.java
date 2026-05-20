@@ -32,6 +32,7 @@ public class Toggle extends Renderer {
     private final Vector2 mousePos;
 
     private boolean toggled;
+    private boolean inputHandlingEnabled;
     private Consumer<Boolean> onValueChanged;
     private float padding;
 
@@ -51,6 +52,7 @@ public class Toggle extends Renderer {
         this.mousePos = new Vector2();
 
         this.toggled = false;
+        this.inputHandlingEnabled = true;
         this.onValueChanged = (state) -> {};
         this.padding = 2f;
 
@@ -83,6 +85,11 @@ public class Toggle extends Renderer {
         updateMousePosition(viewport);
         boolean mouseOver = isMouseOver(mousePos.x, mousePos.y);
         updateState(mouseOver);
+
+        if (!inputHandlingEnabled) {
+            updateVisuals(mouseOver);
+            return;
+        }
 
         interactionButton.update(viewport);
 
@@ -132,7 +139,7 @@ public class Toggle extends Renderer {
     }
 
     private boolean isMouseOver(float x, float y) {
-        return isMouseTarget() && containsPoint(x, y);
+        return containsPoint(x, y);
     }
 
     private void updateState(boolean mouseOver) {
@@ -276,6 +283,14 @@ public class Toggle extends Renderer {
 
     public void setOnValueChanged(Consumer<Boolean> onValueChanged) {
         this.onValueChanged = onValueChanged != null ? onValueChanged : (state) -> {};
+    }
+
+    public boolean isInputHandlingEnabled() {
+        return inputHandlingEnabled;
+    }
+
+    public void setInputHandlingEnabled(boolean inputHandlingEnabled) {
+        this.inputHandlingEnabled = inputHandlingEnabled;
     }
 
     public void setBackgroundOffColor(Color color) {

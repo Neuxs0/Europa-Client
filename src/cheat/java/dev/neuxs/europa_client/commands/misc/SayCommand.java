@@ -8,7 +8,7 @@ public class SayCommand extends ClientCommand {
     @Override
     public void run() {
         if (args.length < 2 || args[1].trim().isEmpty()) {
-            Client.clientChat.addMessage(null, "Usage: #say <message>");
+            Client.clientChat.addMessage(null, "Usage: " + commandPrefix() + "say <message>");
             return;
         }
 

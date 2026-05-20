@@ -19,16 +19,21 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings({"BusyWait", "unused"})
 public class SettingsManager {
+    private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new Gson();
     private static String cheatConfigDir = "config/europaclient";
     private static String cheatFileName = "cheat-settings.json";
     private static String utilityFileName = "utility-settings.json";
+    private static String clientFileName = "settings.json";
     private static Path cheatFilePath = Paths.get(cheatConfigDir, cheatFileName);
     private static Path utilityFilePath = Paths.get(cheatConfigDir, utilityFileName);
+    private static Path clientFilePath = Paths.get(cheatConfigDir, clientFileName);
     private static boolean autoSaveEnabled = true;
     private static volatile boolean internalUpdate = false;
     private static volatile boolean reloading = false;
     private static volatile long lastCheatSaveTime = 0;
     private static volatile long lastUtilitySaveTime = 0;
+    private static volatile long lastClientSaveTime = 0;
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     public static synchronized void saveSettings() {
@@ -47,7 +52,6 @@ public class SettingsManager {
             }
         }
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         File cheatFile = cheatFilePath.toFile();
         File utilityFile = utilityFilePath.toFile();
         File parentDir = cheatFilePath.getParent().toFile();
@@ -65,18 +69,20 @@ public class SettingsManager {
             }
 
             try (FileWriter writer = new FileWriter(cheatFile)) {
-                gson.toJson(cheatSettingsMap, writer);
+                PRETTY_GSON.toJson(cheatSettingsMap, writer);
                 Client.LOGGER.info("Saved cheat settings to {}", cheatFilePath);
             } catch (IOException e) {
                 Client.LOGGER.error("Error saving cheat settings to {}: {}", cheatFilePath, e.getMessage(), e);
             }
 
             try (FileWriter writer = new FileWriter(utilityFile)) {
-                gson.toJson(utilitySettingsMap, writer);
+                PRETTY_GSON.toJson(utilitySettingsMap, writer);
                 Client.LOGGER.info("Saved utility settings to {}", utilityFilePath);
             } catch (IOException e) {
                 Client.LOGGER.error("Error saving utility settings to {}: {}", utilityFilePath, e.getMessage(), e);
             }
+
+            writeClientSettingsFile();
 
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
             if (cheatFile.exists()) lastCheatSaveTime = cheatFile.lastModified();
@@ -92,18 +98,14 @@ public class SettingsManager {
     public static synchronized void loadSettings() {
         File cheatFile = cheatFilePath.toFile();
         File utilityFile = utilityFilePath.toFile();
-        Gson gson = new Gson();
+        File clientFile = clientFilePath.toFile();
         Map<String, Object> cheatSettingsMap = new HashMap<>();
         Map<String, Object> utilitySettingsMap = new HashMap<>();
-
-        if (!cheatFile.exists() || !utilityFile.exists()) {
-            Client.LOGGER.info("Settings file(s) not found. Saving default settings.");
-            saveSettings();
-        }
+        boolean shouldSaveAfterLoad = !cheatFile.exists() || !utilityFile.exists() || !clientFile.exists();
 
         if (cheatFile.exists()) {
             try (FileReader reader = new FileReader(cheatFile)) {
-                Map<String, Object> loadedCheatMap = gson.fromJson(reader, MAP_TYPE);
+                Map<String, Object> loadedCheatMap = GSON.fromJson(reader, MAP_TYPE);
                 if (loadedCheatMap != null) {
                     cheatSettingsMap = loadedCheatMap;
                 }
@@ -113,12 +115,12 @@ public class SettingsManager {
                 Client.LOGGER.error("Error loading cheat settings from {}: {}", cheatFilePath, e.getMessage(), e);
             }
         } else {
-            Client.LOGGER.warn("Cheat settings file still not found after save attempt: {}", cheatFilePath);
+            Client.LOGGER.warn("Cheat settings file not found. Defaults will be saved to {}", cheatFilePath);
         }
 
         if (utilityFile.exists()) {
             try (FileReader reader = new FileReader(utilityFile)) {
-                Map<String, Object> loadedUtilityMap = gson.fromJson(reader, MAP_TYPE);
+                Map<String, Object> loadedUtilityMap = GSON.fromJson(reader, MAP_TYPE);
                 if (loadedUtilityMap != null) {
                     utilitySettingsMap = loadedUtilityMap;
                 }
@@ -128,8 +130,10 @@ public class SettingsManager {
                 Client.LOGGER.error("Error loading utility settings from {}: {}", utilityFilePath, e.getMessage(), e);
             }
         } else {
-            Client.LOGGER.warn("Utility settings file still not found after save attempt: {}", utilityFilePath);
+            Client.LOGGER.warn("Utility settings file not found. Defaults will be saved to {}", utilityFilePath);
         }
+
+        loadClientSettings();
 
         setReloading(true);
         try {
@@ -146,6 +150,84 @@ public class SettingsManager {
         } finally {
             setReloading(false);
         }
+
+        if (shouldSaveAfterLoad) {
+            Client.LOGGER.info("Saving missing settings file(s).");
+            saveSettings();
+        }
+    }
+
+    public static synchronized void saveClientSettings() {
+        try {
+            internalUpdate = true;
+            ensureConfigDirectory();
+            writeClientSettingsFile();
+        } catch (Exception e) {
+            Client.LOGGER.error("An unexpected error occurred during client settings save: {}", e.getMessage(), e);
+        } finally {
+            internalUpdate = false;
+        }
+    }
+
+    public static synchronized void loadClientSettings() {
+        File clientFile = clientFilePath.toFile();
+        if (!clientFile.exists()) {
+            Client.LOGGER.warn("Client settings file not found. Defaults will be saved to {}", clientFilePath.toAbsolutePath());
+            return;
+        }
+
+        try (FileReader reader = new FileReader(clientFile)) {
+            Map<String, Object> loadedClientMap = GSON.fromJson(reader, MAP_TYPE);
+            if (loadedClientMap == null) {
+                loadedClientMap = new HashMap<>();
+            }
+
+            setReloading(true);
+            try {
+                ClientSettings.importSettings(loadedClientMap);
+            } finally {
+                setReloading(false);
+            }
+
+            lastClientSaveTime = clientFile.lastModified();
+            Client.LOGGER.info("Loaded client settings from {}", clientFilePath.toAbsolutePath());
+        } catch (IOException | com.google.gson.JsonSyntaxException e) {
+            Client.LOGGER.error("Error loading client settings from {}: {}", clientFilePath.toAbsolutePath(), e.getMessage(), e);
+        }
+    }
+
+    public static void reloadClientSettingsIfChanged() {
+        if (internalUpdate) {
+            return;
+        }
+
+        File clientFile = clientFilePath.toFile();
+        if (!clientFile.exists()) {
+            return;
+        }
+
+        long currentModTime = clientFile.lastModified();
+        if (currentModTime != 0 && currentModTime != lastClientSaveTime) {
+            Client.LOGGER.info("Runtime client settings change detected. Reloading {}...", clientFilePath.toAbsolutePath());
+            loadClientSettings();
+        }
+    }
+
+    private static void ensureConfigDirectory() throws IOException {
+        Path parentPath = cheatFilePath.getParent();
+        if (parentPath != null && !Files.exists(parentPath)) {
+            Files.createDirectories(parentPath);
+            Client.LOGGER.info("Created config directory: {}", parentPath.toAbsolutePath());
+        }
+    }
+
+    private static void writeClientSettingsFile() throws IOException {
+        File clientFile = clientFilePath.toFile();
+        try (FileWriter writer = new FileWriter(clientFile)) {
+            PRETTY_GSON.toJson(ClientSettings.exportSettings(), writer);
+            Client.LOGGER.info("Saved client settings to {}", clientFilePath.toAbsolutePath());
+        }
+        lastClientSaveTime = clientFile.lastModified();
     }
 
     public static void startFileWatcher() {
@@ -200,8 +282,9 @@ public class SettingsManager {
 
                             boolean isCheatFile = changedFileName.equals(cheatFileName);
                             boolean isUtilityFile = changedFileName.equals(utilityFileName);
+                            boolean isClientFile = changedFileName.equals(clientFileName);
 
-                            if (isCheatFile || isUtilityFile) {
+                            if (isCheatFile || isUtilityFile || isClientFile) {
                                 if (internalUpdate) {
                                     Client.LOGGER.debug("Ignoring internal modification of {}", changedFileName);
                                     continue;
@@ -213,7 +296,9 @@ public class SettingsManager {
                                 if (!changedFile.exists()) continue;
 
                                 long currentModTime = changedFile.lastModified();
-                                long lastKnownSaveTime = isCheatFile ? lastCheatSaveTime : lastUtilitySaveTime;
+                                long lastKnownSaveTime = isCheatFile
+                                        ? lastCheatSaveTime
+                                        : isUtilityFile ? lastUtilitySaveTime : lastClientSaveTime;
 
                                 if (currentModTime != lastKnownSaveTime && currentModTime != 0) {
                                     Client.LOGGER.info("External modification detected for {}. Reloading settings...", changedFileName);
@@ -268,10 +353,16 @@ public class SettingsManager {
         cheatFilePath = Paths.get(path);
         cheatFileName = cheatFilePath.getFileName().toString();
         cheatConfigDir = cheatFilePath.getParent().toString();
+        utilityFilePath = Paths.get(cheatConfigDir, utilityFileName);
+        clientFilePath = Paths.get(cheatConfigDir, clientFileName);
     }
     public static void setUtilityFilePath(String path) {
         utilityFilePath = Paths.get(path);
         utilityFileName = utilityFilePath.getFileName().toString();
+    }
+    public static void setClientFilePath(String path) {
+        clientFilePath = Paths.get(path);
+        clientFileName = clientFilePath.getFileName().toString();
     }
     public static void setAutoSaveEnabled(boolean enabled) {
         autoSaveEnabled = enabled;

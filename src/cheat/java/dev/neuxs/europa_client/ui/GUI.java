@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.ui.pages.*;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
@@ -71,7 +72,7 @@ public class GUI extends GameState {
 
         menuSize.set(screenW / 1.8f, screenH / 1.65f);
 
-        backgroundDim.setFillColor(mainDimColor);
+        syncClientSettings();
         menuContainer.setFillColor(mainBorderColor);
         menuContainer.setBorderRadius(15f);
         contentMenu.setFillColor(mainBackgroundColor);
@@ -209,6 +210,8 @@ public class GUI extends GameState {
         if (currentPage != null) {
             currentPage.update(deltaTime);
         }
+
+        syncClientSettings();
     }
 
     @Override
@@ -351,5 +354,11 @@ public class GUI extends GameState {
 
     public Page getCurrentPage() {
         return this.currentPage;
+    }
+
+    private void syncClientSettings() {
+        backgroundDim.setFillColor(ClientSettings.isGuiBackgroundDimEnabled()
+                ? mainDimColor
+                : ColorUtils.TRANSPARENT);
     }
 }

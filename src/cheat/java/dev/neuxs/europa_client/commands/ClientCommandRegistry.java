@@ -16,7 +16,14 @@ import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
 
 public class ClientCommandRegistry {
+    private static boolean registered;
+
     public static void registerClientCommands() {
+        if (registered) {
+            return;
+        }
+        registered = true;
+
         // Misc
         ClientCommandManager.registerCommand("say", SayCommand::new);
         ClientCommandManager.registerCommand("help", HelpCommand::new, "?", "h");

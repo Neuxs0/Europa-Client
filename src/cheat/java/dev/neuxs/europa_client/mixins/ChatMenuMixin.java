@@ -8,6 +8,7 @@ import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.accounts.Account;
 import finalforeach.cosmicreach.networking.client.ChatSender;
 import dev.neuxs.europa_client.commands.ClientCommandManager;
+import dev.neuxs.europa_client.settings.ClientSettings;
 
 @SuppressWarnings("unused")
 @Mixin(ChatMenu.class)
@@ -21,7 +22,7 @@ public abstract class ChatMenuMixin {
             )
     )
     private static void interceptSendMessageOrCommand(Chat chat, Account account, String messageText) {
-        if (messageText.startsWith("#")) {
+        if (ClientSettings.areCommandsEnabled() && ClientSettings.isCommandMessage(messageText)) {
             ClientCommandManager.triggerCommand(account, messageText);
         } else {
             ChatSender.sendMessageOrCommand(chat, account, messageText);
@@ -36,7 +37,7 @@ public abstract class ChatMenuMixin {
             )
     )
     private void interceptAddMessage(Chat instance, Account account, String messageText) {
-        if (messageText.startsWith("#")) {
+        if (ClientSettings.areCommandsEnabled() && ClientSettings.isCommandMessage(messageText)) {
             return;
         }
         instance.addMessage(account, messageText);

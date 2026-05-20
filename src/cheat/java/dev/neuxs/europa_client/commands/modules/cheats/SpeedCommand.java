@@ -14,7 +14,6 @@ public class SpeedCommand extends ClientCommand {
             return;
         }
 
-        // Expected format: "#speed set speed <value>"
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
                 args[2].equalsIgnoreCase("speed")) {
 
@@ -31,12 +30,12 @@ public class SpeedCommand extends ClientCommand {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid number format. Use a valid float value.");
             }
         } else {
-            Client.clientChat.addMessage(null, "Usage: #speed OR #speed set speed <value>");
+            Client.clientChat.addMessage(null, "Usage: " + commandPrefix() + "speed OR " + commandPrefix() + "speed set speed <value>");
         }
     }
 
     @Override
     public String getDescription() {
-        return "Toggles speed cheat. Use '#speed set speed <value>' to set the speed.";
+        return "Toggles speed cheat. Use '" + commandPrefix() + "speed set speed <value>' to set the speed.";
     }
 }

@@ -38,7 +38,7 @@ public class ProfileCommand extends ClientCommand {
 
     private void saveProfile() throws Exception {
         if (args.length < 3) {
-            reply("Usage: #profile save <name> [all|modules|settings]");
+            reply("Usage: " + commandPrefix() + "profile save <name> [all|modules|settings]");
             return;
         }
 
@@ -48,7 +48,7 @@ public class ProfileCommand extends ClientCommand {
 
     private void loadProfile() throws Exception {
         if (args.length < 3) {
-            reply("Usage: #profile load <name> [all|modules|settings]");
+            reply("Usage: " + commandPrefix() + "profile load <name> [all|modules|settings]");
             return;
         }
 
@@ -58,7 +58,7 @@ public class ProfileCommand extends ClientCommand {
 
     private void deleteProfile() throws Exception {
         if (args.length < 3) {
-            reply("Usage: #profile delete <name>");
+            reply("Usage: " + commandPrefix() + "profile delete <name>");
             return;
         }
 
@@ -88,7 +88,7 @@ public class ProfileCommand extends ClientCommand {
     }
 
     private void sendUsage() {
-        reply("Usage: #profile list|save|load|delete");
+        reply("Usage: " + commandPrefix() + "profile list|save|load|delete");
     }
 
     private void reply(String message) {

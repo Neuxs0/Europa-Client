@@ -14,7 +14,6 @@ public class ReachCommand extends ClientCommand {
             return;
         }
 
-        // Expected format: "#reach set distance <value>"
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
                 args[2].equalsIgnoreCase("distance")) {
 
@@ -31,12 +30,12 @@ public class ReachCommand extends ClientCommand {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid number format. Use a valid float value.");
             }
         } else {
-            Client.clientChat.addMessage(null, "Usage: #reach OR #reach set distance <value>");
+            Client.clientChat.addMessage(null, "Usage: " + commandPrefix() + "reach OR " + commandPrefix() + "reach set distance <value>");
         }
     }
 
     @Override
     public String getDescription() {
-        return "Toggles reach cheat. Use '#reach set distance <value>' to set the reach distance.";
+        return "Toggles reach cheat. Use '" + commandPrefix() + "reach set distance <value>' to set the reach distance.";
     }
 }

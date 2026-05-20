@@ -14,7 +14,6 @@ public class NoClipCommand extends ClientCommand {
             return;
         }
 
-        // Expected format: "#noclip set speed <value>"
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
                 args[2].equalsIgnoreCase("speed")) {
 
@@ -36,12 +35,12 @@ public class NoClipCommand extends ClientCommand {
             }
         } else {
             Client.clientChat.addMessage(null,
-                    "Usage: #noclip OR #noclip set speed <value>");
+                    "Usage: " + commandPrefix() + "noclip OR " + commandPrefix() + "noclip set speed <value>");
         }
     }
 
     @Override
     public String getDescription() {
-        return "Toggles no-clip mode. Use '#noclip set speed <value>' to set the speed.";
+        return "Toggles no-clip mode. Use '" + commandPrefix() + "noclip set speed <value>' to set the speed.";
     }
 }

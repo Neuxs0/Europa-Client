@@ -10,8 +10,6 @@ import dev.neuxs.europa_client.utils.SyncModules;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 
-// TODO SETTINGS: Add support for more custom settings
-// TODO GUI: Add Settings page
 // TODO GUI: Save current page and if side menu is open/closed for re-opening the menu
 // TODO GUI: Add background blur (optional to user via settings)
 // TODO GUI/UI: Add MSAA
@@ -31,6 +29,7 @@ public class Client {
         Modules.initModules();
         SettingsManager.loadSettings();
         ProfileManager.initialize();
+        SettingsManager.loadClientSettings();
         SettingsManager.startFileWatcher();
         ClientCommandRegistry.registerClientCommands();
 
@@ -39,6 +38,7 @@ public class Client {
 
     // Called every frame
     public static void render() {
+        SettingsManager.reloadClientSettingsIfChanged();
         SyncModules.Sync();
         InputManager.getInstance().initialize();
     }

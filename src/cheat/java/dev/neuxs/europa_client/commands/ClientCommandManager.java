@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.settings.ClientSettings;
 import finalforeach.cosmicreach.chat.IChat;
 import finalforeach.cosmicreach.accounts.Account;
 
@@ -41,7 +42,25 @@ public class ClientCommandManager {
             Account account,
             String messageText
     ) {
-        String withoutPrefix = messageText.substring(1);
+        if (COMMANDS.isEmpty()) {
+            ClientCommandRegistry.registerClientCommands();
+        }
+
+        String normalizedMessage = normalizeCommandMessage(messageText);
+        String prefix = ClientSettings.getMatchingCommandPrefix(normalizedMessage);
+        if (prefix.isEmpty()) {
+            return;
+        }
+
+        if (!ClientSettings.areCommandsEnabled()) {
+            return;
+        }
+
+        String withoutPrefix = normalizedMessage.substring(prefix.length()).trim();
+        if (withoutPrefix.isEmpty()) {
+            Client.clientChat.addMessage(null, "Enter a command after " + prefix);
+            return;
+        }
 
         String[] args;
         String commandStr;
@@ -50,9 +69,9 @@ public class ClientCommandManager {
             String rest = withoutPrefix.substring(4);
             args = new String[]{commandStr, rest};
         } else {
-            String[] parts = withoutPrefix.split(" ");
+            String[] parts = withoutPrefix.split("\\s+");
             commandStr = parts[0].toLowerCase();
-            args = withoutPrefix.split(" ");
+            args = parts;
         }
 
         Supplier<ClientCommand> supplier = COMMANDS.get(commandStr);
@@ -75,15 +94,28 @@ public class ClientCommandManager {
 
     public static void printHelp(IChat chat) {
         StringBuilder sb = new StringBuilder("Available commands:\n");
+        String prefix = ClientSettings.getCommandPrefix();
         for (String cmd : COMMANDS.keySet()) {
             Supplier<ClientCommand> supplier = COMMANDS.get(cmd);
             ClientCommand command = supplier.get();
-            sb.append("#")
+            sb.append(prefix)
                     .append(cmd)
                     .append(" - ")
                     .append(command.getDescription())
                     .append("\n");
         }
         Client.clientChat.addMessage(null, sb.toString());
+    }
+
+    private static String normalizeCommandMessage(String messageText) {
+        if (messageText == null) {
+            return "";
+        }
+
+        String normalized = messageText.trim();
+        if (normalized.startsWith("/") && ClientSettings.isCommandMessage(normalized.substring(1))) {
+            normalized = normalized.substring(1);
+        }
+        return normalized;
     }
 }
