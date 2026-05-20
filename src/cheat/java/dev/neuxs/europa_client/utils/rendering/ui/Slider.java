@@ -70,7 +70,7 @@ public class Slider extends Renderer {
         this.snapEnabled = false;
         this.isDragging = false;
         this.onValueChanged = (value) -> {};
-        this.padding = 3f;
+        this.padding = 0f;
         this.trackHeightMultiplier = 0.4f;
 
         this.trackColor = DEFAULT_TRACK_COLOR.cpy();
@@ -207,11 +207,11 @@ public class Slider extends Renderer {
         handleRenderer.setRadius(handleRadius);
         handleRenderer.setPosY(handleCenterY);
 
-        trackRenderer.setPos(getPosX(), trackY);
-        trackRenderer.setSize(getWidth(), trackHeight);
+        trackRenderer.setPos(getMinHandleX(), trackY);
+        trackRenderer.setSize(getUsableTrackWidth(), trackHeight);
         trackRenderer.setBorderRadius(trackRadius);
 
-        fillRenderer.setPos(getPosX(), trackY);
+        fillRenderer.setPos(getMinHandleX(), trackY);
         fillRenderer.setHeight(trackHeight);
         fillRenderer.setBorderRadius(trackRadius);
 
@@ -234,7 +234,7 @@ public class Slider extends Renderer {
     }
 
     private void updateFillWidth() {
-        float fillStartX = trackRenderer.getPosX();
+        float fillStartX = getMinHandleX();
         fillRenderer.setPosX(fillStartX);
         fillRenderer.setWidth(Math.max(0f, handleRenderer.getPosX() - fillStartX));
     }

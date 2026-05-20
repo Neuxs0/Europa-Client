@@ -10,7 +10,8 @@ public class Reach extends Module {
 
     public Reach(int keybind, boolean defaultEnabled) {
         super("Reach", keybind, defaultEnabled);
-        customSettings.put("distance", new Setting<>("distance", 6.0f, value -> value >= 1.0f));
+        customSettings.put("distance", new Setting<>("distance", 6.0f, value -> value >= 1.0f)
+                .withRange(1.0f, 24.0f));
     }
 
     @Override
