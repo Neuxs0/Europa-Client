@@ -1,11 +1,12 @@
 .gitignore
 .gradle/
 build_archive/
-/dev/
+dev/
 build/
 test/
 gradle/
 !gradle/wrapper/gradle-wrapper.jar
+runs/
 
 ### IntelliJ IDEA ###
 .idea/

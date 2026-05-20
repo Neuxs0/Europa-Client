@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.utils.rendering.ui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -7,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.utils.ColorUtils;
@@ -22,404 +24,392 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class Slider extends Renderer {
-    private final InputManager inputManager;
+    private static final float MIN_RANGE = 1e-6f;
+    private static final float VALUE_EPSILON = 1e-6f;
+
+    private static final Color DEFAULT_TRACK_COLOR = ColorUtils.color(80, 80, 80, 255);
+    private static final Color DEFAULT_FILL_COLOR = ColorUtils.color(160, 160, 160, 255);
+    private static final Color DEFAULT_HANDLE_COLOR = ColorUtils.color(240, 240, 240, 255);
+    private static final Color DEFAULT_HANDLE_HOVER_COLOR = ColorUtils.color(255, 255, 255, 255);
+    private static final Color DEFAULT_HANDLE_DRAG_COLOR = ColorUtils.color(220, 220, 220, 255);
+
     private final BoxRenderer trackRenderer;
     private final BoxRenderer fillRenderer;
     private final CircleRenderer handleRenderer;
+    private final Vector2 mousePos;
+    private final List<Float> snapPoints;
 
     private float minValue;
     private float maxValue;
     private float currentValue;
-    private float valueRange;
     private boolean snapEnabled;
-    private List<Float> snapPoints;
     private boolean isDragging;
     private Consumer<Float> onValueChanged;
     private float padding;
     private float trackHeightMultiplier;
 
     private Color trackColor;
-    private Color fillColor; // Overrides the base class fillColor for the fill part
+    private Color fillColor;
     private Color handleColor;
     private Color handleHoverColor;
     private Color handleDragColor;
 
-    private static final Color defaultTrackColor = ColorUtils.color(80, 80, 80, 255);
-    private static final Color defaultFillColor = ColorUtils.color(160, 160, 160, 255);
-    private static final Color defaultHandleColor = ColorUtils.color(240, 240, 240, 255);
-    private static final Color defaultHandleHoverColor = ColorUtils.color(255, 255, 255, 255);
-    private static final Color defaultHandleDragColor = ColorUtils.color(220, 220, 220, 255);
-
     public Slider() {
-        super();
-        this.inputManager = InputManager.getInstance(); // Keep for direct mouse position access during drag
         this.trackRenderer = new BoxRenderer();
         this.fillRenderer = new BoxRenderer();
         this.handleRenderer = new CircleRenderer();
+        this.mousePos = new Vector2();
+        this.snapPoints = new ArrayList<>();
 
-        this.setRenderType(RenderUtil.RenderType.SHAPE);
-        this.setShapeType(ShapeRenderer.ShapeType.Filled);
+        setRenderType(RenderUtil.RenderType.SHAPE);
+        setShapeType(ShapeRenderer.ShapeType.Filled);
 
         this.minValue = 0f;
         this.maxValue = 100f;
-        this.valueRange = this.maxValue - this.minValue;
+        this.currentValue = 50f;
         this.snapEnabled = false;
-        this.snapPoints = new ArrayList<>();
         this.isDragging = false;
         this.onValueChanged = (value) -> {};
         this.padding = 3f;
         this.trackHeightMultiplier = 0.4f;
 
-        this.trackColor = defaultTrackColor.cpy();
-        this.fillColor = defaultFillColor.cpy(); // Assign to specific fillColor field
-        this.handleColor = defaultHandleColor.cpy();
-        this.handleHoverColor = defaultHandleHoverColor.cpy();
-        this.handleDragColor = defaultHandleDragColor.cpy();
+        this.trackColor = DEFAULT_TRACK_COLOR.cpy();
+        this.fillColor = DEFAULT_FILL_COLOR.cpy();
+        this.handleColor = DEFAULT_HANDLE_COLOR.cpy();
+        this.handleHoverColor = DEFAULT_HANDLE_HOVER_COLOR.cpy();
+        this.handleDragColor = DEFAULT_HANDLE_DRAG_COLOR.cpy();
 
-        // Configure sub-renderers
-        this.trackRenderer.setFillColor(this.trackColor);
-        this.trackRenderer.setBorder(false);
-        this.fillRenderer.setFillColor(this.fillColor);
-        this.fillRenderer.setBorder(false);
-        this.handleRenderer.setFillColor(this.handleColor);
-        this.handleRenderer.setBorder(false);
-
-        // Set initial value and update geometry
-        this.setValueInternal(MathUtils.clamp(50f, this.minValue, this.maxValue), false);
-        this.updateGeometry();
+        configureRendererDefaults();
+        updateGeometry();
+        updateVisuals(false);
     }
 
     @Override
     public void update(Viewport viewport) {
-        super.update(viewport); // Handles hover state
+        if (viewport == null) {
+            return;
+        }
 
-        Vector2 mousePos = inputManager.getMousePos(); // Use InputManager for real-time position during drag
-        boolean mouseOver = isMouseOver(viewport);
+        super.update(viewport);
+
+        updateMousePosition(viewport);
+        boolean mouseOver = isMouseOver(mousePos.x, mousePos.y);
         boolean mousePressed = InputManager.isMouseButtonDown(Input.Buttons.LEFT);
-        boolean isCurrentlyPressed = getState() == State.PRESSED;
 
-        // Start dragging
-        if (!this.isDragging && mouseOver && mousePressed && isCurrentlyPressed) {
-            this.isDragging = true;
-            this.updateValueFromMouse(mousePos.x, viewport);
+        if (!isDragging && mouseOver && mousePressed && getState() == State.PRESSED) {
+            isDragging = true;
+            updateValueFromMouse(mousePos.x);
         }
 
-        // Stop dragging
-        if (this.isDragging && !mousePressed) {
-            this.isDragging = false;
+        if (isDragging && !mousePressed) {
+            isDragging = false;
         }
 
-        // Update value while dragging
-        if (this.isDragging) {
-            this.updateValueFromMouse(mousePos.x, viewport);
+        if (isDragging) {
+            updateValueFromMouse(mousePos.x);
         }
 
-        this.updateVisuals(mouseOver);
-    }
-
-    private void updateValueFromMouse(float mouseX, Viewport viewport) {
-        if (!isMouseOver(viewport) && !isDragging) return; // Only update if dragging or initially clicked on
-
-        float sliderHeight = getHeight();
-        if (sliderHeight <= 0) return;
-        float handleRadius = sliderHeight / 2f;
-
-        float sliderX = getPosX();
-        float sliderWidth = getWidth();
-
-        float handleCenterX_Min = sliderX + handleRadius + this.padding;
-        float handleCenterX_Max = sliderX + sliderWidth - handleRadius - this.padding;
-        float usableTrackWidth = Math.max(0, handleCenterX_Max - handleCenterX_Min);
-
-        float newValue;
-        if (usableTrackWidth > 0) {
-            float clampedMouseX = MathUtils.clamp(mouseX, handleCenterX_Min, handleCenterX_Max);
-            float ratio = (clampedMouseX - handleCenterX_Min) / usableTrackWidth;
-            newValue = this.minValue + ratio * this.valueRange;
-        } else {
-            // If track is too small, snap to min or max based on mouse position relative to center
-            float overallCenterX = sliderX + sliderWidth / 2f;
-            newValue = (mouseX < overallCenterX) ? this.minValue : this.maxValue;
-        }
-
-        // Apply snapping if enabled
-        if (this.snapEnabled && this.snapPoints != null && !this.snapPoints.isEmpty()) {
-            newValue = this.findClosestSnapPoint(newValue);
-        } else {
-            newValue = MathUtils.clamp(newValue, this.minValue, this.maxValue);
-        }
-
-        this.setValueInternal(newValue, true);
-    }
-
-    private void setValueInternal(float newValue, boolean triggerCallback) {
-        newValue = MathUtils.clamp(newValue, this.minValue, this.maxValue);
-        // Use a small epsilon for float comparison
-        if (Math.abs(newValue - this.currentValue) > 1e-6f) {
-            this.currentValue = newValue;
-            this.updateHandlePosition();
-            this.updateFillWidth();
-            if (triggerCallback && this.onValueChanged != null) {
-                this.onValueChanged.accept(this.currentValue);
-            }
-        } else if (!triggerCallback) {
-            // Ensure visuals are updated even if value doesn't change (e.g., on initial set or range change)
-            this.updateHandlePosition();
-            this.updateFillWidth();
-        }
-    }
-
-    private void updateVisuals(boolean mouseOver) {
-        Color targetHandleColor = this.handleColor;
-        if (this.isDragging || getState() == State.PRESSED) {
-            targetHandleColor = this.handleDragColor;
-        } else if (mouseOver || getState() == State.HOVERED) {
-            targetHandleColor = this.handleHoverColor;
-        }
-        this.handleRenderer.setFillColor(targetHandleColor);
-        this.trackRenderer.setFillColor(this.trackColor);
-        this.fillRenderer.setFillColor(this.fillColor);
+        updateVisuals(mouseOver);
     }
 
     @Override
     public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
-        // Update visual state based on interaction
-        updateVisuals(isMouseOver(viewport));
+        boolean mouseOver = viewport != null && isMouseOver(viewport);
+        updateVisuals(mouseOver);
 
-        // Render the components
-        this.trackRenderer.renderShape(viewport, shapeRenderer);
-        this.fillRenderer.renderShape(viewport, shapeRenderer);
-        this.handleRenderer.renderShape(viewport, shapeRenderer);
+        trackRenderer.renderShape(viewport, shapeRenderer);
+        fillRenderer.renderShape(viewport, shapeRenderer);
+        handleRenderer.renderShape(viewport, shapeRenderer);
     }
 
     @Override
     public void renderSprite(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {
-        // Slider does not render sprites directly
+    }
+
+    private void configureRendererDefaults() {
+        trackRenderer.setBorder(false);
+        fillRenderer.setBorder(false);
+        handleRenderer.setBorder(false);
+    }
+
+    private void updateMousePosition(Viewport viewport) {
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mousePos);
+    }
+
+    private boolean isMouseOver(float x, float y) {
+        return x >= getPosX() && x <= getPosX() + getWidth()
+                && y >= getPosY() && y <= getPosY() + getHeight();
+    }
+
+    private void updateValueFromMouse(float mouseX) {
+        setValueInternal(valueFromMouseX(mouseX), true);
+    }
+
+    private float valueFromMouseX(float mouseX) {
+        float usableTrackWidth = getUsableTrackWidth();
+
+        if (usableTrackWidth <= 0f) {
+            float sliderCenterX = getPosX() + getWidth() / 2f;
+            return normalizeValue(mouseX < sliderCenterX ? minValue : maxValue);
+        }
+
+        float clampedMouseX = MathUtils.clamp(mouseX, getMinHandleX(), getMaxHandleX());
+        float ratio = (clampedMouseX - getMinHandleX()) / usableTrackWidth;
+        return normalizeValue(minValue + ratio * getValueRange());
+    }
+
+    private float normalizeValue(float value) {
+        float clampedValue = MathUtils.clamp(value, minValue, maxValue);
+        return snapEnabled && !snapPoints.isEmpty()
+                ? findClosestSnapPoint(clampedValue)
+                : clampedValue;
+    }
+
+    private void setValueInternal(float newValue, boolean triggerCallback) {
+        float normalizedValue = normalizeValue(newValue);
+        boolean valueChanged = Math.abs(normalizedValue - currentValue) > VALUE_EPSILON;
+
+        if (valueChanged) {
+            currentValue = normalizedValue;
+        }
+
+        updateValueGeometry();
+
+        if (valueChanged && triggerCallback && onValueChanged != null) {
+            onValueChanged.accept(currentValue);
+        }
+    }
+
+    private void updateVisuals(boolean mouseOver) {
+        trackRenderer.setFillColor(trackColor);
+        fillRenderer.setFillColor(fillColor);
+
+        if (isDragging || getState() == State.PRESSED) {
+            handleRenderer.setFillColor(handleDragColor);
+        } else if (mouseOver || getState() == State.HOVERED) {
+            handleRenderer.setFillColor(handleHoverColor);
+        } else {
+            handleRenderer.setFillColor(handleColor);
+        }
     }
 
     private void updateGeometry() {
-        float sliderX = getPosX();
-        float sliderY = getPosY();
-        float sliderWidth = getWidth();
-        float sliderHeight = getHeight();
-
-        if (sliderWidth <= 0 || sliderHeight <= 0) return;
-
-        float handleRadius = sliderHeight / 2f;
-        this.handleRenderer.setRadius(handleRadius);
-        // Center the handle vertically within the slider's height
-        float handleCenterY = sliderY + handleRadius;
-        this.handleRenderer.setPosY(handleCenterY); // Position is center for circle
-
-        // Calculate track geometry
-        float trackHeight = Math.max(1f, sliderHeight * this.trackHeightMultiplier);
-        float trackRadius = trackHeight / 2f;
-        // Position track vertically centered with handle
-        float trackY = handleCenterY - trackRadius;
-
-        this.trackRenderer.setPos(sliderX, trackY);
-        this.trackRenderer.setSize(sliderWidth, trackHeight);
-        this.trackRenderer.setBorderRadius(trackRadius);
-
-        // Calculate fill geometry
-        this.fillRenderer.setPos(sliderX, trackY);
-        this.fillRenderer.setHeight(trackHeight);
-        this.fillRenderer.setBorderRadius(trackRadius);
-
-        // Update positions based on the current value
-        this.updateHandlePosition();
-        this.updateFillWidth();
-    }
-
-    private void updateHandlePosition() {
-        float sliderX = getPosX();
-        float sliderWidth = getWidth();
-        float handleRadius = this.handleRenderer.getRadius();
-
-        // Check for invalid state
-        if (handleRadius <= 0 || this.valueRange <= 1e-9f || sliderWidth <= (handleRadius * 2 + padding * 2)) {
-            // Default to min position if invalid dimensions or range
-            this.handleRenderer.setPosX(sliderX + handleRadius + this.padding);
+        if (getWidth() <= 0f || getHeight() <= 0f) {
             return;
         }
 
-        // Calculate the valid range for the handle's center X coordinate
-        float handleCenterX_Min = sliderX + handleRadius + this.padding;
-        float handleCenterX_Max = sliderX + sliderWidth - handleRadius - this.padding;
-        float usableTrackWidth = Math.max(0, handleCenterX_Max - handleCenterX_Min);
+        float handleRadius = getHandleRadius();
+        float handleCenterY = getPosY() + handleRadius;
+        float trackHeight = Math.max(1f, getHeight() * trackHeightMultiplier);
+        float trackRadius = trackHeight / 2f;
+        float trackY = handleCenterY - trackRadius;
 
-        // Calculate the position ratio based on the current value
-        float ratio = (this.currentValue - this.minValue) / this.valueRange;
-        // Calculate the target center X for the handle
-        float handleTargetCenterX = handleCenterX_Min + ratio * usableTrackWidth;
+        handleRenderer.setRadius(handleRadius);
+        handleRenderer.setPosY(handleCenterY);
 
-        // Set the handle's position (center X)
-        this.handleRenderer.setPosX(handleTargetCenterX);
+        trackRenderer.setPos(getPosX(), trackY);
+        trackRenderer.setSize(getWidth(), trackHeight);
+        trackRenderer.setBorderRadius(trackRadius);
+
+        fillRenderer.setPos(getPosX(), trackY);
+        fillRenderer.setHeight(trackHeight);
+        fillRenderer.setBorderRadius(trackRadius);
+
+        updateValueGeometry();
+    }
+
+    private void updateValueGeometry() {
+        updateHandlePosition();
+        updateFillWidth();
+    }
+
+    private void updateHandlePosition() {
+        float handleX = getMinHandleX();
+
+        if (getUsableTrackWidth() > 0f) {
+            handleX += getValueRatio() * getUsableTrackWidth();
+        }
+
+        handleRenderer.setPosX(handleX);
     }
 
     private void updateFillWidth() {
-        float fillStartX = this.trackRenderer.getPosX();
-        // The fill should end at the center of the handle
-        float fillEndX = this.handleRenderer.getPosX();
+        float fillStartX = trackRenderer.getPosX();
+        fillRenderer.setPosX(fillStartX);
+        fillRenderer.setWidth(Math.max(0f, handleRenderer.getPosX() - fillStartX));
+    }
 
-        // Width is the difference between the handle center and the track start
-        float fillWidth = Math.max(0, fillEndX - fillStartX);
+    private float getHandleRadius() {
+        return Math.max(0f, getHeight() / 2f);
+    }
 
-        // Update the fill renderer's position and width
-        this.fillRenderer.setPosX(fillStartX);
-        this.fillRenderer.setWidth(fillWidth);
+    private float getMinHandleX() {
+        return getPosX() + getHandleRadius() + padding;
+    }
+
+    private float getMaxHandleX() {
+        return getPosX() + getWidth() - getHandleRadius() - padding;
+    }
+
+    private float getUsableTrackWidth() {
+        return Math.max(0f, getMaxHandleX() - getMinHandleX());
+    }
+
+    private float getValueRange() {
+        return maxValue - minValue;
+    }
+
+    private float getValueRatio() {
+        float valueRange = getValueRange();
+        if (valueRange <= MIN_RANGE) {
+            return 0f;
+        }
+        return MathUtils.clamp((currentValue - minValue) / valueRange, 0f, 1f);
     }
 
     private float findClosestSnapPoint(float value) {
-        if (this.snapPoints == null || this.snapPoints.isEmpty()) {
-            return value; // No snapping if list is null or empty
+        if (snapPoints.isEmpty()) {
+            return value;
         }
 
-        // Clamp snap points to the slider's min/max range first
-        List<Float> clampedSnaps = new ArrayList<>();
-        for (float p : this.snapPoints) {
-            clampedSnaps.add(MathUtils.clamp(p, this.minValue, this.maxValue));
-        }
+        float closestSnap = MathUtils.clamp(snapPoints.get(0), minValue, maxValue);
+        float closestDistance = Math.abs(value - closestSnap);
 
-        // Find the snap point closest to the current value
-        float closestSnap = clampedSnaps.get(0);
-        float minDiff = Math.abs(value - closestSnap);
-
-        for (int i = 1; i < clampedSnaps.size(); i++) {
-            float currentSnap = clampedSnaps.get(i);
-            float currentDiff = Math.abs(value - currentSnap);
-            if (currentDiff < minDiff) {
-                minDiff = currentDiff;
-                closestSnap = currentSnap;
+        for (int i = 1; i < snapPoints.size(); i++) {
+            float snapPoint = MathUtils.clamp(snapPoints.get(i), minValue, maxValue);
+            float distance = Math.abs(value - snapPoint);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestSnap = snapPoint;
             }
         }
+
         return closestSnap;
     }
 
-    // --- Overridden Setters to trigger geometry updates ---
+    private void normalizeRangeFromMin() {
+        if (maxValue <= minValue) {
+            maxValue = minValue + MIN_RANGE;
+        }
+    }
+
+    private void normalizeRangeFromMax() {
+        if (maxValue <= minValue) {
+            minValue = maxValue - MIN_RANGE;
+        }
+    }
+
+    @Override
+    public void setPos(Vector3 pos) {
+        super.setPos(pos);
+        updateGeometry();
+    }
+
+    @Override
+    public void setPos(Vector2 pos) {
+        super.setPos(pos);
+        updateGeometry();
+    }
 
     @Override
     public void setPos(float x, float y, int z) {
         super.setPos(x, y, z);
-        this.updateGeometry();
+        updateGeometry();
     }
 
     @Override
     public void setPos(float x, float y) {
         super.setPos(x, y);
-        this.updateGeometry();
+        updateGeometry();
     }
 
     @Override
     public void setPosX(float x) {
         super.setPosX(x);
-        this.updateGeometry();
+        updateGeometry();
     }
 
     @Override
     public void setPosY(float y) {
         super.setPosY(y);
-        this.updateGeometry();
+        updateGeometry();
     }
 
     @Override
-    public void setSize(float w, float h) {
-        float effectiveHeight = Math.max(1f, h); // Ensure minimum height
-        // Ensure width is at least enough for the handle diameter + padding
-        float handleDiameter = effectiveHeight;
-        float minWidth = handleDiameter + (this.padding * 2f);
-        float effectiveWidth = Math.max(minWidth, w);
+    public void setSize(Vector2 size) {
+        if (size != null) {
+            setSize(size.x, size.y);
+        }
+    }
 
-        super.setSize(effectiveWidth, effectiveHeight);
-        this.updateGeometry();
+    @Override
+    public void setSize(float width, float height) {
+        float effectiveHeight = Math.max(1f, height);
+        float minimumWidth = effectiveHeight + padding * 2f;
+        super.setSize(Math.max(minimumWidth, width), effectiveHeight);
+        updateGeometry();
     }
 
     @Override
     public void setWidth(float width) {
-        this.setSize(width, getHeight()); // Use existing height
+        setSize(width, getHeight());
     }
 
     @Override
     public void setHeight(float height) {
-        this.setSize(getWidth(), height); // Use existing width
+        setSize(getWidth(), height);
     }
 
-    // --- Slider Specific Setters ---
+    public void setRange(float minValue, float maxValue) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        normalizeRangeFromMin();
+        setValueInternal(currentValue, false);
+    }
 
     public void setMinValue(float minValue) {
-        // Ensure min is strictly less than max
-        if (minValue >= this.maxValue) {
-            this.maxValue = minValue + 1e-6f; // Add a small epsilon if they are equal or inverted
-        }
         this.minValue = minValue;
-        this.valueRange = this.maxValue - this.minValue;
-        // Re-clamp and update visuals/position without triggering callback
-        this.setValueInternal(this.currentValue, false);
+        normalizeRangeFromMin();
+        setValueInternal(currentValue, false);
     }
 
     public void setMaxValue(float maxValue) {
-        // Ensure max is strictly greater than min
-        if (maxValue <= this.minValue) {
-            this.minValue = maxValue - 1e-6f; // Subtract a small epsilon if they are equal or inverted
-        }
         this.maxValue = maxValue;
-        this.valueRange = this.maxValue - this.minValue;
-        // Re-clamp and update visuals/position without triggering callback
-        this.setValueInternal(this.currentValue, false);
+        normalizeRangeFromMax();
+        setValueInternal(currentValue, false);
     }
 
     public void setValue(float value) {
-        float targetValue = value;
-        // Apply snapping if enabled when setting value externally
-        if (this.snapEnabled && this.snapPoints != null && !this.snapPoints.isEmpty()) {
-            targetValue = this.findClosestSnapPoint(targetValue);
-        }
-        targetValue = MathUtils.clamp(targetValue, this.minValue, this.maxValue);
-        this.setValueInternal(targetValue, true); // Trigger callback
+        setValueInternal(value, true);
     }
 
     public void setValueSilent(float value) {
-        float targetValue = value;
-        // Apply snapping if enabled when setting value externally
-        if (this.snapEnabled && this.snapPoints != null && !this.snapPoints.isEmpty()) {
-            targetValue = this.findClosestSnapPoint(targetValue);
-        }
-        targetValue = MathUtils.clamp(targetValue, this.minValue, this.maxValue);
-        this.setValueInternal(targetValue, false); // Do not trigger callback
+        setValueInternal(value, false);
     }
 
     public void setSnapEnabled(boolean snapEnabled) {
         this.snapEnabled = snapEnabled;
-        // If enabling snapping, immediately snap the current value
-        if (this.snapEnabled) {
-            // Use setValue to trigger potential callback if value changes due to snapping
-            this.setValue(this.currentValue);
-        }
+        setValueInternal(currentValue, true);
     }
 
     public void setSnapPoints(List<Float> snapPoints) {
-        if (snapPoints == null) {
-            this.snapPoints = new ArrayList<>();
-            // Consider if disabling snap is desired when list is set to null/empty
-            // this.snapEnabled = false;
-        } else {
-            this.snapPoints = new ArrayList<>(snapPoints);
-            Collections.sort(this.snapPoints); // Keep snap points sorted
-            // If snap is enabled, re-snap the current value to the new points
-            if (this.snapEnabled) {
-                this.setValue(this.currentValue); // Use setValue to trigger potential callback
-            }
+        this.snapPoints.clear();
+        if (snapPoints != null) {
+            this.snapPoints.addAll(snapPoints);
+            Collections.sort(this.snapPoints);
         }
+        setValueInternal(currentValue, snapEnabled);
     }
 
     public void setPadding(float padding) {
-        this.padding = Math.max(0, padding);
-        this.updateGeometry(); // Padding affects geometry
+        this.padding = Math.max(0f, padding);
+        setSize(getWidth(), getHeight());
     }
 
     public void setTrackHeightMultiplier(float multiplier) {
-        this.trackHeightMultiplier = MathUtils.clamp(multiplier, 0.0f, 1.0f);
-        this.updateGeometry(); // Track height affects geometry
+        this.trackHeightMultiplier = MathUtils.clamp(multiplier, 0f, 1f);
+        updateGeometry();
     }
 
     public void setOnValueChanged(Consumer<Float> onValueChanged) {
@@ -427,57 +417,93 @@ public class Slider extends Renderer {
     }
 
     public void setTrackColor(Color trackColor) {
-        this.trackColor = (trackColor != null) ? trackColor.cpy() : defaultTrackColor.cpy();
-        this.trackRenderer.setFillColor(this.trackColor);
+        this.trackColor = trackColor != null ? trackColor.cpy() : DEFAULT_TRACK_COLOR.cpy();
+        updateVisuals(false);
     }
 
-    // Override setFillColor to affect the fill part, not the base renderer color
     @Override
     public void setFillColor(Color fillColor) {
-        this.fillColor = (fillColor != null) ? fillColor.cpy() : defaultFillColor.cpy();
-        this.fillRenderer.setFillColor(this.fillColor);
-        // Note: super.setFillColor() is not called, as the base fill color isn't directly used.
+        this.fillColor = fillColor != null ? fillColor.cpy() : DEFAULT_FILL_COLOR.cpy();
+        updateVisuals(false);
     }
 
     public void setHandleColor(Color handleColor) {
-        this.handleColor = (handleColor != null) ? handleColor.cpy() : defaultHandleColor.cpy();
-        this.updateVisuals(isMouseOver(null)); // Update visuals immediately
+        this.handleColor = handleColor != null ? handleColor.cpy() : DEFAULT_HANDLE_COLOR.cpy();
+        updateVisuals(false);
     }
 
     public void setHandleHoverColor(Color handleHoverColor) {
-        this.handleHoverColor = (handleHoverColor != null) ? handleHoverColor.cpy() : defaultHandleHoverColor.cpy();
-        this.updateVisuals(isMouseOver(null)); // Update visuals immediately
+        this.handleHoverColor = handleHoverColor != null ? handleHoverColor.cpy() : DEFAULT_HANDLE_HOVER_COLOR.cpy();
+        updateVisuals(false);
     }
 
     public void setHandleDragColor(Color handleDragColor) {
-        this.handleDragColor = (handleDragColor != null) ? handleDragColor.cpy() : defaultHandleDragColor.cpy();
-        this.updateVisuals(isMouseOver(null)); // Update visuals immediately
+        this.handleDragColor = handleDragColor != null ? handleDragColor.cpy() : DEFAULT_HANDLE_DRAG_COLOR.cpy();
+        updateVisuals(false);
     }
 
-    // --- Getters ---
+    public float getMinValue() {
+        return minValue;
+    }
 
-    public float getMinValue() { return this.minValue; }
-    public float getMaxValue() { return this.maxValue; }
-    public float getValue() { return this.currentValue; }
-    public boolean isSnapEnabled() { return this.snapEnabled; }
-    public List<Float> getSnapPoints() { return new ArrayList<>(this.snapPoints); } // Return copy
-    public Consumer<Float> getOnValueChanged() { return this.onValueChanged; }
-    public float getPadding() { return this.padding; }
-    public float getTrackHeightMultiplier() { return this.trackHeightMultiplier; }
-    public Color getTrackColor() { return this.trackColor.cpy(); }
+    public float getMaxValue() {
+        return maxValue;
+    }
 
-    // Override getFillColor to return the specific fill color
+    public float getValue() {
+        return currentValue;
+    }
+
+    public boolean isSnapEnabled() {
+        return snapEnabled;
+    }
+
+    public List<Float> getSnapPoints() {
+        return new ArrayList<>(snapPoints);
+    }
+
+    public Consumer<Float> getOnValueChanged() {
+        return onValueChanged;
+    }
+
+    public float getPadding() {
+        return padding;
+    }
+
+    public float getTrackHeightMultiplier() {
+        return trackHeightMultiplier;
+    }
+
+    public Color getTrackColor() {
+        return trackColor.cpy();
+    }
+
     @Override
     public Color getFillColor() {
-        return this.fillColor.cpy();
+        return fillColor.cpy();
     }
 
-    public Color getHandleColor() { return this.handleColor.cpy(); }
-    public Color getHandleHoverColor() { return this.handleHoverColor.cpy(); }
-    public Color getHandleDragColor() { return this.handleDragColor.cpy(); }
+    public Color getHandleColor() {
+        return handleColor.cpy();
+    }
 
-    // Provide access to sub-renderers if needed externally
-    public BoxRenderer getTrackRenderer() { return this.trackRenderer; }
-    public BoxRenderer getFillRenderer() { return this.fillRenderer; }
-    public CircleRenderer getHandleRenderer() { return this.handleRenderer; }
+    public Color getHandleHoverColor() {
+        return handleHoverColor.cpy();
+    }
+
+    public Color getHandleDragColor() {
+        return handleDragColor.cpy();
+    }
+
+    public BoxRenderer getTrackRenderer() {
+        return trackRenderer;
+    }
+
+    public BoxRenderer getFillRenderer() {
+        return fillRenderer;
+    }
+
+    public CircleRenderer getHandleRenderer() {
+        return handleRenderer;
+    }
 }
