@@ -2,34 +2,51 @@ package dev.neuxs.europa_client.modules.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
+import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.nio.IntBuffer;
 
 @SuppressWarnings("unused")
 public class FpsCounter extends Module {
+    private static final String ADVANCED_SETTING_KEY = "advanced";
     private static final float X = 8f;
     private static final float Y = 8f;
     private static final float BACKGROUND_PADDING_X = 5f;
     private static final float BACKGROUND_PADDING_Y = 3f;
     private static final float BACKGROUND_RADIUS = 4f;
+    private static final int MAX_FRAME_SAMPLES = 300;
+    private static final float DISPLAY_UPDATE_INTERVAL = 1f;
+    private static final long BYTES_PER_MEBIBYTE = 1024L * 1024L;
     private final RenderUtil renderUtil = new RenderUtil();
     private final BoxRenderer background = new BoxRenderer();
     private final TextRenderer fpsText = new TextRenderer();
+    private final List<Float> frameTimes = new ArrayList<>();
     private final IntBuffer glStateBuffer = BufferUtils.newIntBuffer(1);
+    private float totalFrameTime = 0f;
+    private float displayUpdateTimer = DISPLAY_UPDATE_INTERVAL;
+    private boolean lastAdvancedViewEnabled = false;
+    private String cachedCounterText = "";
     private boolean renderersAdded = false;
 
     public FpsCounter(int keybind, boolean defaultEnabled) {
         super("FPS Counter", keybind, defaultEnabled);
+        customSettings.put(ADVANCED_SETTING_KEY, new Setting<>("advanced", false)
+                .withDisplayName("Stats")
+                .withDescription("Show FPS, average FPS, 1% low, and RAM usage."));
+
         background.setFillColor(ColorUtils.color(0, 0, 0, 150));
         background.setBorderRadius(BACKGROUND_RADIUS);
         background.setZIndex(0);
@@ -59,8 +76,11 @@ public class FpsCounter extends Module {
             return;
         }
 
-        String text = "FPS: " + Gdx.graphics.getFramesPerSecond();
-        fpsText.setText(text);
+        float deltaTime = Gdx.graphics.getDeltaTime();
+        updateFrameStats(deltaTime);
+        updateCounterText(deltaTime);
+
+        fpsText.setText(cachedCounterText);
 
         float textWidth = fpsText.getTextWidth(viewport);
         float textHeight = fpsText.getTextHeight(viewport);
@@ -133,6 +153,91 @@ public class FpsCounter extends Module {
         } else {
             Gdx.gl.glDisable(capability);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean isAdvancedViewEnabled() {
+        Setting<Boolean> advancedSetting = (Setting<Boolean>) customSettings.get(ADVANCED_SETTING_KEY);
+        return advancedSetting != null && advancedSetting.getValue();
+    }
+
+    private void updateCounterText(float deltaTime) {
+        boolean advancedViewEnabled = isAdvancedViewEnabled();
+        displayUpdateTimer += deltaTime;
+
+        if (!cachedCounterText.isEmpty()
+                && displayUpdateTimer < DISPLAY_UPDATE_INTERVAL
+                && advancedViewEnabled == lastAdvancedViewEnabled) {
+            return;
+        }
+
+        cachedCounterText = buildCounterText(advancedViewEnabled);
+        lastAdvancedViewEnabled = advancedViewEnabled;
+        displayUpdateTimer = 0f;
+    }
+
+    private String buildCounterText(boolean advancedViewEnabled) {
+        int fps = Gdx.graphics.getFramesPerSecond();
+        if (!advancedViewEnabled) {
+            return "FPS: " + fps;
+        }
+
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / BYTES_PER_MEBIBYTE;
+        long maxMemory = runtime.maxMemory() / BYTES_PER_MEBIBYTE;
+
+        // Cosmic Reach's flipped font draw path displays newline-separated text bottom-first.
+        return String.format(
+                Locale.ROOT,
+                "RAM: %d/%d MB\n1%%Low: %d\nAvg: %d\nFPS: %d",
+                usedMemory,
+                maxMemory,
+                Math.round(getOnePercentLowFps()),
+                Math.round(getAverageFps()),
+                fps
+        );
+    }
+
+    private void updateFrameStats(float deltaTime) {
+        if (!Float.isFinite(deltaTime) || deltaTime <= 0f) {
+            return;
+        }
+
+        float cappedDeltaTime = Math.min(deltaTime, 1f);
+        frameTimes.add(cappedDeltaTime);
+        totalFrameTime += cappedDeltaTime;
+
+        while (frameTimes.size() > MAX_FRAME_SAMPLES) {
+            totalFrameTime -= frameTimes.remove(0);
+        }
+    }
+
+    private float getAverageFps() {
+        if (frameTimes.isEmpty() || totalFrameTime <= 0f) {
+            return Gdx.graphics.getFramesPerSecond();
+        }
+        return frameTimes.size() / totalFrameTime;
+    }
+
+    private float getOnePercentLowFps() {
+        if (frameTimes.isEmpty()) {
+            return Gdx.graphics.getFramesPerSecond();
+        }
+
+        List<Float> sortedFrameTimes = new ArrayList<>(frameTimes);
+        sortedFrameTimes.sort(Collections.reverseOrder());
+
+        int sampleCount = Math.max(1, (int) Math.ceil(sortedFrameTimes.size() * 0.01f));
+        float slowestFrameTimeTotal = 0f;
+        for (int i = 0; i < sampleCount; i++) {
+            slowestFrameTimeTotal += sortedFrameTimes.get(i);
+        }
+
+        float averageSlowestFrameTime = slowestFrameTimeTotal / sampleCount;
+        if (averageSlowestFrameTime <= 0f) {
+            return Gdx.graphics.getFramesPerSecond();
+        }
+        return 1f / averageSlowestFrameTime;
     }
 
     private record GlState(
