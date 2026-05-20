@@ -117,6 +117,7 @@ public class BackgroundBlurRenderer implements Disposable {
 
             spriteBatch.setShader(shader);
             spriteBatch.setProjectionMatrix(pixelMatrix.setToOrtho2D(0f, 0f, target.getWidth(), target.getHeight()));
+            spriteBatch.disableBlending();
             spriteBatch.begin();
             if (shader != null) {
                 shader.setUniformf("u_direction", directionX, directionY);
@@ -140,6 +141,7 @@ public class BackgroundBlurRenderer implements Disposable {
 
         spriteBatch.setShader(null);
         spriteBatch.setProjectionMatrix(pixelMatrix.setToOrtho2D(0f, 0f, width, height));
+        spriteBatch.disableBlending();
         spriteBatch.begin();
         spriteBatch.draw(createRegion(blurBufferA), 0f, 0f, width, height);
         spriteBatch.end();
