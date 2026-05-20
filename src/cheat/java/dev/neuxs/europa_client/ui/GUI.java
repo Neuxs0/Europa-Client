@@ -205,6 +205,10 @@ public class GUI extends GameState {
         if (this.stage != null) {
             this.stage.act(deltaTime);
         }
+
+        if (currentPage != null) {
+            currentPage.update(deltaTime);
+        }
     }
 
     @Override

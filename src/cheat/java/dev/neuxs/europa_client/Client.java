@@ -3,14 +3,13 @@ package dev.neuxs.europa_client;
 import dev.neuxs.europa_client.commands.ClientCommandRegistry;
 import dev.neuxs.europa_client.managers.InputManager;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.settings.ProfileManager;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.utils.ClientLogger;
 import dev.neuxs.europa_client.utils.SyncModules;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 
-// TODO SETTINGS: Add support for custom profiles
-// TODO GUI: Add Profiles page
 // TODO SETTINGS: Add support for more custom settings
 // TODO GUI: Add Settings page
 // TODO GUI: Save current page and if side menu is open/closed for re-opening the menu
@@ -31,6 +30,7 @@ public class Client {
 
         Modules.initModules();
         SettingsManager.loadSettings();
+        ProfileManager.initialize();
         SettingsManager.startFileWatcher();
         ClientCommandRegistry.registerClientCommands();
 

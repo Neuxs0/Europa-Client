@@ -17,6 +17,10 @@
     - Usage: #version
     - Aliases: #clientVersion
     - Description: Returns what version of Europa Client you are using
+- **Profile**
+    - Usage: #profile list|save|load|delete
+    - Aliases: #profiles
+    - Description: Manages profiles. Optional sections: all, modules, settings
 ### Utils
 - **Disconnect**
     - Usage: #disconnect

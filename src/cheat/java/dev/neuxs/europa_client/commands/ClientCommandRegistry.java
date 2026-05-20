@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.commands;
 
 import dev.neuxs.europa_client.commands.misc.HelpCommand;
+import dev.neuxs.europa_client.commands.misc.ProfileCommand;
 import dev.neuxs.europa_client.commands.misc.SayCommand;
 import dev.neuxs.europa_client.commands.misc.TypeCommand;
 import dev.neuxs.europa_client.commands.misc.VersionCommand;
@@ -21,6 +22,7 @@ public class ClientCommandRegistry {
         ClientCommandManager.registerCommand("help", HelpCommand::new, "?", "h");
         ClientCommandManager.registerCommand("type", TypeCommand::new, "clientType");
         ClientCommandManager.registerCommand("version", VersionCommand::new, "clientVersion");
+        ClientCommandManager.registerCommand("profile", ProfileCommand::new, "profiles");
 
         // Utils
         ClientCommandManager.registerCommand("disconnect", DisconnectCommand::new, "dc", "quit", "exit");

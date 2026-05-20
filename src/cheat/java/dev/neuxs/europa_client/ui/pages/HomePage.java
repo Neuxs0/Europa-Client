@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.ui.pages;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.settings.ProfileManager;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
@@ -15,6 +16,7 @@ public class HomePage extends Page {
     private final TextRenderer clientType = new TextRenderer();
     private final TextRenderer selectedProfile = new TextRenderer();
     private final TextRenderer closeInfo = new TextRenderer();
+    private String lastProfileText = "";
 
     public HomePage(BoxRenderer pageContainer) {
         super("Home", pageContainer);
@@ -31,7 +33,7 @@ public class HomePage extends Page {
 
         clientType.setText(Client.CLIENT_TYPE + " Version");
 
-        selectedProfile.setText("Selected Profile: " + "None");
+        refreshProfileText();
 
         closeInfo.setText("Press ESC to close this menu");
     }
@@ -73,5 +75,19 @@ public class HomePage extends Page {
         renderUtil.removeRenderer(clientType);
         renderUtil.removeRenderer(selectedProfile);
         renderUtil.removeRenderer(closeInfo);
+    }
+
+    @Override
+    public void update(float deltaTime) {
+        String previousText = lastProfileText;
+        refreshProfileText();
+        if (!previousText.equals(lastProfileText)) {
+            resize(0, 0);
+        }
+    }
+
+    private void refreshProfileText() {
+        lastProfileText = "Selected Profile: " + ProfileManager.getActiveProfileName();
+        selectedProfile.setText(lastProfileText);
     }
 }
