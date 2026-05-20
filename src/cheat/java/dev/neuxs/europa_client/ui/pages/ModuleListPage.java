@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"unused", "rawtypes"})
 public abstract class ModuleListPage extends Page implements InputProcessor {
     private static final Map<String, Set<String>> EXPANDED_MODULE_IDS_BY_PAGE = new LinkedHashMap<>();
+    private static final Map<String, SortType> SORT_TYPES_BY_PAGE = new LinkedHashMap<>();
 
     private final Supplier<List<Module>> modulesSupplier;
     private final Vector4 pageDim;
@@ -77,6 +78,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     public void create(Viewport viewport, float width, float height) {
         super.create(viewport, width, height);
         this.viewport = viewport;
+        this.currentSortType = getSavedSortType();
 
         searchInput.setSize(150, topBarHeight);
         searchInput.setBorderRadius(7.5f);
@@ -249,9 +251,14 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     public void setSortType(SortType type) {
         if (this.currentSortType != type) {
             this.currentSortType = type;
+            SORT_TYPES_BY_PAGE.put(getTitle(), type);
             sortDropdown.setSelectedOptionSilent(getSortDisplayName(type));
             applyFiltersAndSort();
         }
+    }
+
+    private SortType getSavedSortType() {
+        return SORT_TYPES_BY_PAGE.getOrDefault(getTitle(), SortType.A_Z);
     }
 
     private void syncFilteredRenderers(List<ModuleEntry> previousEntries) {
