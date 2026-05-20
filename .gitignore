@@ -1,7 +1,7 @@
 .gitignore
 .gradle/
 build_archive/
-dev/
+/dev/
 build/
 test/
 gradle/
