@@ -23,6 +23,13 @@ import finalforeach.cosmicreach.gamestates.GameState;
 @SuppressWarnings({"DuplicatedCode"})
 public class GUI extends GameState {
     private static final RenderUtil renderUtil = new RenderUtil();
+    private static final String PAGE_HOME = "Home";
+    private static final String PAGE_UTILITIES = "Utilities";
+    private static final String PAGE_CHEATS = "Cheats";
+    private static final String PAGE_PROFILES = "Profiles";
+    private static final String PAGE_SETTINGS = "Settings";
+    private static String lastPageTitle = PAGE_HOME;
+    private static boolean lastSideMenuCollapsed = false;
 
     private final Color mainDimColor = ColorUtils.color(0, 0, 0, 75);
     private final Color mainBackgroundColor = ColorUtils.color(40, 40, 40, 255);
@@ -80,7 +87,8 @@ public class GUI extends GameState {
         sideMenu.setFillColor(mainBackgroundColor);
         sideMenu.setBorderRadius(10f);
 
-        currentPage = homePage;
+        sideMenuCollapsed = lastSideMenuCollapsed;
+        currentPage = getPageByTitle(lastPageTitle);
         pageTitle.setText(currentPage.getTitle());
 
         collapseSideMenuButton.setSize(18f, 18f);
@@ -318,6 +326,7 @@ public class GUI extends GameState {
             currentPage.addRenderers(renderUtil);
 
             pageTitle.setText(currentPage.getTitle());
+            saveGuiState();
 
             Gdx.app.postRunnable(() -> resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
         };
@@ -347,6 +356,7 @@ public class GUI extends GameState {
 
                 resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
                 collapseSideMenuButton.getTextRenderer().setText(sideMenuCollapsed ? ">" : "<");
+                saveGuiState();
             });
         };
     }
@@ -363,5 +373,20 @@ public class GUI extends GameState {
         backgroundDim.setFillColor(ClientSettings.isGuiBackgroundDimEnabled()
                 ? mainDimColor
                 : ColorUtils.TRANSPARENT);
+    }
+
+    private Page getPageByTitle(String pageTitle) {
+        return switch (pageTitle) {
+            case PAGE_UTILITIES -> utilitiesPage;
+            case PAGE_CHEATS -> cheatsPage;
+            case PAGE_PROFILES -> profilesPage;
+            case PAGE_SETTINGS -> settingsPage;
+            default -> homePage;
+        };
+    }
+
+    private void saveGuiState() {
+        lastPageTitle = currentPage == null ? PAGE_HOME : currentPage.getTitle();
+        lastSideMenuCollapsed = sideMenuCollapsed;
     }
 }

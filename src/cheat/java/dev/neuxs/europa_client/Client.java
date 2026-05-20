@@ -10,7 +10,6 @@ import dev.neuxs.europa_client.utils.SyncModules;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 
-// TODO GUI: Save current page and if side menu is open/closed for re-opening the menu
 // TODO GUI: Add background blur (optional to user via settings)
 // TODO GUI/UI: Add MSAA
 
