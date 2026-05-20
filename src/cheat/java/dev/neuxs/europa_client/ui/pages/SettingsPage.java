@@ -25,6 +25,8 @@ import java.util.Locale;
 
 @SuppressWarnings({"unused", "rawtypes"})
 public class SettingsPage extends Page implements InputProcessor {
+    private static final float DEFAULT_SLIDER_STEP = 0.1f;
+
     private Viewport viewport;
     private final Vector4 pageDim;
     private final BoxRenderer pageContainer;
@@ -127,6 +129,24 @@ public class SettingsPage extends Page implements InputProcessor {
             return true;
         } catch (RuntimeException e) {
             return false;
+        }
+    }
+
+    private boolean applySettingValueSilently(Setting<?> setting, Object rawValue) {
+        boolean previousAutoSave = SettingsManager.isAutoSaveEnabled();
+        SettingsManager.setAutoSaveEnabled(false);
+        try {
+            Object convertedValue = setting.convertValue(rawValue);
+            Object currentValue = setting.getValue();
+            if (currentValue != null && currentValue.equals(convertedValue)) {
+                return false;
+            }
+            setting.setValueFromObject(convertedValue);
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        } finally {
+            SettingsManager.setAutoSaveEnabled(previousAutoSave);
         }
     }
 
@@ -312,10 +332,11 @@ public class SettingsPage extends Page implements InputProcessor {
             slider.setRange(getSliderMin(), getSliderMax());
             slider.setZIndex(5);
             slider.setOnValueChanged(value -> {
-                if (applySettingValue(setting, normalizeStep(value))) {
+                if (applySettingValueSilently(setting, normalizeStep(value))) {
                     syncFromSetting(true);
                 }
             });
+            slider.setOnInteractionFinished(SettingsManager::saveClientSettings);
             renderers.add(slider);
 
             createTextControl();
@@ -517,7 +538,7 @@ public class SettingsPage extends Page implements InputProcessor {
         private float normalizeStep(float value) {
             Float step = setting.getStep();
             if (step == null || step <= 0f) {
-                return value;
+                step = DEFAULT_SLIDER_STEP;
             }
 
             float base = setting.getMinValue() == null ? 0f : setting.getMinValue();

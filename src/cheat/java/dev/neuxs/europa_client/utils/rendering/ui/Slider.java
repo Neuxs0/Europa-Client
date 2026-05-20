@@ -44,7 +44,9 @@ public class Slider extends Renderer {
     private float currentValue;
     private boolean snapEnabled;
     private boolean isDragging;
+    private boolean interactionValueChanged;
     private Consumer<Float> onValueChanged;
+    private Runnable onInteractionFinished;
     private float padding;
     private float trackHeightMultiplier;
 
@@ -69,7 +71,9 @@ public class Slider extends Renderer {
         this.currentValue = 50f;
         this.snapEnabled = false;
         this.isDragging = false;
+        this.interactionValueChanged = false;
         this.onValueChanged = (value) -> {};
+        this.onInteractionFinished = () -> {};
         this.padding = 0f;
         this.trackHeightMultiplier = 0.4f;
 
@@ -98,11 +102,15 @@ public class Slider extends Renderer {
 
         if (!isDragging && mouseOver && mousePressed && getState() == State.PRESSED) {
             isDragging = true;
+            interactionValueChanged = false;
             updateValueFromMouse(mousePos.x);
         }
 
         if (isDragging && !mousePressed) {
             isDragging = false;
+            if (interactionValueChanged) {
+                onInteractionFinished.run();
+            }
         }
 
         if (isDragging) {
@@ -142,7 +150,11 @@ public class Slider extends Renderer {
     }
 
     private void updateValueFromMouse(float mouseX) {
+        float previousValue = currentValue;
         setValueInternal(valueFromMouseX(mouseX), true);
+        if (Math.abs(currentValue - previousValue) > VALUE_EPSILON) {
+            interactionValueChanged = true;
+        }
     }
 
     private float valueFromMouseX(float mouseX) {
@@ -413,6 +425,10 @@ public class Slider extends Renderer {
 
     public void setOnValueChanged(Consumer<Float> onValueChanged) {
         this.onValueChanged = onValueChanged != null ? onValueChanged : (value) -> {};
+    }
+
+    public void setOnInteractionFinished(Runnable onInteractionFinished) {
+        this.onInteractionFinished = onInteractionFinished != null ? onInteractionFinished : () -> {};
     }
 
     public void setTrackColor(Color trackColor) {

@@ -56,7 +56,7 @@ public class ClientSettings {
             .withDisplayName("Blur Strength")
             .withDescription("Strength of the game background blur")
             .withRange(0.25f, 8f)
-            .withStep(0.25f);
+            .withStep(0.1f);
 
     private static final Map<String, Setting<?>> SETTINGS = new LinkedHashMap<>();
 
