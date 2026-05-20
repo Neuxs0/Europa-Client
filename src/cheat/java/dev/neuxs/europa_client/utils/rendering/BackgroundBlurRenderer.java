@@ -17,54 +17,8 @@ import finalforeach.cosmicreach.gamestates.GameState;
 public class BackgroundBlurRenderer implements Disposable {
     private static final int BLUR_SCALE = 4;
     private static final int MAX_KERNEL_RADIUS = 24;
-
-    private static final String VERTEX_SHADER = """
-            attribute vec4 a_position;
-            attribute vec4 a_color;
-            attribute vec2 a_texCoord0;
-
-            uniform mat4 u_projTrans;
-
-            varying vec4 v_color;
-            varying vec2 v_texCoords;
-
-            void main() {
-                v_color = a_color;
-                v_texCoords = a_texCoord0;
-                gl_Position = u_projTrans * a_position;
-            }
-            """;
-
-    private static final String FRAGMENT_SHADER = """
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-
-            varying vec4 v_color;
-            varying vec2 v_texCoords;
-
-            uniform sampler2D u_texture;
-            uniform vec2 u_direction;
-            uniform float u_sigma;
-
-            void main() {
-                vec4 color = vec4(0.0);
-                float totalWeight = 0.0;
-                float twoSigmaSq = 2.0 * u_sigma * u_sigma;
-                float radius = min(24.0, ceil(u_sigma * 3.0));
-
-                for (int i = -24; i <= 24; i++) {
-                    float sampleIndex = float(i);
-                    if (abs(sampleIndex) <= radius) {
-                        float weight = exp(-(sampleIndex * sampleIndex) / twoSigmaSq);
-                        color += texture2D(u_texture, v_texCoords + u_direction * sampleIndex) * weight;
-                        totalWeight += weight;
-                    }
-                }
-
-                gl_FragColor = (color / totalWeight) * v_color;
-            }
-            """;
+    private static final String VERTEX_SHADER_PATH = "assets/europa_client/shaders/ui/background-blur.vert.glsl";
+    private static final String FRAGMENT_SHADER_PATH = "assets/europa_client/shaders/ui/background-blur.frag.glsl";
 
     private final SpriteBatch spriteBatch = new SpriteBatch();
     private final Matrix4 pixelMatrix = new Matrix4();
@@ -126,7 +80,10 @@ public class BackgroundBlurRenderer implements Disposable {
 
         if (blurShader == null) {
             ShaderProgram.pedantic = false;
-            blurShader = new ShaderProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+            blurShader = new ShaderProgram(
+                    Gdx.files.internal(VERTEX_SHADER_PATH),
+                    Gdx.files.internal(FRAGMENT_SHADER_PATH)
+            );
             if (!blurShader.isCompiled()) {
                 Client.LOGGER.error("Failed to compile GUI background blur shader: {}", blurShader.getLog());
                 blurShader.dispose();

@@ -41,13 +41,18 @@ public class RenderUtil implements Disposable {
         updateMouseTarget(viewport, renderers);
 
         RenderType currentBatchType = RenderType.NONE;
+        ShapeRenderer.ShapeType currentShapeType = null;
+        SdfRenderer.get().setProjectionMatrix(projectionMatrix);
 
         for (Renderer element : renderers) {
             RenderType requiredType = element.getRenderType();
+            ShapeRenderer.ShapeType requiredShapeType = element.getShapeType();
 
-            if (requiredType != currentBatchType && requiredType != RenderType.SHAPE_SPRITE) {
+            if ((requiredType != currentBatchType && requiredType != RenderType.SHAPE_SPRITE)
+                    || requiresShapeBatchRestart(currentBatchType, currentShapeType, requiredShapeType)) {
                 endBatch(currentBatchType);
-                currentBatchType = beginBatch(requiredType, element.getShapeType(), projectionMatrix);
+                currentBatchType = beginBatch(requiredType, requiredShapeType, projectionMatrix);
+                currentShapeType = currentBatchType == RenderType.SHAPE ? requiredShapeType : null;
             }
 
             if (requiredType == RenderType.SHAPE) {
@@ -55,14 +60,17 @@ public class RenderUtil implements Disposable {
             } else if (requiredType == RenderType.SPRITE) {
                 element.renderSprite(viewport, spriteBatch, glyphLayout);
             } else if (requiredType == RenderType.SHAPE_SPRITE) {
-                if (RenderType.SHAPE != currentBatchType) {
+                if (RenderType.SHAPE != currentBatchType
+                        || currentShapeType != requiredShapeType) {
                     endBatch(currentBatchType);
-                    currentBatchType = beginBatch(RenderType.SHAPE, element.getShapeType(), projectionMatrix);
+                    currentBatchType = beginBatch(RenderType.SHAPE, requiredShapeType, projectionMatrix);
+                    currentShapeType = currentBatchType == RenderType.SHAPE ? requiredShapeType : null;
                 }
 
                 element.renderShape(viewport, shapeRenderer);
                 endBatch(currentBatchType);
-                currentBatchType = beginBatch(RenderType.SPRITE, element.getShapeType(), projectionMatrix);
+                currentBatchType = beginBatch(RenderType.SPRITE, requiredShapeType, projectionMatrix);
+                currentShapeType = null;
                 element.renderSprite(viewport, spriteBatch, glyphLayout);
             } else {
                 Client.LOGGER.error("Cannot render {}: Unknown RenderType", element.getClass().getSimpleName());
@@ -83,16 +91,25 @@ public class RenderUtil implements Disposable {
         }
     }
 
+    private boolean requiresShapeBatchRestart(
+            RenderType currentBatchType,
+            ShapeRenderer.ShapeType currentShapeType,
+            ShapeRenderer.ShapeType requiredShapeType
+    ) {
+        return currentBatchType == RenderType.SHAPE
+                && currentShapeType != requiredShapeType;
+    }
+
     private RenderType beginBatch(RenderType renderType, ShapeRenderer.ShapeType shapeType, Matrix4 projectionMatrix) {
         try {
             Gdx.gl.glEnable(GL20.GL_BLEND);
-            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
             if (renderType == RenderType.SHAPE) {
+                Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
                 shapeRenderer.setProjectionMatrix(projectionMatrix);
-                shapeRenderer.begin(shapeType);
                 return RenderType.SHAPE;
             } else if (renderType == RenderType.SPRITE) {
+                Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
                 spriteBatch.setProjectionMatrix(projectionMatrix);
                 spriteBatch.begin();
                 return RenderType.SPRITE;
@@ -167,6 +184,7 @@ public class RenderUtil implements Disposable {
         endBatch(RenderType.SPRITE);
         shapeRenderer.dispose();
         spriteBatch.dispose();
+        SdfRenderer.get().dispose();
         elements.clear();
     }
 

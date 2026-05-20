@@ -34,8 +34,7 @@ public class LineRenderer extends Renderer {
         Color fillColor = getFillColor();
         if (fillColor == null || fillColor.a <= 0 || width <= 0) return;
 
-        shapeRenderer.setColor(fillColor);
-        shapeRenderer.rectLine(startPoint, endPoint, this.width);
+        SdfRenderer.get().drawLine(startPoint, endPoint, this.width, fillColor);
     }
 
     public Vector2 getStartPoint() {

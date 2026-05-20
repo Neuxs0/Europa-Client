@@ -2,7 +2,6 @@ package dev.neuxs.europa_client.utils.rendering;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 
@@ -45,58 +44,30 @@ public class BoxRenderer extends Renderer {
         boolean hasShadow = isShadow() && shadowColor != null && shadowColor.a > 0;
 
         if (hasShadow) {
-            shapeRenderer.setColor(shadowColor);
-            drawRoundedRect(shapeRenderer, posX + getShadowOffsetX(), posY + getShadowOffsetY(), width, height, effectiveRadius);
+            drawRoundedRect(posX + getShadowOffsetX(), posY + getShadowOffsetY(), width, height, effectiveRadius, shadowColor);
         }
 
         if (hasBorder) {
-            shapeRenderer.setColor(borderColor);
-            drawRoundedRect(shapeRenderer, posX, posY, width, height, effectiveRadius);
+            drawRoundedRect(posX, posY, width, height, effectiveRadius, borderColor);
         }
 
         if (hasFill) {
-            shapeRenderer.setColor(fillColor);
             if (hasBorder) {
                 float innerWidth = Math.max(0, width - borderWidth * 2);
                 float innerHeight = Math.max(0, height - borderWidth * 2);
                 float innerRadius = Math.max(0, effectiveRadius - borderWidth);
 
                 if (innerWidth > 0 && innerHeight > 0) {
-                    drawRoundedRect(shapeRenderer, posX + borderWidth, posY + borderWidth, innerWidth, innerHeight, innerRadius);
+                    drawRoundedRect(posX + borderWidth, posY + borderWidth, innerWidth, innerHeight, innerRadius, fillColor);
                 }
             } else {
-                drawRoundedRect(shapeRenderer, posX, posY, width, height, effectiveRadius);
+                drawRoundedRect(posX, posY, width, height, effectiveRadius, fillColor);
             }
         }
     }
 
-    private void drawRoundedRect(ShapeRenderer shapeRenderer, float x, float y, float width, float height, float radius) {
-        radius = Math.max(0, Math.min(radius, Math.min(width, height) / 2f));
-
-        if (radius <= 0.01f) {
-            shapeRenderer.rect(x, y, width, height);
-            return;
-        }
-
-        int segments = MathUtils.clamp((int)(6 * (float)Math.cbrt(radius)), 4, roundedCornerSegments * 2);
-
-        shapeRenderer.arc(x + radius, y + radius, radius, 180f, 90f, segments); // Bottom-left
-        shapeRenderer.arc(x + radius, y + height - radius, radius, 90f, 90f, segments); // Top-left
-        shapeRenderer.arc(x + width - radius, y + height - radius, radius, 0f, 90f, segments); // Top-right
-        shapeRenderer.arc(x + width - radius, y + radius, radius, 270f, 90f, segments); // Bottom-right
-        if (width > 2 * radius) {
-            shapeRenderer.rect(x + radius, y, width - 2 * radius, radius); // Bottom edge connector
-            shapeRenderer.rect(x + radius, y + height - radius, width - 2 * radius, radius); // Top edge connector
-        }
-
-        if (height > 2 * radius) {
-            shapeRenderer.rect(x, y + radius, radius, height - 2 * radius); // Left edge connector
-            shapeRenderer.rect(x + width - radius, y + radius, radius, height - 2 * radius); // Right edge connector
-        }
-
-        if (width > 2 * radius && height > 2 * radius) {
-            shapeRenderer.rect(x + radius, y + radius, width - 2 * radius, height - 2 * radius); // Center area
-        }
+    private void drawRoundedRect(float x, float y, float width, float height, float radius, Color color) {
+        SdfRenderer.get().drawRoundedRect(x, y, width, height, radius, color);
     }
 
     public int getRoundedCornerSegments() {

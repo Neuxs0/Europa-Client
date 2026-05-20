@@ -2,7 +2,6 @@ package dev.neuxs.europa_client.utils.rendering;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 
@@ -40,30 +39,26 @@ public class CircleRenderer extends Renderer {
         boolean hasBorder = isBorder() && getBorderWidth() > 0f && borderColor != null && borderColor.a > 0;
 
         if (hasShadow) {
-            shapeRenderer.setColor(shadowColor);
-            drawCircle(shapeRenderer, posX + getShadowOffsetX(), posY + getShadowOffsetY(), radius);
+            drawCircle(posX + getShadowOffsetX(), posY + getShadowOffsetY(), radius, shadowColor);
         }
 
         if (hasBorder) {
-            shapeRenderer.setColor(borderColor);
-            drawCircle(shapeRenderer, posX, posY, radius);
+            drawCircle(posX, posY, radius, borderColor);
         }
 
         if (hasFill) {
             if (getShapeType() != ShapeRenderer.ShapeType.Filled) setShapeType(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(fillColor);
             if (hasBorder) {
                 float innerRadius = Math.max(0f, radius - getBorderWidth());
-                if (innerRadius > 0f) drawCircle(shapeRenderer, posX, posY, innerRadius);
+                if (innerRadius > 0f) drawCircle(posX, posY, innerRadius, fillColor);
             } else {
-                drawCircle(shapeRenderer, posX, posY, radius);
+                drawCircle(posX, posY, radius, fillColor);
             }
         }
     }
 
-    private void drawCircle(ShapeRenderer shapeRenderer, float cx, float cy, float r) {
-        int segments = MathUtils.clamp((int)(6 * (float)Math.cbrt(r)), 8, circleSegments * 2);
-        shapeRenderer.circle(cx, cy, r, segments);
+    private void drawCircle(float cx, float cy, float r, Color color) {
+        SdfRenderer.get().drawCircle(cx, cy, r, color);
     }
 
     public float getRadius() {

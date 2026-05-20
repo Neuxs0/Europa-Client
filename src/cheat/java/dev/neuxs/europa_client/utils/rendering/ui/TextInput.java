@@ -16,6 +16,7 @@ import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.Renderer;
+import dev.neuxs.europa_client.utils.rendering.SdfRenderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 
 import java.util.function.Consumer;
@@ -290,8 +291,10 @@ public class TextInput extends Renderer implements InputProcessor {
             return;
         }
 
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(cursorColor);
         shapeRenderer.rectLine(cursorX, cursorY, cursorX, cursorY + cursorHeight, cursorWidth);
+        shapeRenderer.end();
     }
 
     private void renderSelection(ShapeRenderer shapeRenderer) {
@@ -310,8 +313,7 @@ public class TextInput extends Renderer implements InputProcessor {
             return;
         }
 
-        shapeRenderer.setColor(selectionColor);
-        shapeRenderer.rect(startX, selectionY, endX - startX, selectionHeight);
+        SdfRenderer.get().drawRoundedRect(startX, selectionY, endX - startX, selectionHeight, 0f, selectionColor);
     }
 
     private void renderText(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout) {

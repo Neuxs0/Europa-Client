@@ -10,8 +10,6 @@ import dev.neuxs.europa_client.utils.SyncModules;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.chat.IChat;
 
-// TODO GUI/UI: Add MSAA
-
 @SuppressWarnings("unused")
 public class Client {
     public static final String MOD_ID = "europa_client";
