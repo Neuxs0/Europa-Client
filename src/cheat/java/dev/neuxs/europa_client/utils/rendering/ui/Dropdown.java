@@ -30,8 +30,10 @@ public class Dropdown extends Renderer {
     private static final Color DEFAULT_BORDER_COLOR = ColorUtils.color(20, 20, 20, 255);
     private static final Color DEFAULT_TEXT_COLOR = ColorUtils.color(255, 255, 255, 255);
     private static final Color DEFAULT_PLACEHOLDER_COLOR = ColorUtils.color(170, 170, 170, 255);
+    private static final float PANEL_OVERLAP = 8f;
 
     private final BoxRenderer boxRenderer;
+    private final BoxRenderer panelRenderer;
     private final BoxRenderer optionRenderer;
     private final TextRenderer textRenderer;
     private final Vector2 mousePos;
@@ -57,6 +59,7 @@ public class Dropdown extends Renderer {
 
     public Dropdown() {
         this.boxRenderer = new BoxRenderer();
+        this.panelRenderer = new BoxRenderer();
         this.optionRenderer = new BoxRenderer();
         this.textRenderer = new TextRenderer();
         this.mousePos = new Vector2();
@@ -90,7 +93,10 @@ public class Dropdown extends Renderer {
         setText("");
 
         this.boxRenderer.setBorder(true);
-        this.optionRenderer.setBorder(true);
+        this.panelRenderer.setBorder(true);
+        this.panelRenderer.setTopLeftRounded(false);
+        this.panelRenderer.setTopRightRounded(false);
+        this.optionRenderer.setBorder(false);
     }
 
     @Override
@@ -114,18 +120,25 @@ public class Dropdown extends Renderer {
 
     @Override
     public void renderShape(Viewport viewport, ShapeRenderer shapeRenderer) {
-        syncHeaderRenderer();
-        boxRenderer.renderShape(viewport, shapeRenderer);
-
         if (!open) {
+            syncHeaderRenderer();
+            boxRenderer.renderShape(viewport, shapeRenderer);
             return;
         }
 
         List<String> visibleOptions = getVisibleOptions();
-        for (int i = 0; i < visibleOptions.size(); i++) {
-            syncOptionRenderer(i);
+        if (!visibleOptions.isEmpty()) {
+            syncPanelRenderer(visibleOptions.size());
+            panelRenderer.renderShape(viewport, shapeRenderer);
+        }
+
+        if (hoveredOptionIndex >= 0 && hoveredOptionIndex < visibleOptions.size()) {
+            syncOptionRenderer(hoveredOptionIndex, visibleOptions.size());
             optionRenderer.renderShape(viewport, shapeRenderer);
         }
+
+        syncHeaderRenderer();
+        boxRenderer.renderShape(viewport, shapeRenderer);
     }
 
     @Override
@@ -227,12 +240,38 @@ public class Dropdown extends Renderer {
         boxRenderer.setBorderColor(borderColor);
     }
 
-    private void syncOptionRenderer(int index) {
-        optionRenderer.setPos(getOptionX(), getOptionY(index));
-        optionRenderer.setSize(getOptionWidth(), getOptionHeight());
-        optionRenderer.setFillColor(index == hoveredOptionIndex ? optionHoverFillColor : getFillColor());
-        optionRenderer.setBorder(isBorder());
-        optionRenderer.setBorderWidth(getBorderWidth());
+    private void syncPanelRenderer(int optionCount) {
+        float overlap = getPanelOverlap();
+        float optionHeight = getOptionHeight();
+
+        panelRenderer.setPos(getPosX(), getPosY() - optionHeight * optionCount);
+        panelRenderer.setSize(getWidth(), optionHeight * optionCount + overlap);
+        panelRenderer.setFillColor(getFillColor());
+        panelRenderer.setBorder(isBorder());
+        panelRenderer.setBorderWidth(getBorderWidth());
+        panelRenderer.setBorderRadius(getBorderRadius());
+        panelRenderer.setBorderColor(getBorderColor());
+    }
+
+    private void syncOptionRenderer(int index, int optionCount) {
+        float borderInset = isBorder() ? getBorderWidth() : 0f;
+        float optionY = getOptionY(index);
+        float optionHeight = getOptionHeight();
+
+        if (index == 0) {
+            optionHeight += getPanelOverlap();
+        }
+
+        if (index == optionCount - 1) {
+            optionY += borderInset;
+            optionHeight = Math.max(0f, optionHeight - borderInset);
+        }
+
+        optionRenderer.setPos(getOptionX() + borderInset, optionY);
+        optionRenderer.setSize(Math.max(0f, getOptionWidth() - borderInset * 2f), optionHeight);
+        optionRenderer.setFillColor(optionHoverFillColor);
+        optionRenderer.setBorder(false);
+        optionRenderer.setBorderWidth(0f);
         optionRenderer.setBorderRadius(0f);
         optionRenderer.setBorderColor(getBorderColor());
     }
@@ -273,6 +312,10 @@ public class Dropdown extends Renderer {
 
     private float getOptionY(int index) {
         return getPosY() - getOptionHeight() * (index + 1);
+    }
+
+    private float getPanelOverlap() {
+        return Math.min(PANEL_OVERLAP, Math.max(0f, getHeight()));
     }
 
     private void selectOption(int index, boolean triggerCallback) {
@@ -416,6 +459,10 @@ public class Dropdown extends Renderer {
 
     public BoxRenderer getBoxRenderer() {
         return boxRenderer;
+    }
+
+    public BoxRenderer getPanelRenderer() {
+        return panelRenderer;
     }
 
     public BoxRenderer getOptionRenderer() {

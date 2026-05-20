@@ -79,6 +79,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         this.viewport = viewport;
 
         searchInput.setSize(150, topBarHeight);
+        searchInput.setBorderRadius(7.5f);
         searchInput.setPlaceholder("Search...");
         searchInput.setOnTextChanged(text -> {
             previousSearchText = text;
@@ -87,6 +88,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         searchInput.setOnFocusLost(text -> previousSearchText = text);
 
         sortDropdown.setSize(sortButtonWidth, topBarHeight);
+        sortDropdown.setBorderRadius(7.5f);
         sortDropdown.setPlaceholderText(getSortDisplayName(currentSortType));
         sortDropdown.setPadding(3f);
         sortDropdown.setOptions(new ArrayList<>(sortDisplayMap.keySet()));
@@ -701,6 +703,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
 
         private void createDropdownControl() {
             dropdown = new Dropdown();
+            dropdown.setBorderRadius(7.5f);
             dropdown.setPadding(3f);
             dropdown.setZIndex(35);
 

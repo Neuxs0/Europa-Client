@@ -323,6 +323,7 @@ public class SettingsPage extends Page implements InputProcessor {
 
         private void createDropdownControl() {
             dropdown = new Dropdown();
+            dropdown.setBorderRadius(7.5f);
             dropdown.setPadding(3f);
             dropdown.setZIndex(35);
 

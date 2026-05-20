@@ -50,6 +50,7 @@ public class ProfilesPage extends Page implements InputProcessor {
         this.viewport = viewport;
 
         profileDropdown.setPlaceholderText("Select profile");
+        profileDropdown.setBorderRadius(7.5f);
         profileDropdown.setPadding(3f);
         profileDropdown.setOnSelectionChanged(selected -> {
             profileNameInput.setTextSilent(selected);
@@ -57,6 +58,7 @@ public class ProfilesPage extends Page implements InputProcessor {
         });
 
         profileNameInput.setPlaceholder("Profile name");
+        profileNameInput.setBorderRadius(7.5f);
 
         configureSectionButton(modulesSectionButton, () -> {
             includeModules = !includeModules;
