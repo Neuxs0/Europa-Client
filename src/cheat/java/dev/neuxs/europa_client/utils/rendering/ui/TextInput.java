@@ -25,6 +25,7 @@ public class TextInput extends Renderer implements InputProcessor {
     private static final float DEFAULT_PADDING = 5f;
     private static final float DEFAULT_BLINK_INTERVAL = 0.5f;
     private static final float DEFAULT_CURSOR_WIDTH = 1f;
+    private static final float DEFAULT_CURSOR_X_OFFSET = 1f;
     private static final float KEY_REPEAT_DELAY = 0.5f;
     private static final float KEY_REPEAT_INTERVAL = 0.05f;
     private static final float KEY_RELEASE_GRACE = 0.075f;
@@ -50,7 +51,7 @@ public class TextInput extends Renderer implements InputProcessor {
     private int selectionAnchor;
     private boolean selectingWithKeyboard;
     private boolean focused;
-    private float blinkTimer;
+    private long blinkStartNanos;
     private boolean showCursor;
     private float blinkInterval;
     private float cursorWidth;
@@ -84,7 +85,7 @@ public class TextInput extends Renderer implements InputProcessor {
         this.selectionAnchor = 0;
         this.selectingWithKeyboard = false;
         this.focused = false;
-        this.blinkTimer = 0f;
+        this.blinkStartNanos = 0L;
         this.showCursor = false;
         this.blinkInterval = DEFAULT_BLINK_INTERVAL;
         this.cursorWidth = DEFAULT_CURSOR_WIDTH;
@@ -184,19 +185,24 @@ public class TextInput extends Renderer implements InputProcessor {
     private void updateCursorBlink(float delta) {
         if (!focused) {
             showCursor = false;
-            blinkTimer = 0f;
+            blinkStartNanos = 0L;
             return;
         }
 
-        blinkTimer += Math.max(0f, delta);
-        while (blinkTimer >= blinkInterval) {
-            blinkTimer -= blinkInterval;
-            showCursor = !showCursor;
+        long now = System.nanoTime();
+        if (blinkStartNanos == 0L) {
+            blinkStartNanos = now;
+            showCursor = true;
+            return;
         }
+
+        long intervalNanos = Math.max(1L, (long) (blinkInterval * 1_000_000_000L));
+        long elapsedIntervals = (now - blinkStartNanos) / intervalNanos;
+        showCursor = elapsedIntervals % 2L == 0L;
     }
 
     private void resetCursorBlink() {
-        blinkTimer = 0f;
+        blinkStartNanos = System.nanoTime();
         showCursor = focused;
     }
 
@@ -276,7 +282,7 @@ public class TextInput extends Renderer implements InputProcessor {
             return;
         }
 
-        float cursorX = getTextStartX() + getCursorTextWidth();
+        float cursorX = getTextStartX() + getCursorTextWidth() + DEFAULT_CURSOR_X_OFFSET;
         float cursorY = getPosY() + padding;
         float cursorHeight = Math.max(0f, getHeight() - padding * 2f);
 
@@ -569,8 +575,17 @@ public class TextInput extends Renderer implements InputProcessor {
         }
 
         if (keycode == repeatingKeycode && isRepeatableKey(keycode)) {
-            keyReleasePending = false;
-            keyReleaseTimer = 0f;
+            if (keyReleasePending) {
+                boolean handled = handleEditingKeyDown(keycode);
+                if (handled) {
+                    keyRepeatTimer = KEY_REPEAT_DELAY;
+                    lastKeyRepeatNanos = System.nanoTime();
+                }
+                keyReleasePending = false;
+                keyReleaseTimer = 0f;
+                return handled;
+            }
+
             return true;
         }
 
@@ -844,7 +859,7 @@ public class TextInput extends Renderer implements InputProcessor {
             clearSelection();
             stopKeyRepeat();
             showCursor = false;
-            blinkTimer = 0f;
+            blinkStartNanos = 0L;
             if (onFocusLost != null) {
                 onFocusLost.accept(text.toString());
             }
