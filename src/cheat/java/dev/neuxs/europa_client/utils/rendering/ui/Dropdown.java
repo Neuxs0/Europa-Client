@@ -267,13 +267,18 @@ public class Dropdown extends Renderer {
             optionHeight = Math.max(0f, optionHeight - borderInset);
         }
 
+        boolean bottomOption = index == optionCount - 1;
         optionRenderer.setPos(getOptionX() + borderInset, optionY);
         optionRenderer.setSize(Math.max(0f, getOptionWidth() - borderInset * 2f), optionHeight);
         optionRenderer.setFillColor(optionHoverFillColor);
         optionRenderer.setBorder(false);
         optionRenderer.setBorderWidth(0f);
-        optionRenderer.setBorderRadius(0f);
+        optionRenderer.setBorderRadius(bottomOption ? Math.max(0f, getBorderRadius() - borderInset) : 0f);
         optionRenderer.setBorderColor(getBorderColor());
+        optionRenderer.setTopLeftRounded(false);
+        optionRenderer.setTopRightRounded(false);
+        optionRenderer.setBottomLeftRounded(bottomOption);
+        optionRenderer.setBottomRightRounded(bottomOption);
     }
 
     private void renderText(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout, String text, float x, float y, float width, float height, boolean placeholder) {
