@@ -58,7 +58,8 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     private final float topBarHeight = 25f;
     private final float sortButtonWidth = 100f;
     private final float moduleButtonHeight = 30f;
-    private final float expandedPadding = 6f;
+    private final float expandedHorizontalPadding = 6f;
+    private final float expandedVerticalPadding = 2.5f;
     private final float expandedBoxOverlap = 8f;
     private final float settingRowHeight = 30f;
 
@@ -564,14 +565,14 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
 
             float settingsHeight = getSettingsBoxHeight();
             float settingsY = y - settingsHeight;
-            float rowX = x + expandedPadding;
-            float rowWidth = Math.max(0f, width - expandedPadding * 2f);
+            float rowX = x + expandedHorizontalPadding;
+            float rowWidth = Math.max(0f, width - expandedHorizontalPadding * 2f);
 
             setExpandedClipBounds();
             settingsBox.setPos(x, settingsY);
             settingsBox.setSize(width, settingsHeight + expandedBoxOverlap);
 
-            float currentY = settingsY + settingsHeight - expandedPadding - settingRowHeight;
+            float currentY = settingsY + settingsHeight - expandedVerticalPadding - settingRowHeight;
             keybindRow.layout(rowX, currentY, rowWidth, settingRowHeight);
             currentY -= settingRowHeight + elementSpacing;
             for (ModuleSettingRow row : settingRows) {
@@ -704,7 +705,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
 
         private float getSettingsBoxHeight() {
             int rowCount = settingRows.size() + 1;
-            return expandedPadding * 2f
+            return expandedVerticalPadding * 2f
                     + rowCount * settingRowHeight
                     + Math.max(0, rowCount - 1) * elementSpacing;
         }
