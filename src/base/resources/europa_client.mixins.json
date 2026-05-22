@@ -8,6 +8,8 @@
     "InGameMixin",
     "ChunkShaderMixin",
     "EntityMixin",
+    "ItemThingModelMixin",
+    "ItemModelBlockMixin",
     "BlockSelectionMixin",
     "ChatMenuMixin",
     "NettyClientIdentifierMixin",
