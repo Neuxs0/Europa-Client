@@ -65,6 +65,13 @@ public class ClientSettings {
             .withRange(0.25f, 8f)
             .withStep(0.1f);
 
+    public static final Setting<Boolean> HUD_EDITOR_SNAPPING = new Setting<>(
+            "hudEditorSnapping",
+            true
+    )
+            .withDisplayName("HUD Editor Snapping")
+            .withDescription("Snap HUD elements to nearby alignment guides while editing");
+
     private static final Map<String, Setting<?>> SETTINGS = new LinkedHashMap<>();
 
     static {
@@ -75,6 +82,7 @@ public class ClientSettings {
         register(GUI_BACKGROUND_DIM);
         register(GUI_BACKGROUND_BLUR);
         register(GUI_BACKGROUND_BLUR_STRENGTH);
+        register(HUD_EDITOR_SNAPPING);
     }
 
     private static void register(Setting<?> setting) {

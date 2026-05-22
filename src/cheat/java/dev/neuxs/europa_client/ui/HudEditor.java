@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.ui.HudManager;
 import dev.neuxs.europa_client.modules.ui.HudModule;
+import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.ui.widgets.HudSettingsWidget;
 import dev.neuxs.europa_client.utils.ColorUtils;
@@ -80,6 +81,7 @@ public class HudEditor extends GameState implements InputProcessor {
     private final BoxRenderer contextPanel = new BoxRenderer();
     private final TextRenderer contextTitle = new TextRenderer();
     private final Dropdown addDropdown = new Dropdown();
+    private final Button snapButton = new Button();
     private final Button lockButton = new Button();
     private final Button resetSizeButton = new Button();
     private final Button settingsButton = new Button();
@@ -252,7 +254,7 @@ public class HudEditor extends GameState implements InputProcessor {
         exitText.setScale(0.75f);
         exitText.setZIndex(210);
 
-        mouseGuideText.setText("Left drag: move HUD\nDrag edge: resize HUD\nRight click empty: add element\nRight click element: options");
+        mouseGuideText.setText("Left drag: move HUD\nDrag edge: resize HUD\nRight click empty: add/toggle snapping\nRight click element: options");
         mouseGuideText.setTextColor(ColorUtils.color(230, 230, 230, 210));
         mouseGuideText.setScale(0.72f);
         mouseGuideText.setZIndex(210);
@@ -294,6 +296,15 @@ public class HudEditor extends GameState implements InputProcessor {
         addDropdown.setPadding(3f);
         addDropdown.setZIndex(250);
         addDropdown.setOnSelectionChanged(this::addHudElement);
+
+        configureContextButton(snapButton, "");
+        snapButton.setOnClickUp((renderer, button) -> {
+            if (button == Input.Buttons.LEFT) {
+                ClientSettings.HUD_EDITOR_SNAPPING.setValue(!isSnappingEnabled());
+                hideSnapLines();
+                closeContextMenu();
+            }
+        });
 
         configureContextButton(lockButton, "");
         lockButton.setOnClickUp((renderer, button) -> {
@@ -346,13 +357,15 @@ public class HudEditor extends GameState implements InputProcessor {
         contextRequestX = worldX;
         contextRequestY = worldY;
 
-        contextTitle.setText("Add HUD Element");
+        contextTitle.setText("HUD Editor");
+        syncSnapButtonText();
         syncAddDropdownOptions();
 
         contextRenderers.clear();
         contextRenderers.add(contextPanel);
         contextRenderers.add(contextTitle);
         contextRenderers.add(addDropdown);
+        contextRenderers.add(snapButton);
 
         layoutContextMenu();
         addContextRenderers();
@@ -397,9 +410,13 @@ public class HudEditor extends GameState implements InputProcessor {
         addDropdown.setPlaceholderText(options.isEmpty() ? "No elements" : "Select element");
     }
 
+    private void syncSnapButtonText() {
+        snapButton.setText(isSnappingEnabled() ? "Disable Snapping" : "Enable Snapping");
+    }
+
     private void layoutContextMenu() {
         int itemCount = contextMode == ContextMode.ADD
-                ? 1
+                ? 2
                 : 2
                 + (contextElement != null && contextElement.hasHudSettings() ? 1 : 0)
                 + (contextElement != null && contextElement.canBeHiddenInHudEditor() ? 1 : 0);
@@ -426,6 +443,9 @@ public class HudEditor extends GameState implements InputProcessor {
         if (contextMode == ContextMode.ADD) {
             addDropdown.setSize(contextWidth - CONTEXT_PADDING * 2f, CONTEXT_ITEM_HEIGHT);
             addDropdown.setPosition(contextX + CONTEXT_PADDING, currentY);
+            currentY -= CONTEXT_ITEM_HEIGHT + CONTEXT_SPACING;
+            syncSnapButtonText();
+            layoutContextButton(snapButton, currentY);
             return;
         }
 
@@ -798,6 +818,11 @@ public class HudEditor extends GameState implements InputProcessor {
     }
 
     private Vector2 applySnapping(HudModule movingModule, float x, float y, Vector2 size) {
+        if (!isSnappingEnabled()) {
+            hideSnapLines();
+            return new Vector2(x, y);
+        }
+
         Rectangle movingBounds = new Rectangle(x, y, size.x, size.y);
         SnapMatch xMatch = findBestXSnap(movingModule, movingBounds);
         SnapMatch yMatch = findBestYSnap(movingModule, movingBounds);
@@ -817,6 +842,10 @@ public class HudEditor extends GameState implements InputProcessor {
         }
 
         return new Vector2(x, y);
+    }
+
+    private boolean isSnappingEnabled() {
+        return ClientSettings.HUD_EDITOR_SNAPPING.getValue();
     }
 
     private SnapMatch findBestXSnap(HudModule movingModule, Rectangle movingBounds) {
