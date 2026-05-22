@@ -15,7 +15,7 @@ public abstract class ChunkShaderMixin {
         ChunkShader shader = (ChunkShader) (Object) this;
 
         if (Modules.fullbright != null && Modules.fullbright.isEnabled()) {
-            shader.bindOptionalUniform3f("skyAmbientColor", 0.75F, 0.75F, 0.75F);
+            shader.bindOptionalUniform3f("skyAmbientColor", 0.55F, 0.55F, 0.55F);
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
         }
