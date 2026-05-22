@@ -36,7 +36,6 @@ public class BackgroundBlurRenderer implements Disposable {
         int height = Math.max(1, Gdx.graphics.getHeight());
         ensureResources(width, height);
 
-        sceneBuffer.begin();
         try {
             ScreenUtils.clear(0f, 0f, 0f, 1f, true);
             previousGamestate.render();
@@ -46,12 +45,17 @@ public class BackgroundBlurRenderer implements Disposable {
             if (fallbackRenderer != null) {
                 fallbackRenderer.run();
             }
-        } finally {
-            sceneBuffer.end();
         }
 
+        copyBackBufferToSceneTexture(width, height);
         runGaussianBlurPass(Math.max(0.25f, Math.min(MAX_KERNEL_RADIUS / 3f, blurStrength)));
         drawBlurredBackground(width, height);
+    }
+
+    private void copyBackBufferToSceneTexture(int width, int height) {
+        Texture sceneTexture = sceneBuffer.getColorBufferTexture();
+        sceneTexture.bind();
+        Gdx.gl.glCopyTexSubImage2D(GL20.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
     }
 
     private void ensureResources(int width, int height) {
