@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.ui.pages;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.settings.SettingsManager;
+import dev.neuxs.europa_client.ui.HudEditor;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
 import dev.neuxs.europa_client.utils.rendering.RenderUtil;
@@ -15,9 +17,11 @@ import dev.neuxs.europa_client.utils.rendering.Renderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import dev.neuxs.europa_client.utils.rendering.ui.Dropdown;
+import dev.neuxs.europa_client.utils.rendering.ui.ScrollState;
 import dev.neuxs.europa_client.utils.rendering.ui.Slider;
 import dev.neuxs.europa_client.utils.rendering.ui.TextInput;
 import dev.neuxs.europa_client.utils.rendering.ui.Toggle;
+import finalforeach.cosmicreach.gamestates.GameState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +35,13 @@ public class SettingsPage extends Page implements InputProcessor {
     private final Vector4 pageDim;
     private final BoxRenderer pageContainer;
     private final Vector2 touchPos = new Vector2();
+    private final ScrollState scrollState = new ScrollState();
 
     private final Button resetButton = new Button();
+    private final ActionRow hudEditorRow = new ActionRow("HUD Editor", "Open", this::openHudEditor);
     private final List<SettingRow> settingRows = new ArrayList<>();
+    private RenderUtil renderUtil;
+    private boolean renderersAdded = false;
 
     private final float padding = 8f;
     private final float elementSpacing = 6f;
@@ -72,26 +80,50 @@ public class SettingsPage extends Page implements InputProcessor {
 
         resetButton.setSize(resetButtonWidth, inputHeight);
         resetButton.setPos(pageDim.x + pageDim.z - padding - resetButtonWidth, currentY);
-        resetButton.setZIndex(5);
+        resetButton.setZIndex(20);
 
-        currentY -= rowHeight + elementSpacing * 1.5f;
+        float scrollTop = currentY - elementSpacing;
+        float scrollBottom = pageDim.y + padding;
+        scrollState.setViewport(pageDim.x + padding, scrollBottom, usableWidth, Math.max(0f, scrollTop - scrollBottom));
+        layoutScrollableContent();
+    }
+
+    private void layoutScrollableContent() {
+        float contentHeight = rowHeight;
+        if (!settingRows.isEmpty()) {
+            contentHeight += elementSpacing + settingRows.size() * rowHeight
+                    + Math.max(0, settingRows.size() - 1) * elementSpacing;
+        }
+        scrollState.setContentHeight(contentHeight);
+
+        float currentY = scrollState.getViewportY()
+                + scrollState.getViewportHeight()
+                - scrollState.getOffset()
+                - rowHeight;
+
+        hudEditorRow.layout(scrollState.getViewportX(), currentY, scrollState.getViewportWidth(), rowHeight);
+        currentY -= rowHeight + elementSpacing;
         for (SettingRow row : settingRows) {
-            row.layout(pageDim.x + padding, currentY, usableWidth, rowHeight);
+            row.layout(scrollState.getViewportX(), currentY, scrollState.getViewportWidth(), rowHeight);
             currentY -= rowHeight + elementSpacing;
         }
+
+        syncScrollableRenderers();
     }
 
     @Override
     public void addRenderers(RenderUtil renderUtil) {
+        this.renderUtil = renderUtil;
+        this.renderersAdded = true;
         renderUtil.addRenderer(resetButton);
-        for (SettingRow row : settingRows) {
-            row.addRenderers(renderUtil);
-        }
+        syncScrollableRenderers();
     }
 
     @Override
     public void removeRenderers(RenderUtil renderUtil) {
+        this.renderersAdded = false;
         renderUtil.removeRenderer(resetButton);
+        hudEditorRow.removeRenderers(renderUtil);
         for (SettingRow row : settingRows) {
             row.removeRenderers(renderUtil);
         }
@@ -101,7 +133,9 @@ public class SettingsPage extends Page implements InputProcessor {
     public void update(float deltaTime) {
         super.update(deltaTime);
         for (SettingRow row : settingRows) {
-            row.update(viewport, deltaTime);
+            if (row.isVisible()) {
+                row.update(viewport, deltaTime);
+            }
         }
     }
 
@@ -161,10 +195,27 @@ public class SettingsPage extends Page implements InputProcessor {
         SettingsManager.saveClientSettings();
     }
 
+    private void syncScrollableRenderers() {
+        if (!renderersAdded || renderUtil == null) {
+            return;
+        }
+
+        hudEditorRow.syncRenderers(renderUtil, scrollState.isFullyVisible(hudEditorRow.getY(), hudEditorRow.getHeight()));
+        for (SettingRow row : settingRows) {
+            row.syncRenderers(renderUtil, scrollState.isFullyVisible(row.getY(), row.getHeight()));
+        }
+    }
+
+    private void openHudEditor() {
+        GameState backgroundState = GameState.IN_GAME.isCreated() ? GameState.IN_GAME : GameState.currentGameState;
+        Gdx.input.setCursorCatched(false);
+        Gdx.app.postRunnable(() -> GameState.switchToGameState(new HudEditor(backgroundState, true)));
+    }
+
     @Override
     public boolean keyDown(int keycode) {
         for (SettingRow row : settingRows) {
-            if (row.keyDown(keycode)) {
+            if (row.isVisible() && row.keyDown(keycode)) {
                 return true;
             }
         }
@@ -174,7 +225,7 @@ public class SettingsPage extends Page implements InputProcessor {
     @Override
     public boolean keyUp(int keycode) {
         for (SettingRow row : settingRows) {
-            if (row.keyUp(keycode)) {
+            if (row.isVisible() && row.keyUp(keycode)) {
                 return true;
             }
         }
@@ -184,7 +235,7 @@ public class SettingsPage extends Page implements InputProcessor {
     @Override
     public boolean keyTyped(char character) {
         for (SettingRow row : settingRows) {
-            if (row.keyTyped(character)) {
+            if (row.isVisible() && row.keyTyped(character)) {
                 return true;
             }
         }
@@ -203,7 +254,7 @@ public class SettingsPage extends Page implements InputProcessor {
         boolean handled = false;
         SettingRow activeRow = null;
         for (SettingRow row : settingRows) {
-            if (row.handleTouchDown(touchPos.x, touchPos.y, button)) {
+            if (row.isVisible() && row.handleTouchDown(touchPos.x, touchPos.y, button)) {
                 handled = true;
                 activeRow = row;
             }
@@ -232,7 +283,19 @@ public class SettingsPage extends Page implements InputProcessor {
         return false;
     }
     @Override public boolean scrolled(float amountX, float amountY) {
-        return false;
+        if (viewport == null) {
+            return false;
+        }
+
+        touchPos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(touchPos);
+        if (!scrollState.contains(touchPos.x, touchPos.y) || scrollState.getMaxOffset() <= 0f) {
+            return false;
+        }
+
+        scrollState.scroll(amountY);
+        layoutScrollableContent();
+        return true;
     }
 
     private static String formatSettingValue(Object value) {
@@ -263,11 +326,83 @@ public class SettingsPage extends Page implements InputProcessor {
         return text;
     }
 
+    private class ActionRow {
+        private final TextRenderer labelText = new TextRenderer();
+        private final Button actionButton = new Button();
+        private final List<Renderer> renderers = new ArrayList<>();
+        private boolean renderersAdded = false;
+        private float y;
+        private float height;
+
+        private ActionRow(String label, String buttonText, Runnable action) {
+            labelText.setText(label);
+            labelText.setTextColor(ColorUtils.color(255, 255, 255, 255));
+            labelText.setZIndex(10);
+            renderers.add(labelText);
+
+            actionButton.setText(buttonText);
+            actionButton.setBorderWidth(1.5f);
+            actionButton.setBorderRadius(7.5f);
+            actionButton.setZIndex(10);
+            actionButton.setOnClickUp((renderer, clickedButton) -> {
+                if (clickedButton == Input.Buttons.LEFT) {
+                    action.run();
+                }
+            });
+            renderers.add(actionButton);
+        }
+
+        private void layout(float x, float y, float width, float height) {
+            this.y = y;
+            this.height = height;
+
+            float labelWidth = Math.min(130f, Math.max(90f, width * 0.32f));
+            float buttonWidth = Math.max(0f, width - labelWidth - elementSpacing);
+
+            labelText.setPos(x, y + (height - labelText.getTextHeight(viewport)) / 2f);
+            actionButton.setSize(buttonWidth, inputHeight);
+            actionButton.setPos(x + labelWidth + elementSpacing, y + (height - inputHeight) / 2f);
+        }
+
+        private void syncRenderers(RenderUtil renderUtil, boolean visible) {
+            if (visible && !renderersAdded) {
+                for (Renderer renderer : renderers) {
+                    renderUtil.addRenderer(renderer);
+                }
+                renderersAdded = true;
+            } else if (!visible && renderersAdded) {
+                removeRenderers(renderUtil);
+            }
+        }
+
+        private void removeRenderers(RenderUtil renderUtil) {
+            for (Renderer renderer : renderers) {
+                renderUtil.removeRenderer(renderer);
+            }
+            renderersAdded = false;
+        }
+
+        private boolean isVisible() {
+            return renderersAdded;
+        }
+
+        private float getY() {
+            return y;
+        }
+
+        private float getHeight() {
+            return height;
+        }
+    }
+
     private class SettingRow {
         private final Setting<?> setting;
         private final TextRenderer labelText = new TextRenderer();
         private final List<Renderer> renderers = new ArrayList<>();
         private final List<Object> optionValues = new ArrayList<>();
+        private boolean renderersAdded = false;
+        private float y;
+        private float height;
 
         private Toggle toggle;
         private TextRenderer booleanValueText;
@@ -371,6 +506,8 @@ public class SettingsPage extends Page implements InputProcessor {
         }
 
         private void layout(float x, float y, float width, float height) {
+            this.y = y;
+            this.height = height;
             float labelWidth = Math.min(130f, Math.max(90f, width * 0.32f));
             controlX = x + labelWidth + elementSpacing;
             controlY = y + (height - inputHeight) / 2f;
@@ -486,12 +623,34 @@ public class SettingsPage extends Page implements InputProcessor {
             for (Renderer renderer : renderers) {
                 renderUtil.addRenderer(renderer);
             }
+            renderersAdded = true;
         }
 
         private void removeRenderers(RenderUtil renderUtil) {
             for (Renderer renderer : renderers) {
                 renderUtil.removeRenderer(renderer);
             }
+            renderersAdded = false;
+        }
+
+        private void syncRenderers(RenderUtil renderUtil, boolean visible) {
+            if (visible && !renderersAdded) {
+                addRenderers(renderUtil);
+            } else if (!visible && renderersAdded) {
+                removeRenderers(renderUtil);
+            }
+        }
+
+        private boolean isVisible() {
+            return renderersAdded;
+        }
+
+        private float getY() {
+            return y;
+        }
+
+        private float getHeight() {
+            return height;
         }
 
         private void applyTextValue(String text) {

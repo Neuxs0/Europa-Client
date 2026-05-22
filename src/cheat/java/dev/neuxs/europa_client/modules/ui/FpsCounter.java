@@ -2,10 +2,10 @@ package dev.neuxs.europa_client.modules.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 import dev.neuxs.europa_client.utils.ColorUtils;
@@ -20,10 +20,8 @@ import java.util.Locale;
 import java.nio.IntBuffer;
 
 @SuppressWarnings("unused")
-public class FpsCounter extends Module {
+public class FpsCounter extends HudModule {
     private static final String ADVANCED_SETTING_KEY = "advanced";
-    private static final float X = 8f;
-    private static final float Y = 8f;
     private static final float BACKGROUND_PADDING_X = 5f;
     private static final float BACKGROUND_PADDING_Y = 3f;
     private static final float BACKGROUND_RADIUS = 4f;
@@ -68,6 +66,11 @@ public class FpsCounter extends Module {
     }
 
     public void render(Viewport viewport) {
+        renderHud(viewport);
+    }
+
+    @Override
+    public void renderHud(Viewport viewport) {
         if (!isEnabled() || Gdx.graphics == null) {
             return;
         }
@@ -82,12 +85,12 @@ public class FpsCounter extends Module {
 
         fpsText.setText(cachedCounterText);
 
-        float textWidth = fpsText.getTextWidth(viewport);
-        float textHeight = fpsText.getTextHeight(viewport);
-        float backgroundWidth = textWidth + BACKGROUND_PADDING_X * 2f;
-        float backgroundHeight = textHeight + BACKGROUND_PADDING_Y * 2f;
-        float backgroundX = X;
-        float backgroundY = viewport.getWorldHeight() - Y - backgroundHeight;
+        Vector2 hudSize = getHudSize(viewport);
+        Vector2 hudPosition = getHudPosition(viewport, hudSize);
+        float backgroundWidth = hudSize.x;
+        float backgroundHeight = hudSize.y;
+        float backgroundX = hudPosition.x;
+        float backgroundY = hudPosition.y;
         float textX = backgroundX + BACKGROUND_PADDING_X;
         float textY = backgroundY + BACKGROUND_PADDING_Y;
 
@@ -116,6 +119,24 @@ public class FpsCounter extends Module {
         } finally {
             restoreGlState(glState);
         }
+    }
+
+    @Override
+    public Vector2 getHudSize(Viewport viewport) {
+        fpsText.setText(getMeasuredCounterText());
+        float textWidth = fpsText.getTextWidth(viewport);
+        float textHeight = fpsText.getTextHeight(viewport);
+        return new Vector2(
+                textWidth + BACKGROUND_PADDING_X * 2f,
+                textHeight + BACKGROUND_PADDING_Y * 2f
+        );
+    }
+
+    private String getMeasuredCounterText() {
+        if (!cachedCounterText.isEmpty()) {
+            return cachedCounterText;
+        }
+        return buildCounterText(isAdvancedViewEnabled());
     }
 
     private GlState captureGlState() {

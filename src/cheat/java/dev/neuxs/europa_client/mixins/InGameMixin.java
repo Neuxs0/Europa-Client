@@ -1,9 +1,10 @@
 package dev.neuxs.europa_client.mixins;
 
 import com.badlogic.gdx.Gdx;
-import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.ui.GUI;
+import dev.neuxs.europa_client.ui.HudEditor;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
+import dev.neuxs.europa_client.modules.ui.HudManager;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.gamestates.*;
 import finalforeach.cosmicreach.ui.UI;
@@ -23,7 +24,7 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
     // Thanks to tympanicblock61 for telling me about this
     @Inject(method = "switchAwayTo", at = @At("HEAD"), cancellable = true)
     private void preventUnloadOnSwitch(GameState gameState, CallbackInfo ci) {
-        if (gameState instanceof GUI) {
+        if (gameState instanceof GUI || gameState instanceof HudEditor) {
             if (Gdx.input.getInputProcessor() != null) {
                 Gdx.input.setInputProcessor(null);
             }
@@ -33,13 +34,14 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void renderEuropaHud(CallbackInfo ci) {
+        if (HudManager.isInGameHudSuppressed()) {
+            return;
+        }
         if (UI.renderDebugInfo) {
             return;
         }
 
-        if (Modules.fpsCounter != null) {
-            Modules.fpsCounter.render(this.newUiViewport);
-        }
+        HudManager.render(this.newUiViewport);
     }
 
     @Override
