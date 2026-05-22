@@ -10,6 +10,7 @@ import dev.neuxs.europa_client.modules.ui.PingCounter;
 import dev.neuxs.europa_client.modules.ui.TpsCounter;
 import dev.neuxs.europa_client.modules.ui.VanillaHealthbarHud;
 import dev.neuxs.europa_client.modules.ui.VanillaHotbarHud;
+import dev.neuxs.europa_client.modules.ui.VelocityHud;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
 import dev.neuxs.europa_client.modules.utils.NoFog;
 import dev.neuxs.europa_client.modules.utils.PacketInspector;
@@ -29,6 +30,7 @@ public class Modules {
     public static FpsCounter fpsCounter;
     public static TpsCounter tpsCounter;
     public static PingCounter pingCounter;
+    public static VelocityHud velocityHud;
     public static ConnectedServerHud connectedServerHud;
     public static VanillaHotbarHud vanillaHotbar;
     public static VanillaHealthbarHud vanillaHealthbar;
@@ -93,6 +95,9 @@ public class Modules {
 
         pingCounter = new PingCounter(unknown, false);
         uiModuleList.add(pingCounter);
+
+        velocityHud = new VelocityHud(unknown, false);
+        uiModuleList.add(velocityHud);
 
         connectedServerHud = new ConnectedServerHud(unknown, false);
         uiModuleList.add(connectedServerHud);
