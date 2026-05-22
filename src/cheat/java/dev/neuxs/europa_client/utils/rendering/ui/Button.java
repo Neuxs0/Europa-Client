@@ -87,6 +87,12 @@ public class Button extends Renderer {
             return;
         }
 
+        float textPadding = Math.max(3f, getBorderWidth() + 3f);
+        textRenderer.fitToBox(
+                viewport,
+                Math.max(0f, getWidth() - textPadding * 2f),
+                Math.max(0f, getHeight() - textPadding * 2f)
+        );
         textRenderer.setPos(
                 getPosX() + (getWidth() - textRenderer.getTextWidth(viewport)) / 2f,
                 getPosY() + (getHeight() - textRenderer.getTextHeight(viewport)) / 2f

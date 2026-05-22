@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
 import dev.neuxs.europa_client.modules.ui.FpsCounter;
+import dev.neuxs.europa_client.modules.ui.TpsCounter;
 import dev.neuxs.europa_client.modules.ui.VanillaHealthbarHud;
 import dev.neuxs.europa_client.modules.ui.VanillaHotbarHud;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
@@ -24,6 +25,7 @@ public class Modules {
     public static Reach reach;
 
     public static FpsCounter fpsCounter;
+    public static TpsCounter tpsCounter;
     public static VanillaHotbarHud vanillaHotbar;
     public static VanillaHealthbarHud vanillaHealthbar;
 
@@ -81,6 +83,9 @@ public class Modules {
 
         fpsCounter = new FpsCounter(unknown, false);
         uiModuleList.add(fpsCounter);
+
+        tpsCounter = new TpsCounter(unknown, false);
+        uiModuleList.add(tpsCounter);
 
         moduleList.addAll(uiModuleList);
     }

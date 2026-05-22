@@ -17,6 +17,8 @@
         "GamePacketLoggingMixin",
         "NettyPacketHandlerMixin",
         "InGameUIHotbarMixin",
+        "TickRunnerMixin",
+        "EndTickPacketMixin",
         "GameSingletonsInterface"
     ],
     "client": [

@@ -388,7 +388,8 @@ public abstract class Renderer {
     }
 
     public void setText(String text) {
-        if (text != null && !text.isEmpty() && !text.equals(this.text)) this.text = text;
+        String value = text == null ? "" : text;
+        if (!value.equals(this.text)) this.text = value;
     }
     public void setFont(BitmapFont font) {
         if (font != null && fontManager.getFontName(font) != null) {

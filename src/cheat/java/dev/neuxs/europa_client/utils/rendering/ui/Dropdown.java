@@ -288,6 +288,11 @@ public class Dropdown extends Renderer {
 
         textRenderer.setText(text);
         textRenderer.setTextColor(placeholder ? placeholderTextColor : getTextColor());
+        textRenderer.fitToBox(
+                viewport,
+                Math.max(0f, width - padding * 2f),
+                Math.max(0f, height - padding * 2f)
+        );
         textRenderer.setPos(
                 x + padding,
                 y + (height - textRenderer.getTextHeight(viewport)) / 2f

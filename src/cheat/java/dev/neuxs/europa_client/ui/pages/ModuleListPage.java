@@ -703,6 +703,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             controlWidth = Math.max(0f, width - labelWidth - elementSpacing);
             controlHeight = topBarHeight;
 
+            labelText.fitToBox(viewport, labelWidth, height);
             labelText.setPos(x, y + (height - labelText.getTextHeight(viewport)) / 2f);
             keybindButton.setSize(controlWidth, topBarHeight);
             keybindButton.setPos(controlX, controlY);
@@ -903,12 +904,18 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             controlWidth = Math.max(0f, width - labelWidth - elementSpacing);
             controlHeight = topBarHeight;
 
+            labelText.fitToBox(viewport, labelWidth, height);
             labelText.setPos(x, y + (height - labelText.getTextHeight(viewport)) / 2f);
 
             if (toggle != null) {
                 toggle.setSize(42f, 22f);
                 toggle.setPos(controlX, y + (height - toggle.getHeight()) / 2f);
                 if (booleanValueText != null) {
+                    booleanValueText.fitToBox(
+                            viewport,
+                            Math.max(0f, controlWidth - toggle.getWidth() - elementSpacing),
+                            height
+                    );
                     booleanValueText.setPos(controlX + toggle.getWidth() + elementSpacing, y + (height - booleanValueText.getTextHeight(viewport)) / 2f);
                 }
             } else if (slider != null && textInput != null) {

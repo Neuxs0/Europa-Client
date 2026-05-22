@@ -359,6 +359,7 @@ public class SettingsPage extends Page implements InputProcessor {
             float labelWidth = Math.min(130f, Math.max(90f, width * 0.32f));
             float buttonWidth = Math.max(0f, width - labelWidth - elementSpacing);
 
+            labelText.fitToBox(viewport, labelWidth, height);
             labelText.setPos(x, y + (height - labelText.getTextHeight(viewport)) / 2f);
             actionButton.setSize(buttonWidth, inputHeight);
             actionButton.setPos(x + labelWidth + elementSpacing, y + (height - inputHeight) / 2f);
@@ -514,12 +515,18 @@ public class SettingsPage extends Page implements InputProcessor {
             controlWidth = Math.max(0f, width - labelWidth - elementSpacing);
             controlHeight = inputHeight;
 
+            labelText.fitToBox(viewport, labelWidth, height);
             labelText.setPos(x, centerTextY(labelText, y, height));
 
             if (toggle != null) {
                 toggle.setSize(42f, 22f);
                 toggle.setPos(controlX, y + (height - toggle.getHeight()) / 2f);
                 if (booleanValueText != null) {
+                    booleanValueText.fitToBox(
+                            viewport,
+                            Math.max(0f, controlWidth - toggle.getWidth() - elementSpacing),
+                            height
+                    );
                     booleanValueText.setPos(controlX + toggle.getWidth() + elementSpacing, centerTextY(booleanValueText, y, height));
                 }
             } else if (slider != null && textInput != null) {
