@@ -76,6 +76,10 @@ public abstract class HudModule extends Module {
         return new ArrayList<>(customSettings.values());
     }
 
+    public boolean canBeHiddenInHudEditor() {
+        return true;
+    }
+
     protected Vector2 getDefaultHudPosition(Viewport viewport, Vector2 size) {
         float viewportHeight = viewport == null ? 0f : viewport.getWorldHeight();
         float height = size == null ? 0f : size.y;

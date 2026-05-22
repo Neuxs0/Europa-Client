@@ -38,7 +38,7 @@ public final class HudManager {
     public static List<HudModule> getHiddenHudModules() {
         List<HudModule> hudModules = new ArrayList<>();
         for (HudModule module : getHudModules()) {
-            if (!module.isEnabled()) {
+            if (!module.isEnabled() && module.canBeHiddenInHudEditor()) {
                 hudModules.add(module);
             }
         }

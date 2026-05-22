@@ -62,6 +62,7 @@ public class HudEditor extends GameState implements InputProcessor {
     private final LineRenderer hoverRightLine = new LineRenderer();
     private final TextRenderer titleText = new TextRenderer();
     private final TextRenderer exitText = new TextRenderer();
+    private final TextRenderer mouseGuideText = new TextRenderer();
     private final LineRenderer verticalSnapLine = new LineRenderer();
     private final LineRenderer horizontalSnapLine = new LineRenderer();
 
@@ -105,6 +106,7 @@ public class HudEditor extends GameState implements InputProcessor {
         renderUtil.addRenderer(hoverRightLine);
         renderUtil.addRenderer(titleText);
         renderUtil.addRenderer(exitText);
+        renderUtil.addRenderer(mouseGuideText);
         renderUtil.addRenderer(verticalSnapLine);
         renderUtil.addRenderer(horizontalSnapLine);
     }
@@ -125,6 +127,7 @@ public class HudEditor extends GameState implements InputProcessor {
         editorGrid.setPos(0f, 0f);
         editorGrid.setSize(screenW, screenH);
         layoutEditorTitle();
+        layoutMouseGuide();
 
         if (contextMode != ContextMode.NONE) {
             layoutContextMenu();
@@ -197,6 +200,7 @@ public class HudEditor extends GameState implements InputProcessor {
         renderUtil.removeRenderer(hoverRightLine);
         renderUtil.removeRenderer(titleText);
         renderUtil.removeRenderer(exitText);
+        renderUtil.removeRenderer(mouseGuideText);
         renderUtil.removeRenderer(verticalSnapLine);
         renderUtil.removeRenderer(horizontalSnapLine);
         renderUtil.dispose();
@@ -234,6 +238,11 @@ public class HudEditor extends GameState implements InputProcessor {
         exitText.setTextColor(ColorUtils.color(220, 220, 220, 210));
         exitText.setScale(0.75f);
         exitText.setZIndex(210);
+
+        mouseGuideText.setText("Left drag: move HUD\nRight click empty: add element\nRight click element: options");
+        mouseGuideText.setTextColor(ColorUtils.color(230, 230, 230, 210));
+        mouseGuideText.setScale(0.72f);
+        mouseGuideText.setZIndex(210);
     }
 
     private void configureHoverLine(LineRenderer lineRenderer) {
@@ -251,6 +260,10 @@ public class HudEditor extends GameState implements InputProcessor {
 
         titleText.setPos(screenW / 2f - titleWidth / 2f, titleY);
         exitText.setPos(screenW / 2f - exitWidth / 2f, titleY - exitHeight - 4f);
+    }
+
+    private void layoutMouseGuide() {
+        mouseGuideText.setPos(10f, 10f);
     }
 
     private void configureContextRenderers() {
@@ -343,7 +356,9 @@ public class HudEditor extends GameState implements InputProcessor {
         if (module.hasHudSettings()) {
             contextRenderers.add(settingsButton);
         }
-        contextRenderers.add(deleteButton);
+        if (module.canBeHiddenInHudEditor()) {
+            contextRenderers.add(deleteButton);
+        }
 
         layoutContextMenu();
         addContextRenderers();
@@ -363,7 +378,9 @@ public class HudEditor extends GameState implements InputProcessor {
     private void layoutContextMenu() {
         int itemCount = contextMode == ContextMode.ADD
                 ? 1
-                : 1 + (contextElement != null && contextElement.hasHudSettings() ? 1 : 0) + 1;
+                : 1
+                + (contextElement != null && contextElement.hasHudSettings() ? 1 : 0)
+                + (contextElement != null && contextElement.canBeHiddenInHudEditor() ? 1 : 0);
         contextWidth = CONTEXT_WIDTH;
         contextHeight = CONTEXT_PADDING * 2f
                 + CONTEXT_TITLE_HEIGHT
@@ -396,7 +413,9 @@ public class HudEditor extends GameState implements InputProcessor {
             layoutContextButton(settingsButton, currentY);
             currentY -= CONTEXT_ITEM_HEIGHT + CONTEXT_SPACING;
         }
-        layoutContextButton(deleteButton, currentY);
+        if (contextElement != null && contextElement.canBeHiddenInHudEditor()) {
+            layoutContextButton(deleteButton, currentY);
+        }
     }
 
     private void layoutContextButton(Button button, float y) {
