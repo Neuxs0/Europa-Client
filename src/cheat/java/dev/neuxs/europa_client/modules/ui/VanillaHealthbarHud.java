@@ -38,11 +38,11 @@ public class VanillaHealthbarHud extends HudModule {
     public Vector2 getHudSize(Viewport viewport) {
         Actor healthbarActor = getHealthbarActor();
         if (healthbarActor == null) {
-            return new Vector2(FALLBACK_WIDTH, FALLBACK_HEIGHT);
+            return new Vector2(FALLBACK_WIDTH * getHudScale(), FALLBACK_HEIGHT * getHudScale());
         }
         return new Vector2(
-                Math.max(FALLBACK_WIDTH, healthbarActor.getWidth()),
-                Math.max(FALLBACK_HEIGHT, healthbarActor.getHeight())
+                Math.max(FALLBACK_WIDTH, healthbarActor.getWidth()) * getHudScale(),
+                Math.max(FALLBACK_HEIGHT, healthbarActor.getHeight()) * getHudScale()
         );
     }
 
@@ -81,6 +81,7 @@ public class VanillaHealthbarHud extends HudModule {
         Vector2 position = getHudPosition(viewport, getHudSize(viewport));
         healthbarActor.setPosition(position.x, position.y);
         healthbarActor.setHeight(FALLBACK_HEIGHT);
+        healthbarActor.setScale(getHudScale());
     }
 
     private Actor getHealthbarActor() {

@@ -17,12 +17,16 @@ public abstract class HudModule extends Module {
     private static final String HUD_DATA_KEY = "hud";
     private static final String HUD_X_KEY = "x";
     private static final String HUD_Y_KEY = "y";
+    private static final String HUD_SCALE_KEY = "scale";
     private static final String HUD_LOCKED_KEY = "locked";
     private static final float UNSET_POSITION = -1f;
     private static final float DEFAULT_MARGIN = 8f;
+    private static final float MIN_HUD_SCALE = 0.5f;
+    private static final float MAX_HUD_SCALE = 4f;
 
     private float hudX = UNSET_POSITION;
     private float hudY = UNSET_POSITION;
+    private float hudScale = 1f;
     private boolean hudLocked = false;
 
     public HudModule(String id, int defaultKeybind, boolean defaultEnabled) {
@@ -58,6 +62,14 @@ public abstract class HudModule extends Module {
         Vector2 clamped = clampHudPosition(x, y, getHudSize(viewport), viewport);
         hudX = clamped.x;
         hudY = clamped.y;
+    }
+
+    public float getHudScale() {
+        return hudScale;
+    }
+
+    public void setHudScale(float hudScale) {
+        this.hudScale = MathUtils.clamp(hudScale, MIN_HUD_SCALE, MAX_HUD_SCALE);
     }
 
     public boolean isHudLocked() {
@@ -108,6 +120,7 @@ public abstract class HudModule extends Module {
         Map<String, Object> hudData = new HashMap<>();
         hudData.put(HUD_X_KEY, hudX);
         hudData.put(HUD_Y_KEY, hudY);
+        hudData.put(HUD_SCALE_KEY, hudScale);
         hudData.put(HUD_LOCKED_KEY, hudLocked);
         exported.put(HUD_DATA_KEY, hudData);
         return exported;
@@ -124,6 +137,7 @@ public abstract class HudModule extends Module {
 
         hudX = readFloat(hudData.get(HUD_X_KEY), hudX);
         hudY = readFloat(hudData.get(HUD_Y_KEY), hudY);
+        setHudScale(readFloat(hudData.get(HUD_SCALE_KEY), hudScale));
         Object locked = hudData.get(HUD_LOCKED_KEY);
         if (locked instanceof Boolean bool) {
             hudLocked = bool;

@@ -69,12 +69,13 @@ public class TpsCounter extends HudModule {
 
         updateCounterText(Gdx.graphics.getDeltaTime());
         tpsText.setText(cachedCounterText);
+        tpsText.setScale(getHudScale());
 
         Vector2 hudSize = getHudSize(viewport);
         Vector2 hudPosition = getHudPosition(viewport, hudSize);
         background.setPos(hudPosition.x, hudPosition.y);
         background.setSize(hudSize.x, hudSize.y);
-        tpsText.setPos(hudPosition.x + BACKGROUND_PADDING_X, hudPosition.y + BACKGROUND_PADDING_Y);
+        tpsText.setPos(hudPosition.x + BACKGROUND_PADDING_X * getHudScale(), hudPosition.y + BACKGROUND_PADDING_Y * getHudScale());
 
         GlState glState = captureGlState();
         try {
@@ -102,9 +103,10 @@ public class TpsCounter extends HudModule {
     @Override
     public Vector2 getHudSize(Viewport viewport) {
         tpsText.setText(getMeasuredCounterText());
+        tpsText.setScale(getHudScale());
         return new Vector2(
-                tpsText.getTextWidth(viewport) + BACKGROUND_PADDING_X * 2f,
-                tpsText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * 2f
+                tpsText.getTextWidth(viewport) + BACKGROUND_PADDING_X * getHudScale() * 2f,
+                tpsText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * getHudScale() * 2f
         );
     }
 

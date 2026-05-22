@@ -36,11 +36,11 @@ public class VanillaHotbarHud extends HudModule {
     public Vector2 getHudSize(Viewport viewport) {
         Actor hotbarActor = getHotbarActor();
         if (hotbarActor == null) {
-            return new Vector2(FALLBACK_WIDTH, FALLBACK_HEIGHT);
+            return new Vector2(FALLBACK_WIDTH * getHudScale(), FALLBACK_HEIGHT * getHudScale());
         }
         return new Vector2(
-                Math.max(FALLBACK_WIDTH, hotbarActor.getWidth()),
-                Math.max(FALLBACK_HEIGHT, hotbarActor.getHeight())
+                Math.max(FALLBACK_WIDTH, hotbarActor.getWidth()) * getHudScale(),
+                Math.max(FALLBACK_HEIGHT, hotbarActor.getHeight()) * getHudScale()
         );
     }
 
@@ -80,6 +80,7 @@ public class VanillaHotbarHud extends HudModule {
 
         Vector2 position = getHudPosition(viewport, getHudSize(viewport));
         hotbarActor.setPosition(position.x, position.y);
+        hotbarActor.setScale(getHudScale());
     }
 
     private Actor getHotbarActor() {

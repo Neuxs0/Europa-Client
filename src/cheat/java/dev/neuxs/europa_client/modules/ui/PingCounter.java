@@ -62,12 +62,13 @@ public class PingCounter extends HudModule {
 
         updateCounterText(Gdx.graphics.getDeltaTime());
         pingText.setText(cachedCounterText);
+        pingText.setScale(getHudScale());
 
         Vector2 hudSize = getHudSize(viewport);
         Vector2 hudPosition = getHudPosition(viewport, hudSize);
         background.setPos(hudPosition.x, hudPosition.y);
         background.setSize(hudSize.x, hudSize.y);
-        pingText.setPos(hudPosition.x + BACKGROUND_PADDING_X, hudPosition.y + BACKGROUND_PADDING_Y);
+        pingText.setPos(hudPosition.x + BACKGROUND_PADDING_X * getHudScale(), hudPosition.y + BACKGROUND_PADDING_Y * getHudScale());
 
         GlState glState = captureGlState();
         try {
@@ -95,9 +96,10 @@ public class PingCounter extends HudModule {
     @Override
     public Vector2 getHudSize(Viewport viewport) {
         pingText.setText(getMeasuredCounterText());
+        pingText.setScale(getHudScale());
         return new Vector2(
-                pingText.getTextWidth(viewport) + BACKGROUND_PADDING_X * 2f,
-                pingText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * 2f
+                pingText.getTextWidth(viewport) + BACKGROUND_PADDING_X * getHudScale() * 2f,
+                pingText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * getHudScale() * 2f
         );
     }
 

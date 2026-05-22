@@ -65,12 +65,13 @@ public class VelocityHud extends HudModule {
 
         updateCounterText(Gdx.graphics.getDeltaTime());
         velocityText.setText(cachedCounterText);
+        velocityText.setScale(getHudScale());
 
         Vector2 hudSize = getHudSize(viewport);
         Vector2 hudPosition = getHudPosition(viewport, hudSize);
         background.setPos(hudPosition.x, hudPosition.y);
         background.setSize(hudSize.x, hudSize.y);
-        velocityText.setPos(hudPosition.x + BACKGROUND_PADDING_X, hudPosition.y + BACKGROUND_PADDING_Y);
+        velocityText.setPos(hudPosition.x + BACKGROUND_PADDING_X * getHudScale(), hudPosition.y + BACKGROUND_PADDING_Y * getHudScale());
 
         GlState glState = captureGlState();
         try {
@@ -98,9 +99,10 @@ public class VelocityHud extends HudModule {
     @Override
     public Vector2 getHudSize(Viewport viewport) {
         velocityText.setText(getMeasuredCounterText());
+        velocityText.setScale(getHudScale());
         return new Vector2(
-                velocityText.getTextWidth(viewport) + BACKGROUND_PADDING_X * 2f,
-                velocityText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * 2f
+                velocityText.getTextWidth(viewport) + BACKGROUND_PADDING_X * getHudScale() * 2f,
+                velocityText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * getHudScale() * 2f
         );
     }
 

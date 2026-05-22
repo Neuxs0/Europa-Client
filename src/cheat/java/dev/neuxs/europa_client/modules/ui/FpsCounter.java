@@ -84,6 +84,7 @@ public class FpsCounter extends HudModule {
         updateCounterText(deltaTime);
 
         fpsText.setText(cachedCounterText);
+        fpsText.setScale(getHudScale());
 
         Vector2 hudSize = getHudSize(viewport);
         Vector2 hudPosition = getHudPosition(viewport, hudSize);
@@ -91,8 +92,8 @@ public class FpsCounter extends HudModule {
         float backgroundHeight = hudSize.y;
         float backgroundX = hudPosition.x;
         float backgroundY = hudPosition.y;
-        float textX = backgroundX + BACKGROUND_PADDING_X;
-        float textY = backgroundY + BACKGROUND_PADDING_Y;
+        float textX = backgroundX + BACKGROUND_PADDING_X * getHudScale();
+        float textY = backgroundY + BACKGROUND_PADDING_Y * getHudScale();
 
         background.setPos(backgroundX, backgroundY);
         background.setSize(backgroundWidth, backgroundHeight);
@@ -125,11 +126,12 @@ public class FpsCounter extends HudModule {
     @Override
     public Vector2 getHudSize(Viewport viewport) {
         fpsText.setText(getMeasuredCounterText());
+        fpsText.setScale(getHudScale());
         float textWidth = fpsText.getTextWidth(viewport);
         float textHeight = fpsText.getTextHeight(viewport);
         return new Vector2(
-                textWidth + BACKGROUND_PADDING_X * 2f,
-                textHeight + BACKGROUND_PADDING_Y * 2f
+                textWidth + BACKGROUND_PADDING_X * getHudScale() * 2f,
+                textHeight + BACKGROUND_PADDING_Y * getHudScale() * 2f
         );
     }
 

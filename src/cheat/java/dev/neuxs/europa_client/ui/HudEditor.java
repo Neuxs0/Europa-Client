@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
@@ -35,9 +36,15 @@ public class HudEditor extends GameState implements InputProcessor {
     private static final float CONTEXT_SPACING = 6f;
     private static final float CONTEXT_TITLE_HEIGHT = 22f;
     private static final float CONTEXT_ITEM_HEIGHT = 28f;
+    private static final float RESIZE_EDGE_DISTANCE = 6f;
+    private static final float MIN_RESIZE_DIMENSION = 12f;
 
     private enum ContextMode {
         NONE, ADD, ELEMENT
+    }
+
+    private enum ResizeHandle {
+        NONE, LEFT, RIGHT, TOP, BOTTOM, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
     }
 
     private final GameState backgroundState;
@@ -52,8 +59,12 @@ public class HudEditor extends GameState implements InputProcessor {
     private float screenH;
 
     private HudModule draggingElement;
+    private HudModule resizingElement;
     private HudModule contextElement;
     private HudSettingsWidget settingsWidget;
+    private ResizeHandle activeResizeHandle = ResizeHandle.NONE;
+    private Rectangle resizeStartBounds = new Rectangle();
+    private float resizeStartScale = 1f;
 
     private final GridRenderer editorGrid = new GridRenderer();
     private final LineRenderer hoverTopLine = new LineRenderer();
@@ -70,6 +81,7 @@ public class HudEditor extends GameState implements InputProcessor {
     private final TextRenderer contextTitle = new TextRenderer();
     private final Dropdown addDropdown = new Dropdown();
     private final Button lockButton = new Button();
+    private final Button resetSizeButton = new Button();
     private final Button settingsButton = new Button();
     private final Button deleteButton = new Button();
     private final List<Renderer> contextRenderers = new ArrayList<>();
@@ -146,8 +158,8 @@ public class HudEditor extends GameState implements InputProcessor {
         if (settingsWidget != null) {
             settingsWidget.update(deltaTime);
         }
-        if (draggingElement != null && !Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-            finishDrag();
+        if ((draggingElement != null || resizingElement != null) && !Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            finishPointerAction();
         }
     }
 
@@ -207,6 +219,7 @@ public class HudEditor extends GameState implements InputProcessor {
         if (Gdx.input.getInputProcessor() == this) {
             Gdx.input.setInputProcessor(null);
         }
+        setEditorCursor(Cursor.SystemCursor.Arrow);
     }
 
     private void configureSnapLines() {
@@ -239,7 +252,7 @@ public class HudEditor extends GameState implements InputProcessor {
         exitText.setScale(0.75f);
         exitText.setZIndex(210);
 
-        mouseGuideText.setText("Left drag: move HUD\nRight click empty: add element\nRight click element: options");
+        mouseGuideText.setText("Left drag: move HUD\nDrag edge: resize HUD\nRight click empty: add element\nRight click element: options");
         mouseGuideText.setTextColor(ColorUtils.color(230, 230, 230, 210));
         mouseGuideText.setScale(0.72f);
         mouseGuideText.setZIndex(210);
@@ -300,6 +313,14 @@ public class HudEditor extends GameState implements InputProcessor {
             }
         });
 
+        configureContextButton(resetSizeButton, "Reset Size");
+        resetSizeButton.setOnClickUp((renderer, button) -> {
+            if (button == Input.Buttons.LEFT && contextElement != null) {
+                resetHudElementSize(contextElement);
+                closeContextMenu();
+            }
+        });
+
         configureContextButton(deleteButton, "Delete");
         deleteButton.setOnClickUp((renderer, button) -> {
             if (button == Input.Buttons.LEFT && contextElement != null) {
@@ -353,6 +374,7 @@ public class HudEditor extends GameState implements InputProcessor {
         contextRenderers.add(contextPanel);
         contextRenderers.add(contextTitle);
         contextRenderers.add(lockButton);
+        contextRenderers.add(resetSizeButton);
         if (module.hasHudSettings()) {
             contextRenderers.add(settingsButton);
         }
@@ -378,7 +400,7 @@ public class HudEditor extends GameState implements InputProcessor {
     private void layoutContextMenu() {
         int itemCount = contextMode == ContextMode.ADD
                 ? 1
-                : 1
+                : 2
                 + (contextElement != null && contextElement.hasHudSettings() ? 1 : 0)
                 + (contextElement != null && contextElement.canBeHiddenInHudEditor() ? 1 : 0);
         contextWidth = CONTEXT_WIDTH;
@@ -408,6 +430,8 @@ public class HudEditor extends GameState implements InputProcessor {
         }
 
         layoutContextButton(lockButton, currentY);
+        currentY -= CONTEXT_ITEM_HEIGHT + CONTEXT_SPACING;
+        layoutContextButton(resetSizeButton, currentY);
         currentY -= CONTEXT_ITEM_HEIGHT + CONTEXT_SPACING;
         if (contextElement != null && contextElement.hasHudSettings()) {
             layoutContextButton(settingsButton, currentY);
@@ -477,6 +501,10 @@ public class HudEditor extends GameState implements InputProcessor {
         closeContextMenu();
     }
 
+    private void resetHudElementSize(HudModule module) {
+        saveHudChange(() -> module.setHudScale(1f));
+    }
+
     private void deleteHudElement(HudModule module) {
         saveHudChange(() -> {
             module.disable(false);
@@ -487,6 +515,11 @@ public class HudEditor extends GameState implements InputProcessor {
         if (draggingElement == module) {
             draggingElement = null;
             hideSnapLines();
+        }
+        if (resizingElement == module) {
+            resizingElement = null;
+            activeResizeHandle = ResizeHandle.NONE;
+            updateResizeCursor(ResizeHandle.NONE);
         }
     }
 
@@ -524,11 +557,20 @@ public class HudEditor extends GameState implements InputProcessor {
             return;
         }
 
-        HudModule hovered = draggingElement == null
-                ? HudManager.findTopElementAt(mouseWorld.x, mouseWorld.y, viewport)
-                : draggingElement;
+        HudModule hovered;
+        if (draggingElement != null) {
+            hovered = draggingElement;
+        } else if (resizingElement != null) {
+            hovered = resizingElement;
+        } else {
+            hovered = HudManager.findTopElementAt(mouseWorld.x, mouseWorld.y, viewport);
+            if (hovered == null) {
+                hovered = findResizeTargetAt(mouseWorld.x, mouseWorld.y);
+            }
+        }
         if (hovered == null) {
             hideHoverHitbox();
+            updateResizeCursor(ResizeHandle.NONE);
             return;
         }
 
@@ -537,6 +579,13 @@ public class HudEditor extends GameState implements InputProcessor {
         setHoverLine(hoverBottomLine, bounds.x, bounds.y, bounds.x + bounds.width, bounds.y);
         setHoverLine(hoverLeftLine, bounds.x, bounds.y, bounds.x, bounds.y + bounds.height);
         setHoverLine(hoverRightLine, bounds.x + bounds.width, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height);
+        if (draggingElement == null && resizingElement == null && !hovered.isHudLocked()) {
+            updateResizeCursor(getResizeHandle(bounds, mouseWorld.x, mouseWorld.y));
+        } else if (resizingElement != null) {
+            updateResizeCursor(activeResizeHandle);
+        } else {
+            updateResizeCursor(ResizeHandle.NONE);
+        }
     }
 
     private void setHoverLine(LineRenderer lineRenderer, float x1, float y1, float x2, float y2) {
@@ -550,6 +599,9 @@ public class HudEditor extends GameState implements InputProcessor {
         hideHoverLine(hoverBottomLine);
         hideHoverLine(hoverLeftLine);
         hideHoverLine(hoverRightLine);
+        if (draggingElement == null && resizingElement == null) {
+            updateResizeCursor(ResizeHandle.NONE);
+        }
     }
 
     private void hideHoverLine(LineRenderer lineRenderer) {
@@ -558,11 +610,104 @@ public class HudEditor extends GameState implements InputProcessor {
         lineRenderer.setEndPoint(new Vector2(0f, 0f));
     }
 
+    private ResizeHandle getResizeHandle(Rectangle bounds, float worldX, float worldY) {
+        boolean nearLeft = Math.abs(worldX - bounds.x) <= RESIZE_EDGE_DISTANCE;
+        boolean nearRight = Math.abs(worldX - (bounds.x + bounds.width)) <= RESIZE_EDGE_DISTANCE;
+        boolean nearBottom = Math.abs(worldY - bounds.y) <= RESIZE_EDGE_DISTANCE;
+        boolean nearTop = Math.abs(worldY - (bounds.y + bounds.height)) <= RESIZE_EDGE_DISTANCE;
+        boolean insideExpanded = worldX >= bounds.x - RESIZE_EDGE_DISTANCE
+                && worldX <= bounds.x + bounds.width + RESIZE_EDGE_DISTANCE
+                && worldY >= bounds.y - RESIZE_EDGE_DISTANCE
+                && worldY <= bounds.y + bounds.height + RESIZE_EDGE_DISTANCE;
+
+        if (!insideExpanded) {
+            return ResizeHandle.NONE;
+        }
+        if (nearTop && nearLeft) return ResizeHandle.TOP_LEFT;
+        if (nearTop && nearRight) return ResizeHandle.TOP_RIGHT;
+        if (nearBottom && nearLeft) return ResizeHandle.BOTTOM_LEFT;
+        if (nearBottom && nearRight) return ResizeHandle.BOTTOM_RIGHT;
+        if (nearLeft) return ResizeHandle.LEFT;
+        if (nearRight) return ResizeHandle.RIGHT;
+        if (nearTop) return ResizeHandle.TOP;
+        if (nearBottom) return ResizeHandle.BOTTOM;
+        return ResizeHandle.NONE;
+    }
+
+    private HudModule findResizeTargetAt(float worldX, float worldY) {
+        List<HudModule> modules = HudManager.getVisibleHudModules();
+        for (int i = modules.size() - 1; i >= 0; i--) {
+            HudModule module = modules.get(i);
+            if (module.isHudLocked()) {
+                continue;
+            }
+            if (getResizeHandle(module.getHudBounds(viewport), worldX, worldY) != ResizeHandle.NONE) {
+                return module;
+            }
+        }
+        return null;
+    }
+
+    private void updateResizeCursor(ResizeHandle handle) {
+        setEditorCursor(switch (handle) {
+            case LEFT, RIGHT -> Cursor.SystemCursor.HorizontalResize;
+            case TOP, BOTTOM -> Cursor.SystemCursor.VerticalResize;
+            case TOP_LEFT, BOTTOM_RIGHT -> Cursor.SystemCursor.NWSEResize;
+            case TOP_RIGHT, BOTTOM_LEFT -> Cursor.SystemCursor.NESWResize;
+            case NONE -> Cursor.SystemCursor.Arrow;
+        });
+    }
+
+    private void setEditorCursor(Cursor.SystemCursor cursor) {
+        if (Gdx.graphics != null) {
+            Gdx.graphics.setSystemCursor(cursor);
+        }
+    }
+
+    private boolean usesHorizontalResize(ResizeHandle handle) {
+        return handle == ResizeHandle.LEFT
+                || handle == ResizeHandle.RIGHT
+                || handle == ResizeHandle.TOP_LEFT
+                || handle == ResizeHandle.TOP_RIGHT
+                || handle == ResizeHandle.BOTTOM_LEFT
+                || handle == ResizeHandle.BOTTOM_RIGHT;
+    }
+
+    private boolean usesVerticalResize(ResizeHandle handle) {
+        return handle == ResizeHandle.TOP
+                || handle == ResizeHandle.BOTTOM
+                || handle == ResizeHandle.TOP_LEFT
+                || handle == ResizeHandle.TOP_RIGHT
+                || handle == ResizeHandle.BOTTOM_LEFT
+                || handle == ResizeHandle.BOTTOM_RIGHT;
+    }
+
+    private boolean usesLeftResize(ResizeHandle handle) {
+        return handle == ResizeHandle.LEFT
+                || handle == ResizeHandle.TOP_LEFT
+                || handle == ResizeHandle.BOTTOM_LEFT;
+    }
+
+    private boolean usesBottomResize(ResizeHandle handle) {
+        return handle == ResizeHandle.BOTTOM
+                || handle == ResizeHandle.BOTTOM_LEFT
+                || handle == ResizeHandle.BOTTOM_RIGHT;
+    }
+
     private void beginDrag(HudModule module, float worldX, float worldY) {
         Rectangle bounds = module.getHudBounds(viewport);
         draggingElement = module;
         dragOffset.set(worldX - bounds.x, worldY - bounds.y);
         hideSnapLines();
+    }
+
+    private void beginResize(HudModule module, ResizeHandle handle) {
+        resizingElement = module;
+        activeResizeHandle = handle;
+        resizeStartBounds.set(module.getHudBounds(viewport));
+        resizeStartScale = module.getHudScale();
+        hideSnapLines();
+        updateResizeCursor(handle);
     }
 
     private void updateDrag(float worldX, float worldY) {
@@ -584,6 +729,72 @@ public class HudEditor extends GameState implements InputProcessor {
         draggingElement = null;
         hideSnapLines();
         SettingsManager.saveSettings();
+    }
+
+    private void updateResize(float worldX, float worldY) {
+        if (resizingElement == null || activeResizeHandle == ResizeHandle.NONE) {
+            return;
+        }
+
+        float baseWidth = resizeStartBounds.width / resizeStartScale;
+        float baseHeight = resizeStartBounds.height / resizeStartScale;
+        float requestedWidth = switch (activeResizeHandle) {
+            case LEFT, TOP_LEFT, BOTTOM_LEFT -> resizeStartBounds.x + resizeStartBounds.width - worldX;
+            case RIGHT, TOP_RIGHT, BOTTOM_RIGHT -> worldX - resizeStartBounds.x;
+            default -> resizeStartBounds.width;
+        };
+        float requestedHeight = switch (activeResizeHandle) {
+            case BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> resizeStartBounds.y + resizeStartBounds.height - worldY;
+            case TOP, TOP_LEFT, TOP_RIGHT -> worldY - resizeStartBounds.y;
+            default -> resizeStartBounds.height;
+        };
+
+        float requestedScale = resizeStartScale;
+        if (usesHorizontalResize(activeResizeHandle) && baseWidth > 0f) {
+            requestedScale = requestedWidth / baseWidth;
+        }
+        if (usesVerticalResize(activeResizeHandle) && baseHeight > 0f) {
+            float verticalScale = requestedHeight / baseHeight;
+            requestedScale = usesHorizontalResize(activeResizeHandle)
+                    ? Math.min(requestedScale, verticalScale)
+                    : verticalScale;
+        }
+
+        float minScale = Math.max(MIN_RESIZE_DIMENSION / Math.max(1f, baseWidth), MIN_RESIZE_DIMENSION / Math.max(1f, baseHeight));
+        resizingElement.setHudScale(Math.max(minScale, requestedScale));
+
+        Vector2 newSize = resizingElement.getHudSize(viewport);
+        float newX = resizeStartBounds.x;
+        float newY = resizeStartBounds.y;
+
+        if (usesLeftResize(activeResizeHandle)) {
+            newX = resizeStartBounds.x + resizeStartBounds.width - newSize.x;
+        } else if (!usesHorizontalResize(activeResizeHandle)) {
+            newX = resizeStartBounds.x + (resizeStartBounds.width - newSize.x) / 2f;
+        }
+
+        if (usesBottomResize(activeResizeHandle)) {
+            newY = resizeStartBounds.y + resizeStartBounds.height - newSize.y;
+        } else if (!usesVerticalResize(activeResizeHandle)) {
+            newY = resizeStartBounds.y + (resizeStartBounds.height - newSize.y) / 2f;
+        }
+
+        resizingElement.setHudPosition(newX, newY, viewport);
+    }
+
+    private void finishResize() {
+        if (resizingElement == null) {
+            return;
+        }
+        resizingElement = null;
+        activeResizeHandle = ResizeHandle.NONE;
+        updateResizeCursor(ResizeHandle.NONE);
+        SettingsManager.saveSettings();
+    }
+
+    private void finishPointerAction() {
+        finishDrag();
+        finishResize();
     }
 
     private Vector2 applySnapping(HudModule movingModule, float x, float y, Vector2 size) {
@@ -741,7 +952,7 @@ public class HudEditor extends GameState implements InputProcessor {
     }
 
     private void exitEditor() {
-        finishDrag();
+        finishPointerAction();
         SettingsManager.saveSettings();
         Gdx.app.postRunnable(() -> {
             if (returnToGui) {
@@ -833,6 +1044,13 @@ public class HudEditor extends GameState implements InputProcessor {
         }
 
         if (button == Input.Buttons.LEFT) {
+            HudModule resizeTarget = findResizeTargetAt(touchPos.x, touchPos.y);
+            if (resizeTarget != null) {
+                ResizeHandle handle = getResizeHandle(resizeTarget.getHudBounds(viewport), touchPos.x, touchPos.y);
+                beginResize(resizeTarget, handle);
+                return true;
+            }
+
             HudModule target = HudManager.findTopElementAt(touchPos.x, touchPos.y, viewport);
             if (target != null && !target.isHudLocked()) {
                 beginDrag(target, touchPos.x, touchPos.y);
@@ -846,8 +1064,8 @@ public class HudEditor extends GameState implements InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.LEFT && draggingElement != null) {
-            finishDrag();
+        if (button == Input.Buttons.LEFT && (draggingElement != null || resizingElement != null)) {
+            finishPointerAction();
             return true;
         }
         return false;
@@ -855,8 +1073,8 @@ public class HudEditor extends GameState implements InputProcessor {
 
     @Override
     public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.LEFT && draggingElement != null) {
-            finishDrag();
+        if (button == Input.Buttons.LEFT && (draggingElement != null || resizingElement != null)) {
+            finishPointerAction();
             return true;
         }
         return false;
@@ -864,13 +1082,17 @@ public class HudEditor extends GameState implements InputProcessor {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (draggingElement == null || viewport == null) {
+        if ((draggingElement == null && resizingElement == null) || viewport == null) {
             return false;
         }
 
         touchPos.set(screenX, screenY);
         viewport.unproject(touchPos);
-        updateDrag(touchPos.x, touchPos.y);
+        if (resizingElement != null) {
+            updateResize(touchPos.x, touchPos.y);
+        } else {
+            updateDrag(touchPos.x, touchPos.y);
+        }
         return true;
     }
 
