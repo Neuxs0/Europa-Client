@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.utils.FullbrightLighting;
 import finalforeach.cosmicreach.rendering.items.IItemRenderParams;
 import finalforeach.cosmicreach.rendering.items.ItemThingModel;
 import org.spongepowered.asm.mixin.Final;
@@ -16,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemThingModel.class)
 public abstract class ItemThingModelMixin {
-    private static final float FULLBRIGHT_ITEM_BRIGHTNESS = 0.80F;
-
     @Shadow
     @Final
     private static Color tintColor;
@@ -39,9 +38,9 @@ public abstract class ItemThingModelMixin {
     ) {
         if (!isInSlot && Modules.fullbright != null && Modules.fullbright.isEnabled()) {
             tintColor.set(
-                    FULLBRIGHT_ITEM_BRIGHTNESS,
-                    FULLBRIGHT_ITEM_BRIGHTNESS,
-                    FULLBRIGHT_ITEM_BRIGHTNESS,
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
                     1.0F
             );
         }

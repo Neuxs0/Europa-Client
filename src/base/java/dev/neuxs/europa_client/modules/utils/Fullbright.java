@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.modules.utils;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.utils.Chat;
+import dev.neuxs.europa_client.utils.FullbrightLighting;
 
 import java.util.Map;
 
@@ -13,6 +14,7 @@ public class Fullbright extends Module {
 
     public void enable(boolean messaging) {
         setEnabled(true);
+        FullbrightLighting.remeshLoadedChunks();
         if (messaging) {
             Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright enabled");
         }
@@ -20,6 +22,7 @@ public class Fullbright extends Module {
 
     public void disable(boolean messaging) {
         setEnabled(false);
+        FullbrightLighting.remeshLoadedChunks();
         if (messaging) {
             Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Fullbright disabled");
         }

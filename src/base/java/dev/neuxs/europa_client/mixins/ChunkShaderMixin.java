@@ -2,6 +2,7 @@ package dev.neuxs.europa_client.mixins;
 
 import com.badlogic.gdx.graphics.Camera;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.utils.FullbrightLighting;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,9 +15,13 @@ public abstract class ChunkShaderMixin {
     private void europa_client$applyFullbright(Camera worldCamera, CallbackInfo ci) {
         if (Modules.fullbright != null && Modules.fullbright.isEnabled()) {
             ChunkShader shader = (ChunkShader) (Object) this;
-            shader.bindOptionalUniform3f("skyAmbientColor", 0.80F, 0.80F, 0.80F);
+            shader.bindOptionalUniform3f("skyAmbientColor",
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
+                    FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS);
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
+            shader.bindOptionalFloat("u_fullbright", 1.0F);
         }
     }
 }

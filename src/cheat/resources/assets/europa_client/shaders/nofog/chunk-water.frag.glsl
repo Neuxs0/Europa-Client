@@ -10,6 +10,7 @@ uniform vec3 skyColor;
 uniform vec4 tintColor;
 uniform vec3 worldAmbientColor;
 uniform vec3 u_sunDirection;
+uniform float u_fullbright;
 
 #import "base:shaders/common/renderDistance.glsl"
 
@@ -56,6 +57,13 @@ void main()
     vec3 lightTint = max(blocklight.rgb, blocklight.a * skyAmbientColor);
 
     float alpha = mix(texColor.a*2.0, texColor.a*0.5, fresnel);
+
+    if (u_fullbright > 0.5)
+    {
+        float bodyStrength = 0.42 + 0.18 * (1.0 - fresnel);
+        alpha = max(alpha, texColor.a * (1.15 + 0.75 * (1.0 - fresnel)));
+        waterColor = mix(waterColor, vec3(0.22, 0.36, 0.48), bodyStrength);
+    }
 
     if(alpha == 0)
     {
