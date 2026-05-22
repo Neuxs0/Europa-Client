@@ -24,6 +24,7 @@
         "ZoomInGameMixin",
         "ZoomUIMixin",
         "ZoomPlayerControllerMixin",
+        "PlayerControllerMixin",
         "TickRunnerMixin",
         "EndTickPacketMixin",
         "GameSingletonsInterface"

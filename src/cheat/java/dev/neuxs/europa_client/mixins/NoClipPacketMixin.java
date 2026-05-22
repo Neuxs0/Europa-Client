@@ -19,6 +19,10 @@ public abstract class NoClipPacketMixin {
     @Overwrite
     public void handle(NetworkIdentity identity, ChannelHandlerContext ctx) {
         Player player = identity.getPlayer();
+        if (!this.shouldNoClip && Modules.noClip.isEnabled()) {
+            Modules.noClip.setNoClip(player, true);
+            return;
+        }
         Modules.noClip.setNoClip(player, this.shouldNoClip);
     }
 }

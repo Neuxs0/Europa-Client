@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.modules;
 
 import com.badlogic.gdx.Input;
+import dev.neuxs.europa_client.modules.cheats.Fly;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
@@ -26,6 +27,7 @@ public class Modules {
     public static Zoom zoom;
 
     public static NoClip noClip;
+    public static Fly fly;
     public static Speed speed;
     public static Reach reach;
 
@@ -76,6 +78,9 @@ public class Modules {
         // Cheats
         noClip = new NoClip(unknown, false);
         cheatModuleList.add(noClip);
+
+        fly = new Fly(unknown, false);
+        cheatModuleList.add(fly);
 
         speed = new Speed(unknown, false);
         cheatModuleList.add(speed);

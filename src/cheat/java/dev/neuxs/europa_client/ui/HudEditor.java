@@ -37,7 +37,7 @@ public class HudEditor extends GameState implements InputProcessor {
     private static final float CONTEXT_SPACING = 6f;
     private static final float CONTEXT_TITLE_HEIGHT = 22f;
     private static final float CONTEXT_ITEM_HEIGHT = 28f;
-    private static final float RESIZE_EDGE_DISTANCE = 6f;
+    private static final float RESIZE_EDGE_DISTANCE = 4f;
     private static final float MIN_RESIZE_DIMENSION = 12f;
 
     private enum ContextMode {

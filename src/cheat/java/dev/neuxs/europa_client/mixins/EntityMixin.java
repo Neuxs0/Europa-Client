@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @SuppressWarnings({"DuplicatedCode", "unused", "ConstantConditions"})
 @Mixin(GameEntity.class)
 public abstract class EntityMixin {
+    private float europa_client$positionDeltaTime;
+
     @Inject(method = "renderModelAfterMatrixSet", at = @At("HEAD"))
     private void europa_client$applyFullbrightEntityLighting(Camera worldCamera, boolean shouldRender, CallbackInfo ci) {
         if (Modules.fullbright != null && Modules.fullbright.isEnabled()) {
@@ -26,6 +28,15 @@ public abstract class EntityMixin {
                     FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS,
                     1.0F
             );
+        }
+    }
+
+    @Inject(method = "updatePositions", at = @At("HEAD"))
+    private void europa_client$capturePositionDeltaTime(Zone zone, float deltaTime, CallbackInfo ci) {
+        this.europa_client$positionDeltaTime = deltaTime;
+        GameEntity self = (GameEntity) (Object) this;
+        if (Modules.fly != null && Modules.fly.isActiveFor(self)) {
+            Modules.fly.prepare(InGame.getLocalPlayer());
         }
     }
 
@@ -49,6 +60,10 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffX(float x) {
         GameEntity self = (GameEntity) (Object) this;
+        if (Modules.fly != null && Modules.fly.isActiveFor(self)) {
+            return Modules.fly.getPositionDeltaX(self, europa_client$positionDeltaTime);
+        }
+
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();
@@ -70,6 +85,10 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffY(float y) {
         GameEntity self = (GameEntity) (Object) this;
+        if (Modules.fly != null && Modules.fly.isActiveFor(self)) {
+            return Modules.fly.getPositionDeltaY(self, europa_client$positionDeltaTime);
+        }
+
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();
@@ -88,6 +107,10 @@ public abstract class EntityMixin {
     )
     private float modifyPosDiffZ(float z) {
         GameEntity self = (GameEntity) (Object) this;
+        if (Modules.fly != null && Modules.fly.isActiveFor(self)) {
+            return Modules.fly.getPositionDeltaZ(self, europa_client$positionDeltaTime);
+        }
+
         float modifier = 1.0F;
         if (self.isNoClip()) {
             modifier *= Modules.noClip.getSpeed();
