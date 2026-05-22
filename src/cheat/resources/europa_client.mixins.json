@@ -13,6 +13,7 @@
         "NettyClientIdentifierMixin",
         "NoClipPacketMixin",
         "BlockRaycastsMixin",
+        "EntityRaycastsMixin",
         "GamePacketLoggingMixin",
         "NettyPacketHandlerMixin",
         "InGameUIHotbarMixin",
