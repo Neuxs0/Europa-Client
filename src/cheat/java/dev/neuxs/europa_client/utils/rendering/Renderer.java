@@ -37,6 +37,9 @@ public abstract class Renderer {
 
     private final Vector3 pos = new Vector3(0f, 0f, 0f);
     private final Vector2 size = new Vector2(0f, 0f);
+    private final Vector2 clipPos = new Vector2();
+    private final Vector2 clipSize = new Vector2();
+    private boolean clipEnabled = false;
 
     private Color fillColor = ColorUtils.color(0, 0, 0, 255);
 
@@ -284,7 +287,22 @@ public abstract class Renderer {
                 y >= this.pos.y && y <= this.pos.y + this.size.y;
     }
     public boolean blocksMouseAt(float x, float y) {
-        return containsPoint(x, y);
+        return containsPoint(x, y) && isInsideClip(x, y);
+    }
+    public boolean hasClipBounds() {
+        return clipEnabled;
+    }
+    public float getClipX() {
+        return clipPos.x;
+    }
+    public float getClipY() {
+        return clipPos.y;
+    }
+    public float getClipWidth() {
+        return clipSize.x;
+    }
+    public float getClipHeight() {
+        return clipSize.y;
     }
     public boolean isMouseTarget() {
         return mouseTarget == this;
@@ -424,6 +442,14 @@ public abstract class Renderer {
     public void setTextColor(Color color) {
         if (color != null) this.textColor = color.cpy();
     }
+    public void setClipBounds(float x, float y, float width, float height) {
+        clipPos.set(x, y);
+        clipSize.set(Math.max(0f, width), Math.max(0f, height));
+        clipEnabled = true;
+    }
+    public void clearClipBounds() {
+        clipEnabled = false;
+    }
 
     public void setToggleEnabled(boolean enabled) {
         if (enabled != this.toggleEnabled) this.toggleEnabled = enabled;
@@ -449,5 +475,10 @@ public abstract class Renderer {
     }
     public void setOnHoverExit(Consumer<Renderer> onHoverExit) {
         this.onHoverExit = onHoverExit;
+    }
+
+    private boolean isInsideClip(float x, float y) {
+        return !clipEnabled || (x >= clipPos.x && x <= clipPos.x + clipSize.x
+                && y >= clipPos.y && y <= clipPos.y + clipSize.y);
     }
 }

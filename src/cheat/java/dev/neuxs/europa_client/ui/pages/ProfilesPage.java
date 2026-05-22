@@ -93,6 +93,7 @@ public class ProfilesPage extends Page implements InputProcessor {
         profileDropdown.setSize(dropdownWidth, inputHeight);
         profileDropdown.setPosition(pageDim.x + padding, currentY);
         profileDropdown.setZIndex(40);
+        profileDropdown.setVerticalBounds(pageDim.y, pageDim.y + pageDim.w);
 
         profileNameInput.setSize(nameWidth, inputHeight);
         profileNameInput.setPosition(pageDim.x + padding + dropdownWidth + elementSpacing, currentY);

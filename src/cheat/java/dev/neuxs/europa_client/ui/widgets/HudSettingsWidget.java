@@ -377,6 +377,7 @@ public class HudSettingsWidget {
             } else if (dropdown != null) {
                 dropdown.setSize(controlWidth, inputHeight);
                 dropdown.setPosition(controlX, controlY);
+                dropdown.setVerticalBounds(HudSettingsWidget.this.y, HudSettingsWidget.this.y + HudSettingsWidget.this.height);
             } else if (textInput != null) {
                 textInput.setSize(controlWidth, inputHeight);
                 textInput.setPosition(controlX, controlY);

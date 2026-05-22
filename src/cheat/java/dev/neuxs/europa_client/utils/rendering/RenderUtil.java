@@ -45,6 +45,14 @@ public class RenderUtil implements Disposable {
         SdfRenderer.get().setProjectionMatrix(projectionMatrix);
 
         for (Renderer element : renderers) {
+            if (element.hasClipBounds()) {
+                endBatch(currentBatchType);
+                renderClippedElement(element, projectionMatrix, viewport);
+                currentBatchType = RenderType.NONE;
+                currentShapeType = null;
+                continue;
+            }
+
             RenderType requiredType = element.getRenderType();
             ShapeRenderer.ShapeType requiredShapeType = element.getShapeType();
 
@@ -121,6 +129,63 @@ public class RenderUtil implements Disposable {
             return RenderType.NONE;
         }
         return RenderType.NONE;
+    }
+
+    private void renderClippedElement(Renderer element, Matrix4 projectionMatrix, Viewport viewport) {
+        if (!enableClip(element, viewport)) {
+            return;
+        }
+
+        RenderType currentType = RenderType.NONE;
+        try {
+            RenderType requiredType = element.getRenderType();
+            ShapeRenderer.ShapeType requiredShapeType = element.getShapeType();
+
+            if (requiredType == RenderType.SHAPE) {
+                currentType = beginBatch(RenderType.SHAPE, requiredShapeType, projectionMatrix);
+                element.renderShape(viewport, shapeRenderer);
+            } else if (requiredType == RenderType.SPRITE) {
+                currentType = beginBatch(RenderType.SPRITE, requiredShapeType, projectionMatrix);
+                element.renderSprite(viewport, spriteBatch, glyphLayout);
+            } else if (requiredType == RenderType.SHAPE_SPRITE) {
+                currentType = beginBatch(RenderType.SHAPE, requiredShapeType, projectionMatrix);
+                element.renderShape(viewport, shapeRenderer);
+                endBatch(currentType);
+                currentType = beginBatch(RenderType.SPRITE, requiredShapeType, projectionMatrix);
+                element.renderSprite(viewport, spriteBatch, glyphLayout);
+            } else {
+                Client.LOGGER.error("Cannot render {}: Unknown RenderType", element.getClass().getSimpleName());
+            }
+        } finally {
+            endBatch(currentType);
+            Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+        }
+    }
+
+    private boolean enableClip(Renderer element, Viewport viewport) {
+        if (viewport == null || element.getClipWidth() <= 0f || element.getClipHeight() <= 0f) {
+            return false;
+        }
+
+        Vector2 bottomLeft = new Vector2(element.getClipX(), element.getClipY());
+        Vector2 topRight = new Vector2(
+                element.getClipX() + element.getClipWidth(),
+                element.getClipY() + element.getClipHeight()
+        );
+        viewport.project(bottomLeft);
+        viewport.project(topRight);
+
+        int x = Math.round(Math.min(bottomLeft.x, topRight.x));
+        int y = Math.round(Math.min(bottomLeft.y, topRight.y));
+        int width = Math.round(Math.abs(topRight.x - bottomLeft.x));
+        int height = Math.round(Math.abs(topRight.y - bottomLeft.y));
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+
+        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+        Gdx.gl.glScissor(x, y, width, height);
+        return true;
     }
 
     private void endBatch(RenderType type) {

@@ -45,6 +45,8 @@ public class Dropdown extends Renderer {
     private int hoveredOptionIndex;
     private float padding;
     private Consumer<String> onSelectionChanged;
+    private Float minPanelY;
+    private Float maxPanelY;
 
     private Color hoverFillColor;
     private Color pressedFillColor;
@@ -71,6 +73,8 @@ public class Dropdown extends Renderer {
         this.hoveredOptionIndex = -1;
         this.padding = 5f;
         this.onSelectionChanged = (selected) -> {};
+        this.minPanelY = null;
+        this.maxPanelY = null;
 
         this.hoverFillColor = DEFAULT_HOVER_FILL_COLOR.cpy();
         this.pressedFillColor = DEFAULT_PRESSED_FILL_COLOR.cpy();
@@ -243,14 +247,22 @@ public class Dropdown extends Renderer {
     private void syncPanelRenderer(int optionCount) {
         float overlap = getPanelOverlap();
         float optionHeight = getOptionHeight();
+        boolean upwards = opensUpwards(optionCount);
 
-        panelRenderer.setPos(getPosX(), getPosY() - optionHeight * optionCount);
+        panelRenderer.setPos(
+                getPosX(),
+                upwards ? getPosY() + getHeight() - overlap : getPosY() - optionHeight * optionCount
+        );
         panelRenderer.setSize(getWidth(), optionHeight * optionCount + overlap);
         panelRenderer.setFillColor(getFillColor());
         panelRenderer.setBorder(isBorder());
         panelRenderer.setBorderWidth(getBorderWidth());
         panelRenderer.setBorderRadius(getBorderRadius());
         panelRenderer.setBorderColor(getBorderColor());
+        panelRenderer.setTopLeftRounded(upwards);
+        panelRenderer.setTopRightRounded(upwards);
+        panelRenderer.setBottomLeftRounded(!upwards);
+        panelRenderer.setBottomRightRounded(!upwards);
     }
 
     private void syncOptionRenderer(int index, int optionCount) {
@@ -267,18 +279,19 @@ public class Dropdown extends Renderer {
             optionHeight = Math.max(0f, optionHeight - borderInset);
         }
 
-        boolean bottomOption = index == optionCount - 1;
+        boolean upwards = opensUpwards(optionCount);
+        boolean roundedOption = index == optionCount - 1;
         optionRenderer.setPos(getOptionX() + borderInset, optionY);
         optionRenderer.setSize(Math.max(0f, getOptionWidth() - borderInset * 2f), optionHeight);
         optionRenderer.setFillColor(optionHoverFillColor);
         optionRenderer.setBorder(false);
         optionRenderer.setBorderWidth(0f);
-        optionRenderer.setBorderRadius(bottomOption ? Math.max(0f, getBorderRadius() - borderInset) : 0f);
+        optionRenderer.setBorderRadius(roundedOption ? Math.max(0f, getBorderRadius() - borderInset) : 0f);
         optionRenderer.setBorderColor(getBorderColor());
-        optionRenderer.setTopLeftRounded(false);
-        optionRenderer.setTopRightRounded(false);
-        optionRenderer.setBottomLeftRounded(bottomOption);
-        optionRenderer.setBottomRightRounded(bottomOption);
+        optionRenderer.setTopLeftRounded(upwards && roundedOption);
+        optionRenderer.setTopRightRounded(upwards && roundedOption);
+        optionRenderer.setBottomLeftRounded(!upwards && roundedOption);
+        optionRenderer.setBottomRightRounded(!upwards && roundedOption);
     }
 
     private void renderText(Viewport viewport, SpriteBatch spriteBatch, GlyphLayout glyphLayout, String text, float x, float y, float width, float height, boolean placeholder) {
@@ -321,11 +334,34 @@ public class Dropdown extends Renderer {
     }
 
     private float getOptionY(int index) {
+        int visibleOptionCount = getVisibleOptions().size();
+        if (opensUpwards(visibleOptionCount)) {
+            return getPosY() + getHeight() + getOptionHeight() * index;
+        }
+
         return getPosY() - getOptionHeight() * (index + 1);
     }
 
     private float getPanelOverlap() {
         return Math.min(PANEL_OVERLAP, Math.max(0f, getHeight()));
+    }
+
+    private boolean opensUpwards(int optionCount) {
+        if (optionCount <= 0 || minPanelY == null || maxPanelY == null) {
+            return false;
+        }
+
+        float panelHeight = getOptionHeight() * optionCount + getPanelOverlap();
+        float downwardY = getPosY() - getOptionHeight() * optionCount;
+        float upwardY = getPosY() + getHeight() - getPanelOverlap();
+        boolean downwardFits = downwardY >= minPanelY;
+        boolean upwardFits = upwardY + panelHeight <= maxPanelY;
+
+        if (downwardFits) {
+            return false;
+        }
+
+        return upwardFits || getPosY() - minPanelY < maxPanelY - (getPosY() + getHeight());
     }
 
     private void selectOption(int index, boolean triggerCallback) {
@@ -452,6 +488,16 @@ public class Dropdown extends Renderer {
 
     public void setPadding(float padding) {
         this.padding = Math.max(0f, padding);
+    }
+
+    public void setVerticalBounds(float minY, float maxY) {
+        this.minPanelY = Math.min(minY, maxY);
+        this.maxPanelY = Math.max(minY, maxY);
+    }
+
+    public void clearVerticalBounds() {
+        this.minPanelY = null;
+        this.maxPanelY = null;
     }
 
     public void setOpen(boolean open) {

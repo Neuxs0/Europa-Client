@@ -280,6 +280,14 @@ public class InputManager extends InputAdapter {
     }
     @Override
     public boolean scrolled(float amountX, float amountY) {
+        GameState currentState = GameState.currentGameState;
+        if (currentState instanceof GUI) {
+            Object currentPage = ((GUI) currentState).getCurrentPage();
+            if (currentPage instanceof InputProcessor inputProcessor && inputProcessor.scrolled(amountX, amountY)) {
+                return true;
+            }
+        }
+
         Stage currentStage = getCurrentStage();
         if (currentStage != null) {
             return currentStage.scrolled(amountX, amountY);

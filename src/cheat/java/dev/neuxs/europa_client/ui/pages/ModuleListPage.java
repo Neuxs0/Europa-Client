@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.ui.pages;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
@@ -16,6 +17,7 @@ import dev.neuxs.europa_client.utils.rendering.Renderer;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import dev.neuxs.europa_client.utils.rendering.ui.Dropdown;
+import dev.neuxs.europa_client.utils.rendering.ui.ScrollState;
 import dev.neuxs.europa_client.utils.rendering.ui.Slider;
 import dev.neuxs.europa_client.utils.rendering.ui.TextInput;
 import dev.neuxs.europa_client.utils.rendering.ui.Toggle;
@@ -44,10 +46,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     private final TextInput searchInput = new TextInput();
     private final Dropdown sortDropdown = new Dropdown();
     private final Vector2 touchPos = new Vector2();
+    private final ScrollState scrollState = new ScrollState();
     private final List<ModuleEntry> moduleEntries = new ArrayList<>();
     private final List<ModuleEntry> filteredAndSortedEntries = new ArrayList<>();
-    private final TextRenderer leftClickText = new TextRenderer();
-    private final TextRenderer rightClickText = new TextRenderer();
     private RenderUtil renderUtil;
     private Viewport viewport;
     private boolean renderersAdded = false;
@@ -105,12 +106,6 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             moduleEntries.add(new ModuleEntry(module));
         }
 
-        leftClickText.setText("Left click to toggle");
-        leftClickText.setFillColor(ColorUtils.color(255, 255, 255, 255));
-
-        rightClickText.setText("Right click to expand");
-        rightClickText.setFillColor(ColorUtils.color(255, 255, 255, 255));
-
         resize(width, height);
         applyFiltersAndSort();
     }
@@ -131,11 +126,9 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         currentX += searchWidth + elementSpacing;
         sortDropdown.setPosition(currentX, currentY);
         sortDropdown.setZIndex(20);
+        sortDropdown.setVerticalBounds(pageDim.y, pageDim.y + pageDim.w);
 
         repositionEntries();
-
-        leftClickText.setPos(pageDim.x + padding, pageDim.y + padding);
-        rightClickText.setPos(pageDim.x + pageDim.z - padding - rightClickText.getTextWidth(viewport), pageDim.y + padding);
     }
 
     @Override
@@ -148,8 +141,6 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             entry.addRenderers(renderUtil);
         }
         renderUtil.addRenderer(sortDropdown);
-        renderUtil.addRenderer(leftClickText);
-        renderUtil.addRenderer(rightClickText);
     }
 
     @Override
@@ -161,8 +152,6 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         for (ModuleEntry entry : filteredAndSortedEntries) {
             entry.removeRenderers(renderUtil);
         }
-        renderUtil.removeRenderer(leftClickText);
-        renderUtil.removeRenderer(rightClickText);
     }
 
     @Override
@@ -188,11 +177,25 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     private void repositionEntries() {
-        float gridWidth = pageDim.z - padding * 2f;
+        float scrollTop = pageDim.y + pageDim.w - padding - topBarHeight - elementSpacing;
+        float scrollBottom = pageDim.y + padding;
+        scrollState.setViewport(
+                pageDim.x + padding,
+                scrollBottom,
+                pageDim.z - padding * 2f,
+                Math.max(0f, scrollTop - scrollBottom)
+        );
+
+        float gridWidth = scrollState.getViewportWidth();
         float moduleWidth = (gridWidth - elementSpacing) / 2f;
-        float leftX = pageDim.x + padding;
+        float leftX = scrollState.getViewportX();
         float rightX = leftX + moduleWidth + elementSpacing;
-        float leftY = pageDim.y + pageDim.w - padding - topBarHeight - elementSpacing - moduleButtonHeight;
+        scrollState.setContentHeight(getModuleContentHeight());
+
+        float leftY = scrollState.getViewportY()
+                + scrollState.getViewportHeight()
+                + scrollState.getOffset()
+                - moduleButtonHeight;
         float rightY = leftY;
 
         for (ModuleEntry entry : filteredAndSortedEntries) {
@@ -200,13 +203,29 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             float x = useLeftColumn ? leftX : rightX;
             float y = useLeftColumn ? leftY : rightY;
             entry.layout(x, y, moduleWidth);
-            float nextY = y - entry.getHeight() - elementSpacing;
+            float nextY = y - entry.getLayoutHeight() - elementSpacing;
             if (useLeftColumn) {
                 leftY = nextY;
             } else {
                 rightY = nextY;
             }
         }
+    }
+
+    private float getModuleContentHeight() {
+        float leftHeight = 0f;
+        float rightHeight = 0f;
+
+        for (ModuleEntry entry : filteredAndSortedEntries) {
+            float entryHeight = entry.getLayoutHeight();
+            if (leftHeight <= rightHeight) {
+                leftHeight += entryHeight + elementSpacing;
+            } else {
+                rightHeight += entryHeight + elementSpacing;
+            }
+        }
+
+        return Math.max(0f, Math.max(leftHeight, rightHeight) - elementSpacing);
     }
 
     private void initializeSortMap() {
@@ -406,8 +425,20 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     @Override public boolean mouseMoved(int i, int i1) {
         return false;
     }
-    @Override public boolean scrolled(float v, float v1) {
-        return false;
+    @Override public boolean scrolled(float amountX, float amountY) {
+        if (viewport == null) {
+            return false;
+        }
+
+        touchPos.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(touchPos);
+        if (!scrollState.contains(touchPos.x, touchPos.y) || scrollState.getMaxOffset() <= 0f) {
+            return false;
+        }
+
+        scrollState.scroll(amountY);
+        repositionEntries();
+        return true;
     }
 
     private void clearTextFocusExcept(ModuleEntry activeEntry) {
@@ -519,6 +550,12 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             button.setSize(width, moduleButtonHeight);
             button.setPos(x, y);
             button.setZIndex(5);
+            button.setClipBounds(
+                    scrollState.getViewportX(),
+                    scrollState.getViewportY(),
+                    scrollState.getViewportWidth(),
+                    scrollState.getViewportHeight()
+            );
 
             height = moduleButtonHeight;
             if (!expanded) {
@@ -530,6 +567,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             float rowX = x + expandedPadding;
             float rowWidth = Math.max(0f, width - expandedPadding * 2f);
 
+            setExpandedClipBounds();
             settingsBox.setPos(x, settingsY);
             settingsBox.setSize(width, settingsHeight + expandedBoxOverlap);
 
@@ -567,6 +605,10 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             return height;
         }
 
+        private float getLayoutHeight() {
+            return expanded ? moduleButtonHeight + getSettingsBoxHeight() : moduleButtonHeight;
+        }
+
         private void addRenderers(RenderUtil renderUtil) {
             renderUtil.addRenderer(button);
             syncExpandedRenderers(renderUtil);
@@ -597,7 +639,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         }
 
         private boolean handleTouchDown(float worldX, float worldY, int button) {
-            if (!expanded) {
+            if (!expanded || !scrollState.contains(worldX, worldY)) {
                 return false;
             }
             if (keybindRow.handleTouchDown(worldX, worldY, button)) {
@@ -665,6 +707,17 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             return expandedPadding * 2f
                     + rowCount * settingRowHeight
                     + Math.max(0, rowCount - 1) * elementSpacing;
+        }
+
+        private void setExpandedClipBounds() {
+            for (Renderer renderer : expandedRenderers) {
+                renderer.setClipBounds(
+                        scrollState.getViewportX(),
+                        scrollState.getViewportY(),
+                        scrollState.getViewportWidth(),
+                        scrollState.getViewportHeight()
+                );
+            }
         }
     }
 
@@ -929,6 +982,10 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             } else if (dropdown != null) {
                 dropdown.setSize(controlWidth, topBarHeight);
                 dropdown.setPosition(controlX, y + (height - topBarHeight) / 2f);
+                dropdown.setVerticalBounds(
+                        scrollState.getViewportY(),
+                        scrollState.getViewportY() + scrollState.getViewportHeight()
+                );
             } else if (textInput != null) {
                 textInput.setSize(controlWidth, topBarHeight);
                 textInput.setPosition(controlX, y + (height - topBarHeight) / 2f);

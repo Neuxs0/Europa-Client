@@ -540,6 +540,7 @@ public class SettingsPage extends Page implements InputProcessor {
             } else if (dropdown != null) {
                 dropdown.setSize(controlWidth, inputHeight);
                 dropdown.setPosition(controlX, y + (height - inputHeight) / 2f);
+                dropdown.setVerticalBounds(pageDim.y, pageDim.y + pageDim.w);
             } else if (textInput != null) {
                 textInput.setSize(controlWidth, inputHeight);
                 textInput.setPosition(controlX, y + (height - inputHeight) / 2f);
