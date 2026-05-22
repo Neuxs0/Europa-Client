@@ -70,6 +70,14 @@
             - Aliases: None
             - Description: Sets settings
             - Settings: <a href="./MODULES.md#reach">See here for settings</a>
+- **HClip**
+    - Usage: #hclip \<distance>
+    - Aliases: #hc
+    - Description: Clips horizontally by the provided distance
+- **VClip**
+    - Usage: #vclip \<distance>
+    - Aliases: #vc
+    - Description: Clips vertically by the provided distance
 
 ## No-Cheat Client
 ### Misc

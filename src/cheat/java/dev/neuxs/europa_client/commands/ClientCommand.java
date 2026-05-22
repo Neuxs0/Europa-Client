@@ -21,4 +21,8 @@ public abstract class ClientCommand {
     protected String commandPrefix() {
         return ClientSettings.getCommandPrefix();
     }
+
+    protected float parseFloatArg(String arg) {
+        return Float.parseFloat(arg.trim().replace(',', '.'));
+    }
 }

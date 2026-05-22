@@ -18,7 +18,7 @@ public class SpeedCommand extends ClientCommand {
                 args[2].equalsIgnoreCase("speed")) {
 
             try {
-                float speedValue = Float.parseFloat(args[3].trim());
+                float speedValue = parseFloatArg(args[3]);
 
                 if (Float.isNaN(speedValue) || Float.isInfinite(speedValue)) {
                     Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid speed value, please provide a finite number.");

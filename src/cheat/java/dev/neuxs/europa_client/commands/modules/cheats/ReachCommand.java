@@ -18,7 +18,7 @@ public class ReachCommand extends ClientCommand {
                 args[2].equalsIgnoreCase("distance")) {
 
             try {
-                float reachValue = Float.parseFloat(args[3].trim());
+                float reachValue = parseFloatArg(args[3]);
 
                 if (Float.isNaN(reachValue) || Float.isInfinite(reachValue)) {
                     Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid distance value, please provide a finite number.");
