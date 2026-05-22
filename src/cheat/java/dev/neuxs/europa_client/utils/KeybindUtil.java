@@ -114,6 +114,20 @@ public final class KeybindUtil {
         return true;
     }
 
+    public static boolean isPressed(String keybind) {
+        List<Integer> keys = parse(keybind);
+        if (keys.isEmpty() || !modifiersMatch(keys)) {
+            return false;
+        }
+
+        for (int key : keys) {
+            if (!Gdx.input.isKeyPressed(key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static Set<Integer> captureCurrentCombination(int keycode) {
         LinkedHashSet<Integer> keys = new LinkedHashSet<>();
         for (int modifier : MODIFIER_KEYS) {

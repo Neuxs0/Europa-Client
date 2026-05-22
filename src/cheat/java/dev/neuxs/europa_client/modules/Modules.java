@@ -14,6 +14,7 @@ import dev.neuxs.europa_client.modules.ui.VelocityHud;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
 import dev.neuxs.europa_client.modules.utils.NoFog;
 import dev.neuxs.europa_client.modules.utils.PacketInspector;
+import dev.neuxs.europa_client.modules.utils.Zoom;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class Modules {
     public static Fullbright fullbright;
     public static NoFog noFog;
     public static PacketInspector packetInspector;
+    public static Zoom zoom;
 
     public static NoClip noClip;
     public static Speed speed;
@@ -65,6 +67,9 @@ public class Modules {
 
         packetInspector = new PacketInspector(unknown, false);
         utilModuleList.add(packetInspector);
+
+        zoom = new Zoom(unknown, false);
+        utilModuleList.add(zoom);
 
         moduleList.addAll(utilModuleList);
 

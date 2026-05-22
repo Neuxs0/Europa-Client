@@ -21,6 +21,9 @@
         "GamePacketLoggingMixin",
         "NettyPacketHandlerMixin",
         "InGameUIHotbarMixin",
+        "ZoomInGameMixin",
+        "ZoomUIMixin",
+        "ZoomPlayerControllerMixin",
         "TickRunnerMixin",
         "EndTickPacketMixin",
         "GameSingletonsInterface"

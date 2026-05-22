@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.ui.GUI;
 import dev.neuxs.europa_client.utils.KeybindUtil;
 import finalforeach.cosmicreach.gamestates.ChatMenu;
@@ -308,10 +309,41 @@ public class InputManager extends InputAdapter {
 
         for (Module module : Modules.moduleList) {
             String keybind = module.getKeybindCombo();
+            if (module == Modules.zoom) {
+                updateHeldZoomKeybind(keybind);
+                continue;
+            }
             if (KeybindUtil.isActive(keybind)) {
                 Client.LOGGER.debug("Module keybind pressed: {} for {}", KeybindUtil.format(keybind), module.getId());
                 module.toggle(true);
             }
+        }
+    }
+
+    private void updateHeldZoomKeybind(String keybind) {
+        if (Modules.zoom == null) {
+            return;
+        }
+
+        boolean shouldZoom = KeybindUtil.isPressed(keybind);
+        if (shouldZoom == Modules.zoom.isEnabled()) {
+            return;
+        }
+
+        Client.LOGGER.debug("Zoom keybind {}: {}", shouldZoom ? "held" : "released", KeybindUtil.format(keybind));
+        boolean previousAutoSave = SettingsManager.isAutoSaveEnabled();
+        SettingsManager.setAutoSaveEnabled(false);
+        try {
+            if (shouldZoom) {
+                Modules.zoom.enable(true);
+            } else {
+                Modules.zoom.disable(true);
+            }
+        } finally {
+            SettingsManager.setAutoSaveEnabled(previousAutoSave);
+        }
+        if (!shouldZoom && previousAutoSave && Modules.zoom.shouldPersistZoomAmount()) {
+            SettingsManager.saveSettings();
         }
     }
 
