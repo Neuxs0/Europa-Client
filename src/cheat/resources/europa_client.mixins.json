@@ -6,6 +6,7 @@
     "mixins": [
         "UIMixin",
         "InGameMixin",
+        "ChunkShaderMixin",
         "EntityMixin",
         "BlockSelectionMixin",
         "ChatMenuMixin",
