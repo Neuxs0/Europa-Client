@@ -14,7 +14,7 @@ public abstract class ChunkShaderMixin {
     private void europa_client$applyFullbright(Camera worldCamera, CallbackInfo ci) {
         if (Modules.fullbright != null && Modules.fullbright.isEnabled()) {
             ChunkShader shader = (ChunkShader) (Object) this;
-            shader.bindOptionalUniform3f("skyAmbientColor", 0.55F, 0.55F, 0.55F);
+            shader.bindOptionalUniform3f("skyAmbientColor", 0.80F, 0.80F, 0.80F);
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
         }
