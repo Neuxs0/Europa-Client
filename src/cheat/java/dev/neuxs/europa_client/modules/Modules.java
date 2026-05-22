@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
+import dev.neuxs.europa_client.modules.ui.ConnectedServerHud;
 import dev.neuxs.europa_client.modules.ui.FpsCounter;
 import dev.neuxs.europa_client.modules.ui.PingCounter;
 import dev.neuxs.europa_client.modules.ui.TpsCounter;
@@ -28,6 +29,7 @@ public class Modules {
     public static FpsCounter fpsCounter;
     public static TpsCounter tpsCounter;
     public static PingCounter pingCounter;
+    public static ConnectedServerHud connectedServerHud;
     public static VanillaHotbarHud vanillaHotbar;
     public static VanillaHealthbarHud vanillaHealthbar;
 
@@ -91,6 +93,9 @@ public class Modules {
 
         pingCounter = new PingCounter(unknown, false);
         uiModuleList.add(pingCounter);
+
+        connectedServerHud = new ConnectedServerHud(unknown, false);
+        uiModuleList.add(connectedServerHud);
 
         moduleList.addAll(uiModuleList);
     }

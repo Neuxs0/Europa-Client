@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.modules.ui;
 import finalforeach.cosmicreach.networking.client.ClientNetworkManager;
 import finalforeach.cosmicreach.singletons.GameSingletons;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -24,6 +25,8 @@ public final class PingTracker {
 
     private static volatile String host;
     private static volatile int port = DEFAULT_PORT;
+    private static volatile String textDisplayAddress;
+    private static volatile String numericDisplayAddress;
     private static volatile long lastRemotePingSampleNanos = Long.MIN_VALUE;
     private static volatile long lastRemoteProbeNanos = Long.MIN_VALUE;
     private static volatile long localTickStartNanos = Long.MIN_VALUE;
@@ -40,11 +43,13 @@ public final class PingTracker {
             clearTarget();
             return;
         }
+        textDisplayAddress = formatTypedDisplayAddress(address, target);
         setTarget(target.host, target.port);
     }
 
     public static void setTarget(SocketAddress address) {
         if (address instanceof InetSocketAddress inetSocketAddress) {
+            numericDisplayAddress = formatSocketDisplayAddress(inetSocketAddress);
             setTarget(inetSocketAddress.getHostString(), inetSocketAddress.getPort());
         }
     }
@@ -52,12 +57,39 @@ public final class PingTracker {
     public static void clearTarget() {
         host = null;
         port = DEFAULT_PORT;
+        textDisplayAddress = null;
+        numericDisplayAddress = null;
         lastRemotePingSampleNanos = Long.MIN_VALUE;
         lastRemoteProbeNanos = Long.MIN_VALUE;
         localTickStartNanos = Long.MIN_VALUE;
         lastLocalPingSampleNanos = Long.MIN_VALUE;
         lastLocalPingMillis = -1L;
         lastPingMillis = -1L;
+    }
+
+    public static String getConnectedServerDisplayAddress() {
+        if (isLocalHostMode()) {
+            return "Singleplayer";
+        }
+
+        refreshTargetFromConnectedClient();
+
+        String typedAddress = textDisplayAddress;
+        if (typedAddress != null && !typedAddress.isBlank()) {
+            return typedAddress;
+        }
+
+        String numericAddress = numericDisplayAddress;
+        if (numericAddress != null && !numericAddress.isBlank()) {
+            return numericAddress;
+        }
+
+        String currentHost = host;
+        if (currentHost == null || currentHost.isBlank()) {
+            return null;
+        }
+
+        return formatHostAndPort(currentHost, port, true);
     }
 
     public static Snapshot getSnapshot() {
@@ -224,7 +256,9 @@ public final class PingTracker {
         String parsedHost = trimmed;
 
         int separatorIndex = trimmed.lastIndexOf(':');
-        if (separatorIndex > 0 && separatorIndex < trimmed.length() - 1 && trimmed.indexOf(']') < separatorIndex) {
+        boolean bracketedPort = trimmed.lastIndexOf(']') >= 0 && trimmed.lastIndexOf(']') < separatorIndex;
+        boolean singleColonPort = trimmed.indexOf(':') == separatorIndex;
+        if (separatorIndex > 0 && separatorIndex < trimmed.length() - 1 && (bracketedPort || singleColonPort)) {
             String rawPort = trimmed.substring(separatorIndex + 1);
             try {
                 parsedPort = Integer.parseInt(rawPort);
@@ -239,6 +273,55 @@ public final class PingTracker {
         }
 
         return new Target(parsedHost, parsedPort);
+    }
+
+    private static String formatTypedDisplayAddress(String address, Target target) {
+        if (address == null) {
+            return null;
+        }
+
+        String trimmed = address.trim();
+        if (trimmed.isBlank()) {
+            return null;
+        }
+
+        boolean hasExplicitPort = target.port != DEFAULT_PORT || typedAddressHasPort(trimmed);
+        return formatHostAndPort(target.host, target.port, hasExplicitPort);
+    }
+
+    private static boolean typedAddressHasPort(String address) {
+        int closingBracketIndex = address.lastIndexOf(']');
+        int separatorIndex = address.lastIndexOf(':');
+        if (separatorIndex <= 0 || separatorIndex >= address.length() - 1) {
+            return false;
+        }
+        if (closingBracketIndex >= 0) {
+            return closingBracketIndex < separatorIndex;
+        }
+
+        return address.indexOf(':') == separatorIndex;
+    }
+
+    private static String formatSocketDisplayAddress(InetSocketAddress address) {
+        InetAddress inetAddress = address.getAddress();
+        String addressText = inetAddress == null ? address.getHostString() : inetAddress.getHostAddress();
+        return formatHostAndPort(addressText, address.getPort(), true);
+    }
+
+    private static String formatHostAndPort(String targetHost, int targetPort, boolean includePort) {
+        if (targetHost == null || targetHost.isBlank()) {
+            return null;
+        }
+
+        String displayHost = targetHost.trim();
+        if (!includePort || targetPort <= 0) {
+            return displayHost;
+        }
+
+        if (displayHost.indexOf(':') >= 0 && !(displayHost.startsWith("[") && displayHost.endsWith("]"))) {
+            displayHost = "[" + displayHost + "]";
+        }
+        return displayHost + ":" + targetPort;
     }
 
     private record Target(String host, int port) {
