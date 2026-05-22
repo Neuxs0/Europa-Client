@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.utils.KeybindUtil;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @SuppressWarnings({"unused", "rawtypes"})
@@ -22,7 +23,7 @@ public abstract class Module {
         this.id = id;
         this.enabled = new Setting<>("enabled", defaultEnabled);
         this.keybind = new Setting<>("keybind", KeybindUtil.fromSingleKey(defaultKeybind));
-        this.customSettings = new HashMap<>();
+        this.customSettings = new LinkedHashMap<>();
         this.customSettings.put("notifications", new Setting<>("notifications", defaultNotifications)
                 .withDisplayName("Notifications")
                 .withDescription("Show enabled and disabled messages for this module"));

@@ -2,6 +2,7 @@ package dev.neuxs.europa_client.modules;
 
 import dev.neuxs.europa_client.settings.Setting;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @SuppressWarnings({"unused", "rawtypes"})
@@ -15,7 +16,7 @@ public abstract class Module {
         this.id = id;
         this.enabled = new Setting<>("enabled", defaultEnabled);
         this.keybind = new Setting<>("keybind", defaultKeybind);
-        this.customSettings = new HashMap<>();
+        this.customSettings = new LinkedHashMap<>();
     }
 
     public String getId() {
