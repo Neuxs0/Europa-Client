@@ -12,11 +12,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ChunkShaderMixin {
     @Inject(method = "bind", at = @At("TAIL"))
     private void europa_client$applyFullbright(Camera worldCamera, CallbackInfo ci) {
+        ChunkShader shader = (ChunkShader) (Object) this;
+
         if (Modules.fullbright != null && Modules.fullbright.isEnabled()) {
-            ChunkShader shader = (ChunkShader) (Object) this;
             shader.bindOptionalUniform3f("skyAmbientColor", 0.75F, 0.75F, 0.75F);
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
+        }
+
+        if (Modules.noFog != null && Modules.noFog.isEnabled()) {
+            shader.bindOptionalFloat("u_fogDensity", 0.0F);
         }
     }
 }
