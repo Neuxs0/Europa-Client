@@ -28,7 +28,7 @@ public class FpsCounter extends HudModule {
     private static final int MAX_FRAME_SAMPLES = 300;
     private static final float DISPLAY_UPDATE_INTERVAL = 1f;
     private static final long BYTES_PER_MEBIBYTE = 1024L * 1024L;
-    private final RenderUtil renderUtil = new RenderUtil();
+    private RenderUtil renderUtil;
     private final BoxRenderer background = new BoxRenderer();
     private final TextRenderer fpsText = new TextRenderer();
     private final List<Float> frameTimes = new ArrayList<>();
@@ -108,14 +108,15 @@ public class FpsCounter extends HudModule {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
+            RenderUtil hudRenderUtil = getRenderUtil();
             if (!renderersAdded) {
-                renderUtil.addRenderer(background);
-                renderUtil.addRenderer(fpsText);
+                hudRenderUtil.addRenderer(background);
+                hudRenderUtil.addRenderer(fpsText);
                 renderersAdded = true;
             }
 
-            renderUtil.syncRenderers();
-            renderUtil.renderAll(viewport.getCamera().combined, viewport);
+            hudRenderUtil.syncRenderers();
+            hudRenderUtil.renderAll(viewport.getCamera().combined, viewport);
         } finally {
             restoreGlState(glState);
         }
@@ -150,6 +151,13 @@ public class FpsCounter extends HudModule {
                 getGlInteger(GL20.GL_DEPTH_FUNC),
                 getGlInteger(GL20.GL_CULL_FACE_MODE)
         );
+    }
+
+    private RenderUtil getRenderUtil() {
+        if (renderUtil == null) {
+            renderUtil = new RenderUtil();
+        }
+        return renderUtil;
     }
 
     private int getGlInteger(int parameter) {

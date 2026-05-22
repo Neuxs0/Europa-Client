@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
+import dev.neuxs.europa_client.modules.ui.PingTracker;
 import dev.neuxs.europa_client.modules.ui.TpsTracker;
 import finalforeach.cosmicreach.TickRunner;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +20,7 @@ public abstract class TickRunnerMixin {
     )
     private void europa_client$recordTickStart(CallbackInfo ci) {
         TpsTracker.recordLocalTickStart();
+        PingTracker.recordLocalServerTickStart();
     }
 
     @Inject(
@@ -31,5 +33,6 @@ public abstract class TickRunnerMixin {
     )
     private void europa_client$recordTickEnd(CallbackInfo ci) {
         TpsTracker.recordLocalTickEnd();
+        PingTracker.recordLocalServerTickEnd();
     }
 }

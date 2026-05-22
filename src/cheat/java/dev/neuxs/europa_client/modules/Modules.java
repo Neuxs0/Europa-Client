@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
 import dev.neuxs.europa_client.modules.ui.FpsCounter;
+import dev.neuxs.europa_client.modules.ui.PingCounter;
 import dev.neuxs.europa_client.modules.ui.TpsCounter;
 import dev.neuxs.europa_client.modules.ui.VanillaHealthbarHud;
 import dev.neuxs.europa_client.modules.ui.VanillaHotbarHud;
@@ -26,6 +27,7 @@ public class Modules {
 
     public static FpsCounter fpsCounter;
     public static TpsCounter tpsCounter;
+    public static PingCounter pingCounter;
     public static VanillaHotbarHud vanillaHotbar;
     public static VanillaHealthbarHud vanillaHealthbar;
 
@@ -86,6 +88,9 @@ public class Modules {
 
         tpsCounter = new TpsCounter(unknown, false);
         uiModuleList.add(tpsCounter);
+
+        pingCounter = new PingCounter(unknown, false);
+        uiModuleList.add(pingCounter);
 
         moduleList.addAll(uiModuleList);
     }

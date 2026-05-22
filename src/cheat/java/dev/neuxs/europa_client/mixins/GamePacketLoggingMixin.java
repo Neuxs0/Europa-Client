@@ -2,6 +2,7 @@ package dev.neuxs.europa_client.mixins;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.ui.PingTracker;
 import finalforeach.cosmicreach.networking.GamePacket;
 import io.netty.channel.ChannelHandlerContext;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,6 +23,10 @@ public abstract class GamePacketLoggingMixin {
     )
     private void cosmicreach$logSentPacket(ChannelHandlerContext ctx, CallbackInfo ci) {
         GamePacket self = (GamePacket) (Object) this;
+        if (ctx != null && ctx.channel() != null) {
+            PingTracker.recordOutboundPacket(ctx.channel().remoteAddress());
+        }
+
         if (Modules.packetInspector.isEnabled()) {
             Client.LOGGER.info("[PACKET SEND] ID: {}, Type: {}", self.packetID, self.getClass().getSimpleName());
         }

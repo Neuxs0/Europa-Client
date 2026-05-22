@@ -10,6 +10,7 @@
         "EntityMixin",
         "BlockSelectionMixin",
         "ChatMenuMixin",
+        "ClientNetworkManagerMixin",
         "NettyClientIdentifierMixin",
         "NoClipPacketMixin",
         "BlockRaycastsMixin",

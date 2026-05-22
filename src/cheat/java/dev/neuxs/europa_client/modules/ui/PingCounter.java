@@ -6,7 +6,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import dev.neuxs.europa_client.Client;
-import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 import dev.neuxs.europa_client.utils.ColorUtils;
 import dev.neuxs.europa_client.utils.rendering.BoxRenderer;
@@ -14,51 +13,45 @@ import dev.neuxs.europa_client.utils.rendering.RenderUtil;
 import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 
 import java.nio.IntBuffer;
-import java.util.Locale;
 
 @SuppressWarnings("unused")
-public class TpsCounter extends HudModule {
-    private static final String SHOW_MSPT_SETTING_KEY = "showMspt";
+public class PingCounter extends HudModule {
     private static final float BACKGROUND_PADDING_X = 5f;
     private static final float BACKGROUND_PADDING_Y = 3f;
     private static final float BACKGROUND_RADIUS = 4f;
     private static final float DISPLAY_UPDATE_INTERVAL = 1f;
-    private static final float DEFAULT_TOP_OFFSET = 28f;
+    private static final float DEFAULT_TOP_OFFSET = 56f;
 
     private RenderUtil renderUtil;
     private final BoxRenderer background = new BoxRenderer();
-    private final TextRenderer tpsText = new TextRenderer();
+    private final TextRenderer pingText = new TextRenderer();
     private final IntBuffer glStateBuffer = BufferUtils.newIntBuffer(1);
 
     private float displayUpdateTimer = DISPLAY_UPDATE_INTERVAL;
-    private boolean lastShowMspt = true;
     private String cachedCounterText = "";
     private boolean renderersAdded = false;
 
-    public TpsCounter(int keybind, boolean defaultEnabled) {
-        super("TPS Counter", keybind, defaultEnabled);
-        customSettings.put(SHOW_MSPT_SETTING_KEY, new Setting<>("showMspt", true)
-                .withDisplayName("Show MSPT")
-                .withDescription("Show milliseconds per tick under the TPS counter."));
+    public PingCounter(int keybind, boolean defaultEnabled) {
+        super("Ping Counter", keybind, defaultEnabled);
 
         background.setFillColor(ColorUtils.color(0, 0, 0, 150));
         background.setBorderRadius(BACKGROUND_RADIUS);
         background.setZIndex(0);
 
-        tpsText.setTextColor(ColorUtils.WHITE);
-        tpsText.setZIndex(1);
+        pingText.setTextColor(ColorUtils.WHITE);
+        pingText.setZIndex(1);
     }
 
     @Override
     public void enable(boolean messaging) {
         setEnabled(true);
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "TPS Counter enabled");
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Ping Counter enabled");
     }
 
     @Override
     public void disable(boolean messaging) {
         setEnabled(false);
-        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "TPS Counter disabled");
+        if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Ping Counter disabled");
     }
 
     @Override
@@ -68,13 +61,13 @@ public class TpsCounter extends HudModule {
         }
 
         updateCounterText(Gdx.graphics.getDeltaTime());
-        tpsText.setText(cachedCounterText);
+        pingText.setText(cachedCounterText);
 
         Vector2 hudSize = getHudSize(viewport);
         Vector2 hudPosition = getHudPosition(viewport, hudSize);
         background.setPos(hudPosition.x, hudPosition.y);
         background.setSize(hudSize.x, hudSize.y);
-        tpsText.setPos(hudPosition.x + BACKGROUND_PADDING_X, hudPosition.y + BACKGROUND_PADDING_Y);
+        pingText.setPos(hudPosition.x + BACKGROUND_PADDING_X, hudPosition.y + BACKGROUND_PADDING_Y);
 
         GlState glState = captureGlState();
         try {
@@ -88,7 +81,7 @@ public class TpsCounter extends HudModule {
             RenderUtil hudRenderUtil = getRenderUtil();
             if (!renderersAdded) {
                 hudRenderUtil.addRenderer(background);
-                hudRenderUtil.addRenderer(tpsText);
+                hudRenderUtil.addRenderer(pingText);
                 renderersAdded = true;
             }
 
@@ -101,10 +94,10 @@ public class TpsCounter extends HudModule {
 
     @Override
     public Vector2 getHudSize(Viewport viewport) {
-        tpsText.setText(getMeasuredCounterText());
+        pingText.setText(getMeasuredCounterText());
         return new Vector2(
-                tpsText.getTextWidth(viewport) + BACKGROUND_PADDING_X * 2f,
-                tpsText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * 2f
+                pingText.getTextWidth(viewport) + BACKGROUND_PADDING_X * 2f,
+                pingText.getTextHeight(viewport) + BACKGROUND_PADDING_Y * 2f
         );
     }
 
@@ -115,45 +108,28 @@ public class TpsCounter extends HudModule {
         return new Vector2(8f, Math.max(0f, viewportHeight - 8f - DEFAULT_TOP_OFFSET - height));
     }
 
-    @SuppressWarnings("unchecked")
-    private boolean shouldShowMspt() {
-        Setting<Boolean> showMsptSetting = (Setting<Boolean>) customSettings.get(SHOW_MSPT_SETTING_KEY);
-        return showMsptSetting == null || showMsptSetting.getValue();
-    }
-
     private String getMeasuredCounterText() {
         if (!cachedCounterText.isEmpty()) {
             return cachedCounterText;
         }
-        return buildCounterText(shouldShowMspt());
+        return buildCounterText();
     }
 
     private void updateCounterText(float deltaTime) {
-        boolean showMspt = shouldShowMspt();
         displayUpdateTimer += deltaTime;
-        if (!cachedCounterText.isEmpty() && displayUpdateTimer < DISPLAY_UPDATE_INTERVAL && showMspt == lastShowMspt) {
+        if (!cachedCounterText.isEmpty() && displayUpdateTimer < DISPLAY_UPDATE_INTERVAL) {
             return;
         }
 
-        cachedCounterText = buildCounterText(showMspt);
-        lastShowMspt = showMspt;
+        cachedCounterText = buildCounterText();
         displayUpdateTimer = 0f;
     }
 
-    private String buildCounterText(boolean showMspt) {
-        TpsTracker.Snapshot snapshot = TpsTracker.getSnapshot();
-        if (!snapshot.available()) {
-            return showMspt ? "MSPT: --\nTPS: --" : "TPS: --";
-        }
-
-        String tps = String.format(Locale.ROOT, "TPS: %.1f", snapshot.tps());
-        if (!showMspt) {
-            return tps;
-        }
-
-        String mspt = String.format(Locale.ROOT, "MSPT: %.1f ms%s", snapshot.mspt(), snapshot.remoteEstimate() ? "*" : "");
-        // Cosmic Reach's flipped font draw path displays newline-separated text bottom-first.
-        return mspt + "\n" + tps;
+    private String buildCounterText() {
+        PingTracker.Snapshot snapshot = PingTracker.getSnapshot();
+        return snapshot.available()
+                ? "Ping: " + snapshot.pingMillis() + " ms"
+                : "Ping: --";
     }
 
     private GlState captureGlState() {
