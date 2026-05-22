@@ -23,7 +23,7 @@ public class Zoom extends Module {
     private float savedZoomAmount = DEFAULT_ZOOM;
 
     public Zoom(int keybind, boolean defaultEnabled) {
-        super("Zoom", keybind, defaultEnabled);
+        super("Zoom", keybind, defaultEnabled, false);
         customSettings.put("showHand", new Setting<>("showHand", false)
                 .withDisplayName("Show Hand"));
         customSettings.put("showHotbar", new Setting<>("showHotbar", true)

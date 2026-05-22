@@ -26,7 +26,7 @@ public abstract class HudModule extends Module {
     private boolean hudLocked = false;
 
     public HudModule(String id, int defaultKeybind, boolean defaultEnabled) {
-        super(id, defaultKeybind, defaultEnabled);
+        super(id, defaultKeybind, defaultEnabled, false);
     }
 
     public abstract void renderHud(Viewport viewport);

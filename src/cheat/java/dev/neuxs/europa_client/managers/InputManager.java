@@ -335,9 +335,9 @@ public class InputManager extends InputAdapter {
         SettingsManager.setAutoSaveEnabled(false);
         try {
             if (shouldZoom) {
-                Modules.zoom.enable(true);
+                Modules.zoom.enable(Modules.zoom.shouldNotify(true));
             } else {
-                Modules.zoom.disable(true);
+                Modules.zoom.disable(Modules.zoom.shouldNotify(true));
             }
         } finally {
             SettingsManager.setAutoSaveEnabled(previousAutoSave);

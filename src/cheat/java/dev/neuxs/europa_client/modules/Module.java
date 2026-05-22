@@ -1,5 +1,6 @@
 package dev.neuxs.europa_client.modules;
 
+import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.utils.KeybindUtil;
@@ -14,10 +15,17 @@ public abstract class Module {
     protected final Map<String, Setting<?>> customSettings;
 
     public Module(String id, int defaultKeybind, boolean defaultEnabled) {
+        this(id, defaultKeybind, defaultEnabled, true);
+    }
+
+    public Module(String id, int defaultKeybind, boolean defaultEnabled, boolean defaultNotifications) {
         this.id = id;
         this.enabled = new Setting<>("enabled", defaultEnabled);
         this.keybind = new Setting<>("keybind", KeybindUtil.fromSingleKey(defaultKeybind));
         this.customSettings = new HashMap<>();
+        this.customSettings.put("notifications", new Setting<>("notifications", defaultNotifications)
+                .withDisplayName("Notifications")
+                .withDescription("Show enabled and disabled messages for this module"));
     }
 
     public String getId() {
@@ -64,11 +72,12 @@ public abstract class Module {
     public void toggle(boolean messaging) {
         boolean wasEnabled = isEnabled();
         boolean previousAutoSave = SettingsManager.isAutoSaveEnabled();
+        boolean notify = shouldNotify(messaging);
 
         SettingsManager.setAutoSaveEnabled(false);
         try {
-            if (wasEnabled) disable(messaging);
-            else enable(messaging);
+            if (wasEnabled) disable(notify);
+            else enable(notify);
         } finally {
             SettingsManager.setAutoSaveEnabled(previousAutoSave);
         }
@@ -76,6 +85,15 @@ public abstract class Module {
         if (previousAutoSave && !SettingsManager.isReloading() && wasEnabled != isEnabled()) {
             SettingsManager.saveSettings();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public boolean shouldNotify(boolean messaging) {
+        if (!messaging || !ClientSettings.areModuleNotificationsEnabled()) {
+            return false;
+        }
+        Setting<Boolean> notifications = (Setting<Boolean>) customSettings.get("notifications");
+        return notifications == null || notifications.getValue();
     }
 
     public Map<String, Object> exportSettings() {

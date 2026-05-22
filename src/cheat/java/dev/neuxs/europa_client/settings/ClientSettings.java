@@ -35,6 +35,13 @@ public class ClientSettings {
             .withDisplayName("Chat Prefix")
             .withDescription("Prefix shown before Europa Client chat messages");
 
+    public static final Setting<Boolean> MODULE_NOTIFICATIONS = new Setting<>(
+            "moduleNotifications",
+            true
+    )
+            .withDisplayName("Module Notifications")
+            .withDescription("Show enabled and disabled messages for modules that allow notifications");
+
     public static final Setting<Boolean> GUI_BACKGROUND_DIM = new Setting<>(
             "guiBackgroundDim",
             true
@@ -64,6 +71,7 @@ public class ClientSettings {
         register(COMMANDS_ENABLED);
         register(COMMAND_PREFIX);
         register(CLIENT_CHAT_PREFIX);
+        register(MODULE_NOTIFICATIONS);
         register(GUI_BACKGROUND_DIM);
         register(GUI_BACKGROUND_BLUR);
         register(GUI_BACKGROUND_BLUR_STRENGTH);
@@ -158,6 +166,10 @@ public class ClientSettings {
     public static String getClientChatPrefix() {
         String prefix = CLIENT_CHAT_PREFIX.getValue();
         return prefix == null ? "" : prefix;
+    }
+
+    public static boolean areModuleNotificationsEnabled() {
+        return MODULE_NOTIFICATIONS.getValue();
     }
 
     public static boolean isGuiBackgroundDimEnabled() {
