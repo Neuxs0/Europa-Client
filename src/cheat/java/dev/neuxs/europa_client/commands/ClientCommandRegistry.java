@@ -11,6 +11,7 @@ import dev.neuxs.europa_client.commands.modules.cheats.NoClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.ReachCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.SpeedCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.VClipCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.XrayCommand;
 import dev.neuxs.europa_client.commands.modules.utils.NoFogCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
 import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
@@ -49,6 +50,7 @@ public class ClientCommandRegistry {
         ClientCommandManager.registerCommand("fly", FlyCommand::new, "f");
         ClientCommandManager.registerCommand("speed", SpeedCommand::new, "s");
         ClientCommandManager.registerCommand("reach", ReachCommand::new);
+        ClientCommandManager.registerCommand("xray", XrayCommand::new, "xr");
         ClientCommandManager.registerCommand("hclip", HClipCommand::new, "hc");
         ClientCommandManager.registerCommand("vclip", VClipCommand::new, "vc");
     }

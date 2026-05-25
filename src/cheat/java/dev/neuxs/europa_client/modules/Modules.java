@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.cheats.Fly;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
+import dev.neuxs.europa_client.modules.cheats.Xray;
 import dev.neuxs.europa_client.modules.ui.ConnectedServerHud;
 import dev.neuxs.europa_client.modules.ui.FpsCounter;
 import dev.neuxs.europa_client.modules.ui.PingCounter;
@@ -30,6 +31,7 @@ public class Modules {
     public static Fly fly;
     public static Speed speed;
     public static Reach reach;
+    public static Xray xray;
 
     public static FpsCounter fpsCounter;
     public static TpsCounter tpsCounter;
@@ -87,6 +89,9 @@ public class Modules {
 
         reach = new Reach(unknown, false);
         cheatModuleList.add(reach);
+
+        xray = new Xray(unknown, false);
+        cheatModuleList.add(xray);
 
         moduleList.addAll(cheatModuleList);
 

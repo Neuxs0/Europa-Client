@@ -2,16 +2,40 @@ package dev.neuxs.europa_client.mixins;
 
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.FullbrightLighting;
+import dev.neuxs.europa_client.utils.XrayRendering;
 import finalforeach.cosmicreach.rendering.blockmodels.BlockModelJson;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockModelJson.class)
 public abstract class BlockModelJsonMixin {
     @Shadow
     String fragShader;
+
+    @Inject(method = "initShader", at = @At("HEAD"))
+    private void europa_client$useXrayCapableChunkShader(CallbackInfo ci) {
+        if (this.fragShader == null || this.fragShader.equals("base:shaders/chunk.frag.glsl")) {
+            this.fragShader = "europa_client:shaders/xray/chunk.frag.glsl";
+        }
+    }
+
+    @ModifyVariable(
+            method = "addVertices(Lfinalforeach/cosmicreach/rendering/IMeshData;IIII[S[I)V",
+            at = @At("HEAD"),
+            argsOnly = true,
+            index = 5
+    )
+    private int europa_client$showBuriedOreFaces(int opaqueBitmask) {
+        if (Modules.xray != null && Modules.xray.isEnabled() && XrayRendering.isCurrentBlockOre()) {
+            return 0;
+        }
+
+        return opaqueBitmask;
+    }
 
     @ModifyVariable(method = "addVert", at = @At("HEAD"), argsOnly = true, index = 5)
     private int europa_client$applyFullbrightSkylight(int skyLight) {
@@ -19,7 +43,25 @@ public abstract class BlockModelJsonMixin {
             return FullbrightLighting.MAX_SKYLIGHT;
         }
 
+        if (Modules.xray != null && Modules.xray.isEnabled() && !isWaterShader()) {
+            return XrayRendering.isCurrentBlockOre() ? FullbrightLighting.MAX_SKYLIGHT : 1;
+        }
+
         return skyLight;
+    }
+
+    @ModifyVariable(method = "addVert", at = @At("HEAD"), argsOnly = true, index = 4)
+    private short europa_client$markFullbrightXrayOre(short blockLight) {
+        if (Modules.xray != null
+                && Modules.xray.isEnabled()
+                && Modules.fullbright != null
+                && Modules.fullbright.isEnabled()
+                && !isWaterShader()
+                && XrayRendering.isCurrentBlockOre()) {
+            return (short) 15;
+        }
+
+        return blockLight;
     }
 
     private boolean isWaterShader() {

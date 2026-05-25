@@ -23,10 +23,14 @@ public abstract class ChunkShaderMixin {
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
             shader.bindOptionalFloat("u_fullbright", 1.0F);
+        } else {
+            shader.bindOptionalFloat("u_fullbright", 0.0F);
         }
 
         if (Modules.noFog != null && Modules.noFog.isEnabled()) {
             shader.bindOptionalFloat("u_fogDensity", 0.0F);
         }
+
+        shader.bindOptionalFloat("u_xray", Modules.xray != null && Modules.xray.isEnabled() ? 1.0F : 0.0F);
     }
 }

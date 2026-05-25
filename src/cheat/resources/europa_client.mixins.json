@@ -6,6 +6,8 @@
     "mixins": [
         "UIMixin",
         "InGameMixin",
+        "BlockStateMixin",
+        "ChunkMeshGroupMixin",
         "BlockModelJsonMixin",
         "ChunkShaderMixin",
         "EntityMixin",
