@@ -2,7 +2,9 @@ package dev.neuxs.europa_client.modules;
 
 import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.modules.cheats.Fly;
+import dev.neuxs.europa_client.modules.cheats.ClickTp;
 import dev.neuxs.europa_client.modules.cheats.ESP;
+import dev.neuxs.europa_client.modules.cheats.InstaBreak;
 import dev.neuxs.europa_client.modules.cheats.LiquidWalk;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.NoFall;
@@ -17,6 +19,7 @@ import java.util.List;
 public final class CheatModules {
     public static NoClip noClip;
     public static Fly fly;
+    public static ClickTp clickTp;
     public static Speed speed;
     public static Reach reach;
     public static Xray xray;
@@ -24,6 +27,7 @@ public final class CheatModules {
     public static Tracers tracers;
     public static NoFall noFall;
     public static LiquidWalk liquidWalk;
+    public static InstaBreak instaBreak;
 
     public static final List<Module> cheatModuleList = new ArrayList<>();
 
@@ -40,6 +44,9 @@ public final class CheatModules {
 
         fly = new Fly(unknown, false);
         Modules.registerModule(fly, cheatModuleList);
+
+        clickTp = new ClickTp(unknown, false);
+        Modules.registerModule(clickTp, cheatModuleList);
 
         speed = new Speed(unknown, false);
         Modules.registerModule(speed, cheatModuleList);
@@ -61,5 +68,8 @@ public final class CheatModules {
 
         liquidWalk = new LiquidWalk(unknown, false);
         Modules.registerModule(liquidWalk, cheatModuleList);
+
+        instaBreak = new InstaBreak(unknown, false);
+        Modules.registerModule(instaBreak, cheatModuleList);
     }
 }

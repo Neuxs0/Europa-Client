@@ -1,8 +1,10 @@
 package dev.neuxs.europa_client.variant;
 
 import dev.neuxs.europa_client.commands.ClientCommandManager;
+import dev.neuxs.europa_client.commands.modules.cheats.ClickTpCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.FlyCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.HClipCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.InstaBreakCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.LiquidWalkCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.NoClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.NoFallCommand;
@@ -36,11 +38,13 @@ public class CheatVariant implements ClientVariant {
         ClientCommandManager.registerCommand("noclip", NoClipCommand::new, "nc");
         ClientCommandManager.registerCommand("nofall", NoFallCommand::new, "nf");
         ClientCommandManager.registerCommand("fly", FlyCommand::new, "f");
+        ClientCommandManager.registerCommand("clicktp", ClickTpCommand::new, "ctp");
         ClientCommandManager.registerCommand("speed", SpeedCommand::new, "s");
         ClientCommandManager.registerCommand("reach", ReachCommand::new);
         ClientCommandManager.registerCommand("xray", XrayCommand::new, "xr");
         ClientCommandManager.registerCommand("tracers", TracersCommand::new, "tr");
         ClientCommandManager.registerCommand("liquidwalk", LiquidWalkCommand::new, "lw");
+        ClientCommandManager.registerCommand("instabreak", InstaBreakCommand::new, "ib");
         ClientCommandManager.registerCommand("hclip", HClipCommand::new, "hc");
         ClientCommandManager.registerCommand("vclip", VClipCommand::new, "vc");
     }
@@ -63,5 +67,8 @@ public class CheatVariant implements ClientVariant {
     @Override
     public void syncModules() {
         CheatSyncModules.syncNoClip();
+        if (CheatModules.clickTp != null) {
+            CheatModules.clickTp.update();
+        }
     }
 }

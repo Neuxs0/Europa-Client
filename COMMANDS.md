@@ -60,6 +60,16 @@
             - Aliases: None
             - Description: Sets settings
             - Settings: <a href="./MODULES.md#no-clip">See here for settings</a>
+- **Click-TP**
+    - Usage: #clicktp
+    - Aliases: #ctp
+    - Description: Teleports you to the block you click
+    - Sub-commands:
+        - **set**
+            - Usage: #clicktp set button \<left|middle|right>
+            - Aliases: None
+            - Description: Sets the click button
+            - Settings: <a href="./MODULES.md#click-tp">See here for settings</a>
 - **Speed**
     - Usage: #speed
     - Aliases: #s
@@ -95,6 +105,11 @@
             - Aliases: None
             - Description: Sets liquid walk settings
             - Settings: <a href="./MODULES.md#liquidwalk">See here for settings</a>
+- **InstaBreak**
+    - Usage: #instabreak
+    - Aliases: #ib
+    - Description: Instantly breaks blocks as if you are in creative mode
+    - Sub-commands: None
 - **HClip**
     - Usage: #hclip \<distance>
     - Aliases: #hc

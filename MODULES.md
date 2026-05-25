@@ -26,6 +26,12 @@
         - Default: 1.0
         - Minimum: 0.1
         - Maximum: 10.0
+### Click-TP
+- Description: Teleports you to the block you click while the module is enabled
+- Settings:
+    - button \<left|middle|right>
+        - Default: middle
+        - Description: Mouse button used to teleport
 ### Speed
 - Description: Makes you go vroom
 - Settings:
@@ -58,6 +64,9 @@
     - lava \<boolean>
         - Default: true
         - Description: Walk on lava blocks
+### InstaBreak
+- Description: Instantly breaks blocks as if you are in creative mode
+- Settings: None
 
 ## No-Cheat Client
 ### Fullbright
