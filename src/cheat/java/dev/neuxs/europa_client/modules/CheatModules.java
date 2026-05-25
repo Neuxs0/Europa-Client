@@ -2,6 +2,7 @@ package dev.neuxs.europa_client.modules;
 
 import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.modules.cheats.Fly;
+import dev.neuxs.europa_client.modules.cheats.LiquidWalk;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.NoFall;
 import dev.neuxs.europa_client.modules.cheats.Reach;
@@ -18,6 +19,7 @@ public final class CheatModules {
     public static Reach reach;
     public static Xray xray;
     public static NoFall noFall;
+    public static LiquidWalk liquidWalk;
 
     public static final List<Module> cheatModuleList = new ArrayList<>();
 
@@ -46,5 +48,8 @@ public final class CheatModules {
 
         noFall = new NoFall(unknown, false);
         Modules.registerModule(noFall, cheatModuleList);
+
+        liquidWalk = new LiquidWalk(unknown, false);
+        Modules.registerModule(liquidWalk, cheatModuleList);
     }
 }

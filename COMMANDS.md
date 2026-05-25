@@ -80,6 +80,16 @@
             - Aliases: None
             - Description: Sets settings
             - Settings: <a href="./MODULES.md#reach">See here for settings</a>
+- **LiquidWalk**
+    - Usage: #liquidwalk
+    - Aliases: #lw
+    - Description: Lets you walk on liquid blocks
+    - Sub-commands:
+        - **set**
+            - Usage: #liquidwalk set \<water|lava> \<true|false>
+            - Aliases: None
+            - Description: Sets liquid walk settings
+            - Settings: <a href="./MODULES.md#liquidwalk">See here for settings</a>
 - **HClip**
     - Usage: #hclip \<distance>
     - Aliases: #hc

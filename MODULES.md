@@ -40,6 +40,15 @@
         - Default: 6.0
         - Minimum: 1.0
         - Maximum: 3.4028235e38
+### LiquidWalk
+- Description: Lets you walk on liquid blocks
+- Settings:
+    - water \<boolean>
+        - Default: true
+        - Description: Walk on water blocks
+    - lava \<boolean>
+        - Default: true
+        - Description: Walk on lava blocks
 
 ## No-Cheat Client
 ### Fullbright
