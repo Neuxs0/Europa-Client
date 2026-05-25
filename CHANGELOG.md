@@ -1,3 +1,36 @@
+# v2.0.0
+Release time: 17:00 PDT, May 25, 2026
+### Features
+- Added an in-game Client GUI with Home, Utilities, Cheats, UI, Profiles, and Settings pages
+- Added client profiles for saving, loading, and deleting per-variant module and settings setups
+- Added persistent settings for modules, keybinds, GUI state, command prefix, HUD layout, and profile data
+- Added configurable keybindings, including combo keybind support and a configurable client menu keybind
+- Added a HUD editor with draggable, scalable HUD elements, snapping controls, and movable vanilla HUD modules
+- Added FPS, TPS, ping, velocity, and connected-server HUD modules
+- Added optional advanced FPS stats for average FPS, 1% lows, and RAM usage
+- Added optional MSPT display to the TPS HUD
+- Added Packet Inspector, No-Fog, Freecam, and Zoom utility modules
+- Added HClip and VClip commands
+- Added Fly, Xray, ESP, Tracers, No-Fall, Liquid Walk, Insta-Break, Click-TP, and Jetpack Height cheat modules
+- Added jetpack speed control to the Speed cheat
+- Added entity targeting controls to ESP and Tracers
+### Fixes
+- Fixed fullbright desync between module state and rendering state
+- Improved fullbright lighting for chunks, entities, and item renders
+- Fixed keybind validation and module toggle sync edge cases
+- Fixed settings page scroll direction and small-control text fitting issues
+- Fixed xray/fullbright rendering conflicts and suppressed xray effects while rendering item models
+### Misc
+- Updated to Cosmic Reach Alpha v0.5.19
+- Updated to require Puzzle Loader Cosmic v1.6.0-alpha
+- Reworked the project into shared main code with Base and Cheat variant source sets
+- Replaced the old multi-project Quilt/Puzzle layout with a Jigsaw-based Puzzle Loader build
+- Added Base and Cheat jar build tasks from the shared source layout
+- Added proper client icons, including a 256x scaled icon
+- Refactored and cleaned up command, module, settings, rendering, and UI code
+- Added custom UI rendering helpers for text, buttons, dropdowns, sliders, toggles, scrollbars, blur, and SDF shapes
+- Added compatibility guards and smoke tests for command, module, and setting behavior
+
 # v1.2.1
 Release time: 16:00 PDT, March 16, 2025
 ### Fixes
