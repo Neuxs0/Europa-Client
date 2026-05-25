@@ -15,7 +15,7 @@ public class SpeedCommand extends ClientCommand {
         }
 
         if (args.length >= 4 && args[1].equalsIgnoreCase("set") &&
-                args[2].equalsIgnoreCase("speed")) {
+                (args[2].equalsIgnoreCase("speed") || args[2].equalsIgnoreCase("jetpackSpeed"))) {
 
             try {
                 float speedValue = parseFloatArg(args[3]);
@@ -25,17 +25,21 @@ public class SpeedCommand extends ClientCommand {
                     return;
                 }
 
-                CheatModules.speed.setSpeed(speedValue);
+                if (args[2].equalsIgnoreCase("jetpackSpeed")) {
+                    CheatModules.speed.setJetpackSpeed(speedValue);
+                } else {
+                    CheatModules.speed.setSpeed(speedValue);
+                }
             } catch (NumberFormatException ex) {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid number format. Use a valid float value.");
             }
         } else {
-            Client.clientChat.addMessage(null, "Usage: " + commandPrefix() + "speed OR " + commandPrefix() + "speed set speed <value>");
+            Client.clientChat.addMessage(null, "Usage: " + commandPrefix() + "speed OR " + commandPrefix() + "speed set <speed|jetpackSpeed> <value>");
         }
     }
 
     @Override
     public String getDescription() {
-        return "Toggles speed cheat. Use '" + commandPrefix() + "speed set speed <value>' to set the speed.";
+        return "Toggles speed cheat. Use '" + commandPrefix() + "speed set <speed|jetpackSpeed> <value>' to set the speed.";
     }
 }

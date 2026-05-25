@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.commands.modules.cheats.ClickTpCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.FlyCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.HClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.InstaBreakCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.JetpackHeightCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.LiquidWalkCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.NoClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.NoFallCommand;
@@ -45,6 +46,7 @@ public class CheatVariant implements ClientVariant {
         ClientCommandManager.registerCommand("tracers", TracersCommand::new, "tr");
         ClientCommandManager.registerCommand("liquidwalk", LiquidWalkCommand::new, "lw");
         ClientCommandManager.registerCommand("instabreak", InstaBreakCommand::new, "ib");
+        ClientCommandManager.registerCommand("jetpackheight", JetpackHeightCommand::new, "jh");
         ClientCommandManager.registerCommand("hclip", HClipCommand::new, "hc");
         ClientCommandManager.registerCommand("vclip", VClipCommand::new, "vc");
     }

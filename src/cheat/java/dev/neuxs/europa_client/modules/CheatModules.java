@@ -5,6 +5,7 @@ import dev.neuxs.europa_client.modules.cheats.Fly;
 import dev.neuxs.europa_client.modules.cheats.ClickTp;
 import dev.neuxs.europa_client.modules.cheats.ESP;
 import dev.neuxs.europa_client.modules.cheats.InstaBreak;
+import dev.neuxs.europa_client.modules.cheats.JetpackHeight;
 import dev.neuxs.europa_client.modules.cheats.LiquidWalk;
 import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.NoFall;
@@ -28,6 +29,7 @@ public final class CheatModules {
     public static NoFall noFall;
     public static LiquidWalk liquidWalk;
     public static InstaBreak instaBreak;
+    public static JetpackHeight jetpackHeight;
 
     public static final List<Module> cheatModuleList = new ArrayList<>();
 
@@ -71,5 +73,8 @@ public final class CheatModules {
 
         instaBreak = new InstaBreak(unknown, false);
         Modules.registerModule(instaBreak, cheatModuleList);
+
+        jetpackHeight = new JetpackHeight(unknown, false);
+        Modules.registerModule(jetpackHeight, cheatModuleList);
     }
 }

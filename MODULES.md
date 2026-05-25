@@ -37,8 +37,16 @@
 - Settings:
     - speed \<float>
         - Default: 1.5
-        - Minimum: 0.1
-        - Maximum: 10.0
+        - Minimum: 1.0
+        - Maximum: 6.0
+    - jetpackSpeed \<float>
+        - Default: 1.5
+        - Minimum: 1.0
+        - Maximum: 6.0
+        - Description: Movement multiplier while the vanilla jetpack is active
+### JetpackHeight
+- Description: Removes the vanilla jetpack's height allowance limit
+- Settings: None
 ### Reach
 - Description: Slenderman?!?!?
 - Settings:

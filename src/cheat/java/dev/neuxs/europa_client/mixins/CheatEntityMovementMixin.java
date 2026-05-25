@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.mixins;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import dev.neuxs.europa_client.modules.CheatModules;
+import finalforeach.cosmicreach.entities.CommonEntityTags;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.GameEntity;
 import finalforeach.cosmicreach.entities.components.IFallDamageComponent;
@@ -62,7 +63,11 @@ public abstract class CheatEntityMovementMixin {
             modifier *= CheatModules.noClip.getSpeed();
         }
         if (CheatModules.speed != null && CheatModules.speed.isEnabled()) {
-            modifier *= CheatModules.speed.getSpeed();
+            if (isUsingJetpack(self)) {
+                modifier *= CheatModules.speed.getJetpackSpeed();
+            } else {
+                modifier *= CheatModules.speed.getSpeed();
+            }
         }
         return x * modifier;
     }
@@ -85,6 +90,9 @@ public abstract class CheatEntityMovementMixin {
         float modifier = 1.0F;
         if (self.isNoClip() && CheatModules.noClip != null) {
             modifier *= CheatModules.noClip.getSpeed();
+        }
+        if (CheatModules.speed != null && CheatModules.speed.isEnabled() && isUsingJetpack(self)) {
+            modifier *= CheatModules.speed.getJetpackSpeed();
         }
         return y * modifier;
     }
@@ -109,9 +117,17 @@ public abstract class CheatEntityMovementMixin {
             modifier *= CheatModules.noClip.getSpeed();
         }
         if (CheatModules.speed != null && CheatModules.speed.isEnabled()) {
-            modifier *= CheatModules.speed.getSpeed();
+            if (isUsingJetpack(self)) {
+                modifier *= CheatModules.speed.getJetpackSpeed();
+            } else {
+                modifier *= CheatModules.speed.getSpeed();
+            }
         }
         return z * modifier;
+    }
+
+    private boolean isUsingJetpack(GameEntity entity) {
+        return entity != null && entity.hasTag(CommonEntityTags.USING_JETPACK);
     }
 
     @Redirect(

@@ -80,6 +80,11 @@
             - Aliases: None
             - Description: Sets settings
             - Settings: <a href="./MODULES.md#speed">See here for settings</a>
+- **JetpackHeight**
+    - Usage: #jetpackheight
+    - Aliases: #jh
+    - Description: Removes the vanilla jetpack height limit
+    - Sub-commands: None
 - **Reach**
     - Usage: #reach
     - Aliases: None
