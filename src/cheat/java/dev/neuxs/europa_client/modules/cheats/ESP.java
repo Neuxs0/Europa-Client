@@ -43,6 +43,9 @@ public class ESP extends Module {
         customSettings.put("targetUser", new Setting<>("targetUser", false)
                 .withDisplayName("Target Self")
                 .withDescription("Include your own player entity"));
+        customSettings.put("targetEntities", new Setting<>("targetEntities", false)
+                .withDisplayName("Entities")
+                .withDescription("Include non-player entities"));
     }
 
     @Override
@@ -69,13 +72,14 @@ public class ESP extends Module {
         }
 
         if (shouldRenderThreeDimensional()) {
-            renderThreeDimensional(players, localPlayer, worldCamera);
+            renderThreeDimensional(zone, players, localPlayer, worldCamera);
         } else if (uiViewport != null && uiViewport.getCamera() != null) {
-            renderTwoDimensional(players, localPlayer, worldCamera, worldViewport, uiViewport);
+            renderTwoDimensional(zone, players, localPlayer, worldCamera, worldViewport, uiViewport);
         }
     }
 
     private void renderTwoDimensional(
+            Zone zone,
             Array<Player> players,
             Player localPlayer,
             Camera worldCamera,
@@ -98,12 +102,27 @@ public class ESP extends Module {
 
                 drawProjectedBox(worldCamera, worldViewport, uiViewport);
             }
+
+            if (shouldTargetEntities()) {
+                Array<GameEntity> entities = zone.getAllEntities();
+                for (GameEntity entity : entities) {
+                    if (!isTargetEntity(entity, players, localPlayer)) {
+                        continue;
+                    }
+                    updateExpandedBounds(entity);
+                    if (!worldCamera.frustum.boundsInFrustum(bounds)) {
+                        continue;
+                    }
+
+                    drawProjectedBox(worldCamera, worldViewport, uiViewport);
+                }
+            }
         } finally {
             endShapeRender();
         }
     }
 
-    private void renderThreeDimensional(Array<Player> players, Player localPlayer, Camera worldCamera) {
+    private void renderThreeDimensional(Zone zone, Array<Player> players, Player localPlayer, Camera worldCamera) {
         worldCamera.update();
         shapeRenderer.setProjectionMatrix(worldCamera.combined);
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
@@ -123,6 +142,22 @@ public class ESP extends Module {
                 setCorners(bounds);
                 drawWorldBox();
             }
+
+            if (shouldTargetEntities()) {
+                Array<GameEntity> entities = zone.getAllEntities();
+                for (GameEntity entity : entities) {
+                    if (!isTargetEntity(entity, players, localPlayer)) {
+                        continue;
+                    }
+                    updateExpandedBounds(entity);
+                    if (!worldCamera.frustum.boundsInFrustum(bounds)) {
+                        continue;
+                    }
+
+                    setCorners(bounds);
+                    drawWorldBox();
+                }
+            }
         } finally {
             endShapeRender();
             Gdx.gl.glDepthMask(true);
@@ -140,6 +175,21 @@ public class ESP extends Module {
 
         GameEntity entity = player.getEntity();
         return entity == null || entity.isDead() ? null : entity;
+    }
+
+    private boolean isTargetEntity(GameEntity entity, Array<Player> players, Player localPlayer) {
+        if (entity == null || entity.isDead()) {
+            return false;
+        }
+        if (localPlayer != null && entity == localPlayer.getEntity()) {
+            return false;
+        }
+        for (Player player : players) {
+            if (player != null && player.getEntity() == entity) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void updateExpandedBounds(GameEntity entity) {
@@ -244,6 +294,11 @@ public class ESP extends Module {
 
     private boolean shouldTargetUser() {
         Setting<Boolean> setting = (Setting<Boolean>) customSettings.get("targetUser");
+        return setting != null && setting.getValue();
+    }
+
+    private boolean shouldTargetEntities() {
+        Setting<Boolean> setting = (Setting<Boolean>) customSettings.get("targetEntities");
         return setting != null && setting.getValue();
     }
 
