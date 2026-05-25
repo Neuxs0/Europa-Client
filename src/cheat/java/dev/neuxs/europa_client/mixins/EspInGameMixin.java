@@ -20,4 +20,14 @@ public abstract class EspInGameMixin {
         InGame inGame = (InGame) (Object) this;
         CheatModules.esp.render(zone, inGame.getWorldCamera(), inGame.viewport, inGame.newUiViewport);
     }
+
+    @Inject(method = "renderWorld", at = @At("TAIL"))
+    private void europa_client$renderTracers(Zone zone, CallbackInfo ci) {
+        if (CheatModules.tracers == null || !CheatModules.tracers.isEnabled()) {
+            return;
+        }
+
+        InGame inGame = (InGame) (Object) this;
+        CheatModules.tracers.render(zone, inGame.getWorldCamera(), inGame.viewport, inGame.newUiViewport);
+    }
 }

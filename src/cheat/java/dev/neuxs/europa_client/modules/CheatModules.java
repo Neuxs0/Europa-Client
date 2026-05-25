@@ -8,6 +8,7 @@ import dev.neuxs.europa_client.modules.cheats.NoClip;
 import dev.neuxs.europa_client.modules.cheats.NoFall;
 import dev.neuxs.europa_client.modules.cheats.Reach;
 import dev.neuxs.europa_client.modules.cheats.Speed;
+import dev.neuxs.europa_client.modules.cheats.Tracers;
 import dev.neuxs.europa_client.modules.cheats.Xray;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public final class CheatModules {
     public static Reach reach;
     public static Xray xray;
     public static ESP esp;
+    public static Tracers tracers;
     public static NoFall noFall;
     public static LiquidWalk liquidWalk;
 
@@ -50,6 +52,9 @@ public final class CheatModules {
 
         esp = new ESP(unknown, false);
         Modules.registerModule(esp, cheatModuleList);
+
+        tracers = new Tracers(unknown, false);
+        Modules.registerModule(tracers, cheatModuleList);
 
         noFall = new NoFall(unknown, false);
         Modules.registerModule(noFall, cheatModuleList);

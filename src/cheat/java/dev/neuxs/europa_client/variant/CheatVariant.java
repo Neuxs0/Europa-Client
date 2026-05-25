@@ -8,6 +8,7 @@ import dev.neuxs.europa_client.commands.modules.cheats.NoClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.NoFallCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.ReachCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.SpeedCommand;
+import dev.neuxs.europa_client.commands.modules.cheats.TracersCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.VClipCommand;
 import dev.neuxs.europa_client.commands.modules.cheats.XrayCommand;
 import dev.neuxs.europa_client.modules.CheatModules;
@@ -38,6 +39,7 @@ public class CheatVariant implements ClientVariant {
         ClientCommandManager.registerCommand("speed", SpeedCommand::new, "s");
         ClientCommandManager.registerCommand("reach", ReachCommand::new);
         ClientCommandManager.registerCommand("xray", XrayCommand::new, "xr");
+        ClientCommandManager.registerCommand("tracers", TracersCommand::new, "tr");
         ClientCommandManager.registerCommand("liquidwalk", LiquidWalkCommand::new, "lw");
         ClientCommandManager.registerCommand("hclip", HClipCommand::new, "hc");
         ClientCommandManager.registerCommand("vclip", VClipCommand::new, "vc");

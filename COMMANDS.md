@@ -80,6 +80,11 @@
             - Aliases: None
             - Description: Sets settings
             - Settings: <a href="./MODULES.md#reach">See here for settings</a>
+- **Tracers**
+    - Usage: #tracers
+    - Aliases: #tr
+    - Description: Draws lines from the bottom of the screen to targets
+    - Sub-commands: None
 - **LiquidWalk**
     - Usage: #liquidwalk
     - Aliases: #lw

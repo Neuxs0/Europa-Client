@@ -40,6 +40,15 @@
         - Default: 6.0
         - Minimum: 1.0
         - Maximum: 3.4028235e38
+### Tracers
+- Description: Draws lines from the bottom of the screen to targets
+- Settings:
+    - targetUser \<boolean>
+        - Default: false
+        - Description: Include your own player entity
+    - targetEntities \<boolean>
+        - Default: false
+        - Description: Include non-player entities
 ### LiquidWalk
 - Description: Lets you walk on liquid blocks
 - Settings:
