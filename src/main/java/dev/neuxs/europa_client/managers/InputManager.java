@@ -309,7 +309,7 @@ public class InputManager extends InputAdapter {
     }
 
     private void processInGameKeybinds() {
-        if (isFirstFrameKeyDown(Input.Keys.GRAVE)) {
+        if (isFirstFrameKeyDown(Input.Keys.BACKSLASH)) {
             Gdx.input.setCursorCatched(false);
             GameState.switchToGameState(new GUI(GameState.currentGameState));
             return;
