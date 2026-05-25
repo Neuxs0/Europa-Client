@@ -37,6 +37,9 @@ dependencies {
     
     // Core libs
     implementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 // 2. Define Custom SourceSets
@@ -57,6 +60,8 @@ afterEvaluate {
     // Fix Compile Classpath (fixes "package does not exist")
     sourceSets.base.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
     sourceSets.cheat.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.test.compileClasspath += sourceSets.main.output + sourceSets.base.output + sourceSets.cheat.output + sourceSets.main.compileClasspath + sourceSets.cheat.compileClasspath
+    sourceSets.test.runtimeClasspath += sourceSets.main.output + sourceSets.base.output + sourceSets.cheat.output + sourceSets.main.runtimeClasspath + sourceSets.cheat.runtimeClasspath
 
     // Fix Runtime Classpath (fixes running the client)
     sourceSets.base.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
@@ -128,4 +133,21 @@ dependencies {
 tasks.named('build') {
     dependsOn tasks.named('baseJar')
     dependsOn tasks.named('cheatJar')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register('smokeTest', Test) {
+    group = 'verification'
+    description = 'Runs fast JVM smoke tests for Europa module and command behavior.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('smokeTest')
 }

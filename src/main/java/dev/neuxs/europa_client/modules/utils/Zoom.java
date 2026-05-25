@@ -75,7 +75,14 @@ public class Zoom extends Module {
         if (!isEnabled()) {
             return currentFov;
         }
-        float baseFov = GraphicsSettings.fieldOfView.getValue();
+        float baseFov = getConfiguredFov(currentFov);
+        return getZoomedFov(currentFov, baseFov);
+    }
+
+    public float getZoomedFov(float currentFov, float baseFov) {
+        if (!isEnabled()) {
+            return currentFov;
+        }
         return Math.max(MIN_FOV, currentFov - baseFov + baseFov / zoomAmount);
     }
 
@@ -84,7 +91,7 @@ public class Zoom extends Module {
     }
 
     public boolean shouldShowHotbar() {
-        return !isEnabled() || UI.uiNeedMouse || getBoolean("showHotbar", true);
+        return !isEnabled() || isUiMouseNeeded() || getBoolean("showHotbar", true);
     }
 
     public boolean shouldSmoothCamera() {
@@ -147,11 +154,27 @@ public class Zoom extends Module {
         return setting == null ? fallback : setting.getValue();
     }
 
+    private boolean isUiMouseNeeded() {
+        try {
+            return UI.uiNeedMouse;
+        } catch (RuntimeException | LinkageError e) {
+            return false;
+        }
+    }
+
     private float clampZoom(float value) {
         return Math.max(MIN_ZOOM, Math.min(getMaxZoom(), value));
     }
 
     private float getMaxZoom() {
-        return Math.max(MIN_ZOOM, GraphicsSettings.fieldOfView.getValue() / MIN_FOV);
+        return Math.max(MIN_ZOOM, getConfiguredFov(DEFAULT_ZOOM) / MIN_FOV);
+    }
+
+    private float getConfiguredFov(float fallback) {
+        try {
+            return GraphicsSettings.fieldOfView.getValue();
+        } catch (RuntimeException | LinkageError e) {
+            return fallback;
+        }
     }
 }

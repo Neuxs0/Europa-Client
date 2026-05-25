@@ -2,13 +2,14 @@ package dev.neuxs.europa_client.modules.cheats;
 
 import com.badlogic.gdx.math.Vector3;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.modules.ControlsMovementInput;
+import dev.neuxs.europa_client.modules.MovementInput;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
 import finalforeach.cosmicreach.entities.GameEntity;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.InGame;
-import finalforeach.cosmicreach.settings.Controls;
 
 @SuppressWarnings("unchecked")
 public class Fly extends Module {
@@ -16,11 +17,17 @@ public class Fly extends Module {
     private static final Vector3 RIGHT = new Vector3();
     private static final Vector3 MOVEMENT = new Vector3();
     private static final Vector3 VELOCITY = new Vector3();
+    private MovementInput movementInput;
 
     public Fly(int keybind, boolean defaultEnabled) {
         super("Fly", keybind, defaultEnabled);
+        this.movementInput = new ControlsMovementInput();
         customSettings.put("speed", new Setting<>("speed", 8.0f, value -> value >= 1.0f)
                 .withRange(1.0f, 20.0f));
+    }
+
+    public void setMovementInput(MovementInput movementInput) {
+        this.movementInput = movementInput == null ? new ControlsMovementInput() : movementInput;
     }
 
     @Override
@@ -32,7 +39,7 @@ public class Fly extends Module {
     @Override
     public void disable(boolean messaging) {
         setEnabled(false);
-        Player player = InGame.getLocalPlayer();
+        Player player = getLocalPlayerSafely();
         if (player != null && player.getEntity() != null) {
             player.getEntity().gravityModifier = 1.0f;
         }
@@ -44,7 +51,14 @@ public class Fly extends Module {
             return;
         }
 
-        GameEntity entity = player.getEntity();
+        apply(player.getEntity());
+    }
+
+    public void apply(GameEntity entity) {
+        if (!isEnabled() || entity == null) {
+            return;
+        }
+
         suppressVanillaVerticalPhysics(entity);
 
         entity.velocity.set(getVelocity(entity));
@@ -72,13 +86,13 @@ public class Fly extends Module {
     }
 
     private Vector3 getMotion(GameEntity entity, float speed) {
-        float forwardInput = Controls.forwardPressed() - Controls.backwardPressed();
-        float strafeInput = Controls.rightPressed() - Controls.leftPressed();
+        float forwardInput = movementInput.forward() - movementInput.backward();
+        float strafeInput = movementInput.right() - movementInput.left();
         float verticalInput = 0.0f;
-        if (Controls.jumpPressed()) {
+        if (movementInput.jump()) {
             verticalInput += 1.0f;
         }
-        if (Controls.crouchPressed()) {
+        if (movementInput.crouch()) {
             verticalInput -= 1.0f;
         }
 
@@ -105,7 +119,15 @@ public class Fly extends Module {
             return;
         }
 
-        suppressVanillaVerticalPhysics(player.getEntity());
+        prepare(player.getEntity());
+    }
+
+    public void prepare(GameEntity entity) {
+        if (!isEnabled() || entity == null) {
+            return;
+        }
+
+        suppressVanillaVerticalPhysics(entity);
     }
 
     private void suppressVanillaVerticalPhysics(GameEntity entity) {
@@ -123,5 +145,13 @@ public class Fly extends Module {
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         speedSetting.setValue(newSpeed);
         Client.clientChat.addMessage(null, "Fly speed set to " + speedSetting.getValue());
+    }
+
+    private Player getLocalPlayerSafely() {
+        try {
+            return InGame.getLocalPlayer();
+        } catch (RuntimeException | LinkageError e) {
+            return null;
+        }
     }
 }

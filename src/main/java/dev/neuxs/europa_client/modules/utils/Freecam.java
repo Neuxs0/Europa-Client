@@ -7,6 +7,8 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import finalforeach.cosmicreach.BlockGame;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.modules.ControlsMovementInput;
+import dev.neuxs.europa_client.modules.MovementInput;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.settings.Setting;
 import dev.neuxs.europa_client.utils.Chat;
@@ -17,7 +19,6 @@ import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.settings.ControlSettings;
-import finalforeach.cosmicreach.settings.Controls;
 import finalforeach.cosmicreach.ui.UI;
 import finalforeach.cosmicreach.world.Zone;
 
@@ -41,9 +42,11 @@ public class Freecam extends Module {
     private boolean couldMoveLastFrame;
     private float startMouseX;
     private float startMouseY;
+    private MovementInput movementInput;
 
     public Freecam(int keybind, boolean defaultEnabled) {
         super("Freecam", keybind, defaultEnabled);
+        this.movementInput = new ControlsMovementInput();
         customSettings.put("speed", new Setting<>("speed", 8.0f, value -> value >= 1.0f)
                 .withRange(1.0f, 30.0f)
                 .withDisplayName("Speed"));
@@ -58,11 +61,15 @@ public class Freecam extends Module {
                 .withDescription("Disable freecam when the local player takes damage"));
     }
 
+    public void setMovementInput(MovementInput movementInput) {
+        this.movementInput = movementInput == null ? new ControlsMovementInput() : movementInput;
+    }
+
     @Override
     public void enable(boolean messaging) {
         setEnabled(true);
         initialized = false;
-        initialize(InGame.getLocalPlayer());
+        initialize(getLocalPlayerSafely());
         if (messaging) {
             Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Freecam enabled");
         }
@@ -73,7 +80,7 @@ public class Freecam extends Module {
         setEnabled(false);
         initialized = false;
         couldMoveLastFrame = false;
-        Player player = InGame.getLocalPlayer();
+        Player player = getLocalPlayerSafely();
         if (player != null && player.getEntity() != null) {
             player.getEntity().gravityModifier = 1.0f;
         }
@@ -92,13 +99,13 @@ public class Freecam extends Module {
         updateLook();
 
         movement.setZero();
-        float forwardInput = Controls.forwardPressed() - Controls.backwardPressed();
-        float strafeInput = Controls.rightPressed() - Controls.leftPressed();
+        float forwardInput = movementInput.forward() - movementInput.backward();
+        float strafeInput = movementInput.right() - movementInput.left();
         float verticalInput = 0.0f;
-        if (Controls.jumpPressed()) {
+        if (movementInput.jump()) {
             verticalInput += 1.0f;
         }
-        if (Controls.crouchPressed()) {
+        if (movementInput.crouch()) {
             verticalInput -= 1.0f;
         }
 
@@ -118,7 +125,7 @@ public class Freecam extends Module {
                 .mulAdd(right, strafeInput)
                 .add(0.0f, verticalInput, 0.0f);
 
-        if (Controls.sprintPressed()) {
+        if (movementInput.sprint()) {
             player.isSprinting = true;
         }
         if (movement.isZero()) {
@@ -269,8 +276,8 @@ public class Freecam extends Module {
 
             float invControllerSensitivityX = 50.0f;
             float invControllerSensitivityY = 100.0f;
-            float controllerX = Controls.getRightXAxis() / invControllerSensitivityX;
-            float controllerY = -Controls.getRightYAxis() / invControllerSensitivityY;
+            float controllerX = finalforeach.cosmicreach.settings.Controls.getRightXAxis() / invControllerSensitivityX;
+            float controllerY = -finalforeach.cosmicreach.settings.Controls.getRightYAxis() / invControllerSensitivityY;
             if (Math.abs(controllerX) > 0.015f / invControllerSensitivityX) {
                 deltaX += controllerX * Gdx.graphics.getDeltaTime() * 60.0f;
             }
@@ -314,6 +321,14 @@ public class Freecam extends Module {
         entity.velocity.setZero();
         entity.onceVelocity.setZero();
         entity.accelerationSetZero();
+    }
+
+    private Player getLocalPlayerSafely() {
+        try {
+            return InGame.getLocalPlayer();
+        } catch (RuntimeException | LinkageError e) {
+            return null;
+        }
     }
 
     private void moveWithCollision(Zone zone, float x, float y, float z) {

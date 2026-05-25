@@ -4,6 +4,8 @@ build_archive/
 /dev/
 build/
 test/
+!src/test/
+!src/test/**
 gradle/
 !gradle/wrapper/gradle-wrapper.jar
 runs/

@@ -3,6 +3,7 @@ package dev.neuxs.europa_client.mixins;
 import com.badlogic.gdx.graphics.Camera;
 import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.FullbrightLighting;
+import dev.neuxs.europa_client.utils.ShaderDecisions;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,13 +23,13 @@ public abstract class ChunkShaderMixin {
                     FullbrightLighting.MAX_DAYLIGHT_BRIGHTNESS);
             shader.bindOptionalUniform3f("u_sunDirection", 0.0F, 1.0F, 0.0F);
             shader.bindOptionalUniform3f("worldAmbientColor", 0.0F, 0.0F, 0.0F);
-            shader.bindOptionalFloat("u_fullbright", 1.0F);
+            shader.bindOptionalFloat("u_fullbright", ShaderDecisions.getFullbrightUniformValue(true));
         } else {
-            shader.bindOptionalFloat("u_fullbright", 0.0F);
+            shader.bindOptionalFloat("u_fullbright", ShaderDecisions.getFullbrightUniformValue(false));
         }
 
         if (Modules.noFog != null && Modules.noFog.isEnabled()) {
-            shader.bindOptionalFloat("u_fogDensity", 0.0F);
+            shader.bindOptionalFloat("u_fogDensity", ShaderDecisions.getFogDensityOverride(true, 0.0F));
         }
     }
 }

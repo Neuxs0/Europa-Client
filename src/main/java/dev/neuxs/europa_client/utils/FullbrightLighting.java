@@ -19,7 +19,12 @@ public final class FullbrightLighting {
     }
 
     public static void remeshLoadedChunks(boolean immediate) {
-        Player player = InGame.getLocalPlayer();
+        Player player;
+        try {
+            player = InGame.getLocalPlayer();
+        } catch (RuntimeException | LinkageError e) {
+            return;
+        }
         if (player == null) {
             return;
         }

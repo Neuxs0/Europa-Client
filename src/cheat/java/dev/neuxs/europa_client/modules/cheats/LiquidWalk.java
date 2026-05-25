@@ -42,11 +42,15 @@ public class LiquidWalk extends Module {
     }
 
     public boolean shouldWalkOn(BlockState blockState) {
-        if (!isEnabled() || blockState == null || !blockState.isFluid) {
+        return blockState != null && shouldWalkOn(blockState.getBlockId(), blockState.isFluid);
+    }
+
+    public boolean shouldWalkOn(String blockId, boolean isFluid) {
+        if (!isEnabled() || !isFluid) {
             return false;
         }
 
-        return switch (blockState.getBlockId()) {
+        return switch (blockId) {
             case WATER_BLOCK_ID -> walksOnWater();
             case LAVA_BLOCK_ID -> walksOnLava();
             default -> false;

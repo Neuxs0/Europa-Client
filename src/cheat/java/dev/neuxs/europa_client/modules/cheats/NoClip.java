@@ -20,7 +20,7 @@ public class NoClip extends Module {
     public void enable(boolean messaging) {
         if (!isEnabled()) {
             setEnabled(true);
-            setNoClip(InGame.getLocalPlayer(), true);
+            setNoClip(getLocalPlayerSafely(), true);
             if (messaging) {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-Clip enabled");
             }
@@ -31,7 +31,7 @@ public class NoClip extends Module {
     public void disable(boolean messaging) {
         if (isEnabled()) {
             setEnabled(false);
-            setNoClip(InGame.getLocalPlayer(), false);
+            setNoClip(getLocalPlayerSafely(), false);
             if (messaging) {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "No-Clip disabled");
             }
@@ -39,9 +39,19 @@ public class NoClip extends Module {
     }
 
     public void setNoClip(Player player, boolean noClip) {
-        player.getEntity().setNoClip(noClip);
+        if (player == null || player.getEntity() == null) {
+            return;
+        }
+        setNoClip(player.getEntity(), noClip);
+    }
+
+    public void setNoClip(finalforeach.cosmicreach.entities.GameEntity entity, boolean noClip) {
+        if (entity == null) {
+            return;
+        }
+        entity.setNoClip(noClip);
         if (noClip) {
-            player.getEntity().velocity.setZero();
+            entity.velocity.setZero();
         }
     }
     public void setSpeed(float newSpeed) {
@@ -53,5 +63,13 @@ public class NoClip extends Module {
     public float getSpeed() {
         Setting<Float> speedSetting = (Setting<Float>) customSettings.get("speed");
         return speedSetting.getValue();
+    }
+
+    private Player getLocalPlayerSafely() {
+        try {
+            return InGame.getLocalPlayer();
+        } catch (RuntimeException | LinkageError e) {
+            return null;
+        }
     }
 }
