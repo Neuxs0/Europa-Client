@@ -30,8 +30,8 @@ public class ProfileManager {
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
     private static final int SCHEMA_VERSION = 1;
     private static final Path CONFIG_DIR = Paths.get("config", "europaclient");
-    private static final Path PROFILES_DIR = CONFIG_DIR.resolve("profiles");
-    private static final Path STATE_FILE = CONFIG_DIR.resolve("profile-state.json");
+    private static final Path PROFILES_ROOT_DIR = CONFIG_DIR.resolve("profiles");
+    private static final Path PROFILE_STATE_DIR = CONFIG_DIR.resolve("profile-state");
     private static String activeProfileName = "";
 
     public static synchronized void initialize() {
@@ -62,6 +62,7 @@ public class ProfileManager {
         Map<String, Object> merged = new LinkedHashMap<>();
         merged.put("schemaVersion", SCHEMA_VERSION);
         merged.put("name", safeName);
+        merged.put("variant", getCurrentVariantName());
         merged.put("createdAt", stringValue(existing.get("createdAt"), now));
         merged.put("updatedAt", now);
 
@@ -90,6 +91,7 @@ public class ProfileManager {
         }
 
         Map<String, Object> profile = readMap(profilePath);
+        validateProfileVariant(profile, safeName);
         EnumSet<ProfileSection> selectedSections = normalizeSections(sections);
         boolean previousAutoSave = SettingsManager.isAutoSaveEnabled();
         SettingsManager.setAutoSaveEnabled(false);
@@ -124,7 +126,7 @@ public class ProfileManager {
         try {
             ensureDirectories();
             List<String> profiles = new ArrayList<>();
-            try (var stream = Files.list(PROFILES_DIR)) {
+            try (var stream = Files.list(getProfilesDir())) {
                 stream.filter(path -> Files.isRegularFile(path) && path.getFileName().toString().endsWith(".json"))
                         .forEach(path -> profiles.add(readProfileDisplayName(path)));
             }
@@ -211,6 +213,7 @@ public class ProfileManager {
         Map<String, Object> profile = new LinkedHashMap<>();
         profile.put("schemaVersion", SCHEMA_VERSION);
         profile.put("name", profileName);
+        profile.put("variant", getCurrentVariantName());
         profile.put("updatedAt", Instant.now().toString());
 
         if (sections.contains(ProfileSection.MODULES)) {
@@ -266,13 +269,14 @@ public class ProfileManager {
     }
 
     private static void loadState() {
-        if (!Files.exists(STATE_FILE)) {
+        Path stateFile = getStateFile();
+        if (!Files.exists(stateFile)) {
             activeProfileName = "";
             return;
         }
 
         try {
-            Map<String, Object> state = readMap(STATE_FILE);
+            Map<String, Object> state = readMap(stateFile);
             activeProfileName = stringValue(state.get("activeProfile"), "");
         } catch (IOException | JsonSyntaxException e) {
             Client.LOGGER.error("Failed to load profile state: {}", e.getMessage(), e);
@@ -283,8 +287,9 @@ public class ProfileManager {
     private static void setActiveProfileName(String profileName) throws IOException {
         activeProfileName = profileName == null ? "" : profileName;
         Map<String, Object> state = new LinkedHashMap<>();
+        state.put("variant", getCurrentVariantName());
         state.put("activeProfile", activeProfileName);
-        writeMap(STATE_FILE, state);
+        writeMap(getStateFile(), state);
     }
 
     private static String readProfileDisplayName(Path path) {
@@ -297,7 +302,7 @@ public class ProfileManager {
     }
 
     private static Path getProfilePath(String profileName) {
-        return PROFILES_DIR.resolve(sanitizeFileName(profileName) + ".json");
+        return getProfilesDir().resolve(sanitizeFileName(profileName) + ".json");
     }
 
     private static Map<String, Object> readMap(Path path) throws IOException {
@@ -318,7 +323,37 @@ public class ProfileManager {
     }
 
     private static void ensureDirectories() throws IOException {
-        Files.createDirectories(PROFILES_DIR);
+        Files.createDirectories(getProfilesDir());
+        Files.createDirectories(PROFILE_STATE_DIR);
+    }
+
+    private static void validateProfileVariant(Map<String, Object> profile, String profileName) throws IOException {
+        Object profileVariant = profile.get("variant");
+        if (!(profileVariant instanceof String storedVariant) || storedVariant.isBlank()) {
+            return;
+        }
+
+        String currentVariant = getCurrentVariantName();
+        if (!storedVariant.equals(currentVariant)) {
+            throw new IOException("Profile '" + profileName + "' is for " + storedVariant + ", not " + currentVariant);
+        }
+    }
+
+    private static Path getProfilesDir() {
+        return PROFILES_ROOT_DIR.resolve(getCurrentVariantFileName());
+    }
+
+    private static Path getStateFile() {
+        return PROFILE_STATE_DIR.resolve(getCurrentVariantFileName() + ".json");
+    }
+
+    private static String getCurrentVariantName() {
+        String variantName = Client.getClientType();
+        return variantName == null || variantName.isBlank() ? "Unknown" : variantName;
+    }
+
+    private static String getCurrentVariantFileName() {
+        return sanitizeFileName(getCurrentVariantName()).toLowerCase(Locale.ROOT);
     }
 
     private static String sanitizeProfileName(String profileName) {

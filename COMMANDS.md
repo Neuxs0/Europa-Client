@@ -20,7 +20,7 @@
 - **Profile**
     - Usage: #profile list|save|load|delete
     - Aliases: #profiles
-    - Description: Manages profiles. Optional sections: all, modules, settings
+    - Description: Manages profiles for the active variation. Optional sections: all, modules, settings
 ### Utils
 - **Disconnect**
     - Usage: #disconnect

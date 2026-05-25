@@ -97,6 +97,6 @@ public class ProfileCommand extends ClientCommand {
 
     @Override
     public String getDescription() {
-        return "Manages profiles. Sections: all, modules, settings.";
+        return "Manages profiles for the active variation. Sections: all, modules, settings.";
     }
 }
