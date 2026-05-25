@@ -1,7 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
 import dev.neuxs.europa_client.modules.CheatModules;
-import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.utils.FullbrightLighting;
 import dev.neuxs.europa_client.utils.XrayRendering;
 import finalforeach.cosmicreach.rendering.blockmodels.BlockModelJson;
@@ -54,15 +53,13 @@ public abstract class XrayBlockModelJsonMixin {
     }
 
     @ModifyVariable(method = "addVert", at = @At("HEAD"), argsOnly = true, index = 4)
-    private short europa_client$markFullbrightXrayOre(short blockLight) {
+    private short europa_client$markXrayOre(short blockLight) {
         if (CheatModules.xray != null
                 && CheatModules.xray.isEnabled()
                 && !XrayRendering.isSuppressed()
-                && Modules.fullbright != null
-                && Modules.fullbright.isEnabled()
                 && !isWaterShader()
                 && XrayRendering.isCurrentBlockOre()) {
-            return (short) 15;
+            return FullbrightLighting.XRAY_ORE_MARKER_BLOCKLIGHT;
         }
 
         return blockLight;

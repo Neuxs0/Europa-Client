@@ -15,14 +15,14 @@ public class Xray extends Module {
     @Override
     public void enable(boolean messaging) {
         setEnabled(true);
-        FullbrightLighting.remeshLoadedChunks();
+        FullbrightLighting.remeshLoadedChunks(true);
         if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Xray enabled");
     }
 
     @Override
     public void disable(boolean messaging) {
         setEnabled(false);
-        FullbrightLighting.remeshLoadedChunks();
+        FullbrightLighting.remeshLoadedChunks(true);
         if (messaging) Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Xray disabled");
     }
 

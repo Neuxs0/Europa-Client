@@ -9,11 +9,16 @@ import finalforeach.cosmicreach.world.Zone;
 public final class FullbrightLighting {
     public static final float MAX_DAYLIGHT_BRIGHTNESS = 0.75F;
     public static final int MAX_SKYLIGHT = 15;
+    public static final short XRAY_ORE_MARKER_BLOCKLIGHT = (short) (15 << 8);
 
     private FullbrightLighting() {
     }
 
     public static void remeshLoadedChunks() {
+        remeshLoadedChunks(false);
+    }
+
+    public static void remeshLoadedChunks(boolean immediate) {
         Player player = InGame.getLocalPlayer();
         if (player == null) {
             return;
@@ -31,7 +36,7 @@ public final class FullbrightLighting {
 
             for (Chunk chunk : region.getChunks()) {
                 if (chunk != null) {
-                    chunk.flagForRemeshing(false);
+                    chunk.flagForRemeshing(immediate);
                 }
             }
         }

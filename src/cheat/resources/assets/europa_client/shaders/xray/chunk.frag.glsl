@@ -26,7 +26,6 @@ uniform vec3 u_sunDirection;
 out vec4 outColor;
 uniform float u_fogDensity;
 uniform float u_xray;
-uniform float u_fullbright;
 
 #import "base:shaders/common/fog.glsl"
 
@@ -73,9 +72,7 @@ void main()
     }
 
     bool xrayEnabled = u_xray > 0.5;
-    bool oreBlock = u_fullbright > 0.5
-            ? blocklight.r > 0.9 && blocklight.g < 0.1 && blocklight.b < 0.1
-            : blocklight.a > 0.9;
+    bool oreBlock = blocklight.r > 0.9 && blocklight.g < 0.1 && blocklight.b < 0.1;
 
     if (xrayEnabled && !oreBlock && !isFaceBorder()) {
         discard;
