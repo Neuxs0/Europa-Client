@@ -2,12 +2,15 @@ package dev.neuxs.europa_client.mixins;
 
 import dev.neuxs.europa_client.modules.CheatModules;
 import finalforeach.cosmicreach.entities.GameEntity;
+import finalforeach.cosmicreach.entities.components.IFallDamageComponent;
+import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.world.Zone;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings({"unused", "ConstantConditions"})
@@ -94,5 +97,24 @@ public abstract class CheatEntityMovementMixin {
             modifier *= CheatModules.speed.getSpeed();
         }
         return z * modifier;
+    }
+
+    @Redirect(
+            method = "updatePositions(Lfinalforeach/cosmicreach/world/Zone;F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lfinalforeach/cosmicreach/entities/components/IFallDamageComponent;onLand(Lfinalforeach/cosmicreach/entities/GameEntity;F)V"
+            )
+    )
+    private void europa_client$cancelFallDamage(IFallDamageComponent fallDamage, GameEntity entity, float landingVelocity) {
+        Player localPlayer = InGame.getLocalPlayer();
+        if (CheatModules.noFall != null
+                && CheatModules.noFall.isEnabled()
+                && localPlayer != null
+                && localPlayer.getEntity() == entity) {
+            return;
+        }
+
+        fallDamage.onLand(entity, landingVelocity);
     }
 }
