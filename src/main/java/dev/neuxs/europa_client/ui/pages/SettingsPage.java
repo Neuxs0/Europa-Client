@@ -18,6 +18,7 @@ import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import dev.neuxs.europa_client.utils.rendering.ui.Dropdown;
 import dev.neuxs.europa_client.utils.rendering.ui.ScrollState;
+import dev.neuxs.europa_client.utils.rendering.ui.Scrollbar;
 import dev.neuxs.europa_client.utils.rendering.ui.Slider;
 import dev.neuxs.europa_client.utils.rendering.ui.TextInput;
 import dev.neuxs.europa_client.utils.rendering.ui.Toggle;
@@ -36,6 +37,7 @@ public class SettingsPage extends Page implements InputProcessor {
     private final BoxRenderer pageContainer;
     private final Vector2 touchPos = new Vector2();
     private final ScrollState scrollState = new ScrollState();
+    private final Scrollbar scrollbar = new Scrollbar();
 
     private final Button resetButton = new Button();
     private final ActionRow hudEditorRow = new ActionRow("HUD Editor", "Open", this::openHudEditor);
@@ -48,6 +50,8 @@ public class SettingsPage extends Page implements InputProcessor {
     private final float inputHeight = 26f;
     private final float rowHeight = 38f;
     private final float resetButtonWidth = 90f;
+    private final float scrollbarWidth = 6f;
+    private final float scrollbarSpacing = 5f;
 
     public SettingsPage(BoxRenderer pageContainer) {
         super("Settings", pageContainer);
@@ -75,7 +79,7 @@ public class SettingsPage extends Page implements InputProcessor {
         super.resize(width, height);
         this.pageDim.set(pageContainer.getPosX(), pageContainer.getPosY(), pageContainer.getWidth(), pageContainer.getHeight());
 
-        float usableWidth = pageDim.z - padding * 2f;
+        float usableWidth = Math.max(0f, pageDim.z - padding * 2f - scrollbarWidth - scrollbarSpacing);
         float currentY = pageDim.y + pageDim.w - padding - inputHeight;
 
         resetButton.setSize(resetButtonWidth, inputHeight);
@@ -95,6 +99,13 @@ public class SettingsPage extends Page implements InputProcessor {
                     + Math.max(0, settingRows.size() - 1) * elementSpacing;
         }
         scrollState.setContentHeight(contentHeight);
+        scrollbar.layout(
+                pageDim.x + pageDim.z - padding - scrollbarWidth,
+                scrollState.getViewportY(),
+                scrollbarWidth,
+                scrollState.getViewportHeight(),
+                scrollState
+        );
 
         float currentY = scrollState.getViewportY()
                 + scrollState.getViewportHeight()
@@ -127,6 +138,7 @@ public class SettingsPage extends Page implements InputProcessor {
         for (SettingRow row : settingRows) {
             row.removeRenderers(renderUtil);
         }
+        scrollbar.removeRenderers(renderUtil);
     }
 
     @Override
@@ -204,6 +216,7 @@ public class SettingsPage extends Page implements InputProcessor {
         for (SettingRow row : settingRows) {
             row.syncRenderers(renderUtil, scrollState.isFullyVisible(row.getY(), row.getHeight()));
         }
+        scrollbar.syncRenderers(renderUtil, scrollState);
     }
 
     private void openHudEditor() {
@@ -251,6 +264,11 @@ public class SettingsPage extends Page implements InputProcessor {
         touchPos.set(screenX, screenY);
         viewport.unproject(touchPos);
 
+        if (scrollbar.handleTouchDown(touchPos.x, touchPos.y, button, scrollState)) {
+            layoutScrollableContent();
+            return true;
+        }
+
         boolean handled = false;
         SettingRow activeRow = null;
         for (SettingRow row : settingRows) {
@@ -271,13 +289,24 @@ public class SettingsPage extends Page implements InputProcessor {
     }
 
     @Override public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
+        return scrollbar.handleTouchUp();
     }
     @Override public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        return false;
+        return scrollbar.handleTouchUp();
     }
     @Override public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return false;
+        if (viewport == null) {
+            return false;
+        }
+
+        touchPos.set(screenX, screenY);
+        viewport.unproject(touchPos);
+        if (!scrollbar.handleTouchDragged(touchPos.x, touchPos.y, scrollState)) {
+            return false;
+        }
+
+        layoutScrollableContent();
+        return true;
     }
     @Override public boolean mouseMoved(int screenX, int screenY) {
         return false;

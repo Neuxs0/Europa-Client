@@ -18,6 +18,7 @@ import dev.neuxs.europa_client.utils.rendering.TextRenderer;
 import dev.neuxs.europa_client.utils.rendering.ui.Button;
 import dev.neuxs.europa_client.utils.rendering.ui.Dropdown;
 import dev.neuxs.europa_client.utils.rendering.ui.ScrollState;
+import dev.neuxs.europa_client.utils.rendering.ui.Scrollbar;
 import dev.neuxs.europa_client.utils.rendering.ui.Slider;
 import dev.neuxs.europa_client.utils.rendering.ui.TextInput;
 import dev.neuxs.europa_client.utils.rendering.ui.Toggle;
@@ -47,6 +48,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     private final Dropdown sortDropdown = new Dropdown();
     private final Vector2 touchPos = new Vector2();
     private final ScrollState scrollState = new ScrollState();
+    private final Scrollbar scrollbar = new Scrollbar();
     private final List<ModuleEntry> moduleEntries = new ArrayList<>();
     private final List<ModuleEntry> filteredAndSortedEntries = new ArrayList<>();
     private RenderUtil renderUtil;
@@ -58,6 +60,8 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     private final float topBarHeight = 25f;
     private final float sortButtonWidth = 100f;
     private final float moduleButtonHeight = 30f;
+    private final float scrollbarWidth = 6f;
+    private final float scrollbarSpacing = 5f;
     private final float expandedHorizontalPadding = 6f;
     private final float expandedVerticalPadding = 2.5f;
     private final float expandedBoxOverlap = 8f;
@@ -142,6 +146,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             entry.addRenderers(renderUtil);
         }
         renderUtil.addRenderer(sortDropdown);
+        scrollbar.syncRenderers(renderUtil, scrollState);
     }
 
     @Override
@@ -153,6 +158,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         for (ModuleEntry entry : filteredAndSortedEntries) {
             entry.removeRenderers(renderUtil);
         }
+        scrollbar.removeRenderers(renderUtil);
     }
 
     @Override
@@ -183,7 +189,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         scrollState.setViewport(
                 pageDim.x + padding,
                 scrollBottom,
-                pageDim.z - padding * 2f,
+                Math.max(0f, pageDim.z - padding * 2f - scrollbarWidth - scrollbarSpacing),
                 Math.max(0f, scrollTop - scrollBottom)
         );
 
@@ -210,6 +216,21 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
             } else {
                 rightY = nextY;
             }
+        }
+
+        scrollbar.layout(
+                pageDim.x + pageDim.z - padding - scrollbarWidth,
+                scrollState.getViewportY(),
+                scrollbarWidth,
+                scrollState.getViewportHeight(),
+                scrollState
+        );
+        syncScrollbarRenderers();
+    }
+
+    private void syncScrollbarRenderers() {
+        if (renderersAdded && renderUtil != null) {
+            scrollbar.syncRenderers(renderUtil, scrollState);
         }
     }
 
@@ -397,6 +418,13 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         touchPos.set(screenX, screenY);
         viewport.unproject(touchPos);
 
+        if (scrollbar.handleTouchDown(touchPos.x, touchPos.y, button, scrollState)) {
+            repositionEntries();
+            searchInput.setFocus(false);
+            clearTextFocusExcept(null);
+            return true;
+        }
+
         for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry.handleTouchDown(touchPos.x, touchPos.y, button)) {
                 searchInput.setFocus(false);
@@ -419,13 +447,24 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     @Override public boolean touchUp(int i, int i1, int i2, int i3) {
-        return false;
+        return scrollbar.handleTouchUp();
     }
     @Override public boolean touchCancelled(int i, int i1, int i2, int i3) {
-        return false;
+        return scrollbar.handleTouchUp();
     }
     @Override public boolean touchDragged(int i, int i1, int i2) {
-        return false;
+        if (viewport == null) {
+            return false;
+        }
+
+        touchPos.set(i, i1);
+        viewport.unproject(touchPos);
+        if (!scrollbar.handleTouchDragged(touchPos.x, touchPos.y, scrollState)) {
+            return false;
+        }
+
+        repositionEntries();
+        return true;
     }
     @Override public boolean mouseMoved(int i, int i1) {
         return false;
