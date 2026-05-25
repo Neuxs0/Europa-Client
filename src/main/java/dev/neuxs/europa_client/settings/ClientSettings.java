@@ -1,6 +1,8 @@
 package dev.neuxs.europa_client.settings;
 
+import com.badlogic.gdx.Input;
 import dev.neuxs.europa_client.Client;
+import dev.neuxs.europa_client.utils.KeybindUtil;
 
 import java.util.Collections;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class ClientSettings {
     public static final String DEFAULT_COMMAND_PREFIX = "#";
+    public static final String DEFAULT_CLIENT_MENU_KEYBIND = KeybindUtil.fromSingleKey(Input.Keys.BACKSLASH);
 
     public static final Setting<String> COMMAND_PREFIX = new Setting<>(
             "commandPrefix",
@@ -19,6 +22,14 @@ public class ClientSettings {
     )
             .withDisplayName("Command Prefix")
             .withDescription("Prefix used to run Europa Client commands");
+
+    public static final Setting<String> CLIENT_MENU_KEYBIND = new Setting<>(
+            "clientMenuKeybind",
+            DEFAULT_CLIENT_MENU_KEYBIND,
+            value -> value != null && KeybindUtil.containsNonModifier(KeybindUtil.parse(value))
+    )
+            .withDisplayName("Client Menu Keybind")
+            .withDescription("Keybind used to open the Europa Client menu");
 
     public static final Setting<Boolean> COMMANDS_ENABLED = new Setting<>(
             "commandsEnabled",
@@ -95,6 +106,7 @@ public class ClientSettings {
 
     public static Map<String, Object> exportSettings() {
         Map<String, Object> exported = new LinkedHashMap<>();
+        exported.put(CLIENT_MENU_KEYBIND.getName(), CLIENT_MENU_KEYBIND.getValue());
         for (Map.Entry<String, Setting<?>> entry : SETTINGS.entrySet()) {
             exported.put(entry.getKey(), entry.getValue().getValue());
         }
@@ -104,6 +116,14 @@ public class ClientSettings {
     public static void importSettings(Map<String, Object> data) {
         if (data == null) {
             return;
+        }
+
+        if (data.containsKey(CLIENT_MENU_KEYBIND.getName())) {
+            try {
+                CLIENT_MENU_KEYBIND.setValueFromObject(data.get(CLIENT_MENU_KEYBIND.getName()));
+            } catch (RuntimeException e) {
+                Client.LOGGER.error("Failed to apply client setting {}: {}", CLIENT_MENU_KEYBIND.getName(), e.getMessage(), e);
+            }
         }
 
         for (Map.Entry<String, Object> entry : data.entrySet()) {
@@ -121,6 +141,7 @@ public class ClientSettings {
     }
 
     public static void resetAll() {
+        CLIENT_MENU_KEYBIND.resetToDefault();
         for (Setting<?> setting : SETTINGS.values()) {
             setting.resetToDefault();
         }
@@ -133,6 +154,13 @@ public class ClientSettings {
     public static String getCommandPrefix() {
         String prefix = COMMAND_PREFIX.getValue();
         return prefix == null || prefix.isBlank() ? DEFAULT_COMMAND_PREFIX : prefix.trim();
+    }
+
+    public static String getClientMenuKeybind() {
+        String keybind = CLIENT_MENU_KEYBIND.getValue();
+        return KeybindUtil.containsNonModifier(KeybindUtil.parse(keybind))
+                ? keybind
+                : DEFAULT_CLIENT_MENU_KEYBIND;
     }
 
     public static List<String> getCommandPrefixes() {

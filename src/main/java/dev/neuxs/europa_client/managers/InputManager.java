@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.modules.Module;
 import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.settings.ClientSettings;
 import dev.neuxs.europa_client.settings.SettingsManager;
 import dev.neuxs.europa_client.ui.GUI;
 import dev.neuxs.europa_client.utils.KeybindUtil;
@@ -309,7 +310,7 @@ public class InputManager extends InputAdapter {
     }
 
     private void processInGameKeybinds() {
-        if (isFirstFrameKeyDown(Input.Keys.BACKSLASH)) {
+        if (KeybindUtil.isActive(ClientSettings.getClientMenuKeybind())) {
             Gdx.input.setCursorCatched(false);
             GameState.switchToGameState(new GUI(GameState.currentGameState));
             return;
