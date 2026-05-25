@@ -98,7 +98,7 @@ public class SettingsPage extends Page implements InputProcessor {
 
         float currentY = scrollState.getViewportY()
                 + scrollState.getViewportHeight()
-                - scrollState.getOffset()
+                + scrollState.getOffset()
                 - rowHeight;
 
         hudEditorRow.layout(scrollState.getViewportX(), currentY, scrollState.getViewportWidth(), rowHeight);
