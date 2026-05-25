@@ -22,7 +22,7 @@ public abstract class BlockStateMixin {
             int[] skyLights,
             CallbackInfo ci
     ) {
-        if (CheatModules.xray != null && CheatModules.xray.isEnabled()) {
+        if (CheatModules.xray != null && CheatModules.xray.isEnabled() && !XrayRendering.isSuppressed()) {
             XrayRendering.beginBlock((BlockState) (Object) this);
         }
     }
@@ -38,7 +38,7 @@ public abstract class BlockStateMixin {
             int[] skyLights,
             CallbackInfo ci
     ) {
-        if (CheatModules.xray != null && CheatModules.xray.isEnabled()) {
+        if (CheatModules.xray != null && CheatModules.xray.isEnabled() && !XrayRendering.isSuppressed()) {
             XrayRendering.endBlock();
         }
     }

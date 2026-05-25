@@ -12,6 +12,7 @@
         "PlayerControllerMixin",
         "XrayBlockModelJsonMixin",
         "XrayChunkShaderMixin",
+        "XrayItemModelBlockMixin",
         "CheatEntityMovementMixin"
     ],
     "client": [],

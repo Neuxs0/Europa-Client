@@ -31,7 +31,10 @@ public abstract class XrayBlockModelJsonMixin {
             index = 5
     )
     private int europa_client$showBuriedOreFaces(int opaqueBitmask) {
-        if (CheatModules.xray != null && CheatModules.xray.isEnabled() && XrayRendering.isCurrentBlockOre()) {
+        if (CheatModules.xray != null
+                && CheatModules.xray.isEnabled()
+                && !XrayRendering.isSuppressed()
+                && XrayRendering.isCurrentBlockOre()) {
             return 0;
         }
 
@@ -40,7 +43,10 @@ public abstract class XrayBlockModelJsonMixin {
 
     @ModifyVariable(method = "addVert", at = @At("HEAD"), argsOnly = true, index = 5)
     private int europa_client$applyXraySkylight(int skyLight) {
-        if (CheatModules.xray != null && CheatModules.xray.isEnabled() && !isWaterShader()) {
+        if (CheatModules.xray != null
+                && CheatModules.xray.isEnabled()
+                && !XrayRendering.isSuppressed()
+                && !isWaterShader()) {
             return XrayRendering.isCurrentBlockOre() ? FullbrightLighting.MAX_SKYLIGHT : 1;
         }
 
@@ -51,6 +57,7 @@ public abstract class XrayBlockModelJsonMixin {
     private short europa_client$markFullbrightXrayOre(short blockLight) {
         if (CheatModules.xray != null
                 && CheatModules.xray.isEnabled()
+                && !XrayRendering.isSuppressed()
                 && Modules.fullbright != null
                 && Modules.fullbright.isEnabled()
                 && !isWaterShader()
