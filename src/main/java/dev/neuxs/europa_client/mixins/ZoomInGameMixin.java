@@ -32,6 +32,7 @@ public abstract class ZoomInGameMixin extends GameState {
     private void applyEuropaZoomFov(Zone zone, CallbackInfo ci) {
         if (Modules.zoom != null && rawWorldCamera != null) {
             rawWorldCamera.fieldOfView = Modules.zoom.getZoomedFov(rawWorldCamera.fieldOfView);
+            rawWorldCamera.update();
         }
     }
 
