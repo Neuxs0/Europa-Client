@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.networking.NetworkIdentity;
 import finalforeach.cosmicreach.networking.packets.entities.NoClipPacket;
@@ -18,11 +18,15 @@ public abstract class NoClipPacketMixin {
 
     @Overwrite
     public void handle(NetworkIdentity identity, ChannelHandlerContext ctx) {
-        Player player = identity.getPlayer();
-        if (!this.shouldNoClip && Modules.noClip.isEnabled()) {
-            Modules.noClip.setNoClip(player, true);
+        if (CheatModules.noClip == null) {
             return;
         }
-        Modules.noClip.setNoClip(player, this.shouldNoClip);
+
+        Player player = identity.getPlayer();
+        if (!this.shouldNoClip && CheatModules.noClip.isEnabled()) {
+            CheatModules.noClip.setNoClip(player, true);
+            return;
+        }
+        CheatModules.noClip.setNoClip(player, this.shouldNoClip);
     }
 }

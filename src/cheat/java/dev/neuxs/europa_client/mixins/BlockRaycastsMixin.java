@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import finalforeach.cosmicreach.BlockRaycasts;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.items.ItemStack;
@@ -24,8 +24,8 @@ public abstract class BlockRaycastsMixin {
                                               boolean breakPressed,
                                               boolean placePressed,
                                               CallbackInfo ci) {
-        if (Modules.reach != null && Modules.reach.isEnabled()) {
-            this.maximumRaycastDist = Modules.reach.getReachDistance();
+        if (CheatModules.reach != null && CheatModules.reach.isEnabled()) {
+            this.maximumRaycastDist = CheatModules.reach.getReachDistance();
         }
     }
 }

@@ -55,12 +55,12 @@ sourceSets {
 // We wait for Jigsaw to finish setting up 'main', then we steal its classpath.
 afterEvaluate {
     // Fix Compile Classpath (fixes "package does not exist")
-    sourceSets.base.compileClasspath += sourceSets.main.compileClasspath
-    sourceSets.cheat.compileClasspath += sourceSets.main.compileClasspath
+    sourceSets.base.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.cheat.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
 
     // Fix Runtime Classpath (fixes running the client)
-    sourceSets.base.runtimeClasspath += sourceSets.main.runtimeClasspath
-    sourceSets.cheat.runtimeClasspath += sourceSets.main.runtimeClasspath
+    sourceSets.base.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    sourceSets.cheat.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
 }
 
 // 4. Jigsaw Configuration
@@ -96,6 +96,8 @@ tasks.register('baseJar', Jar) {
     group = 'build'
     description = 'Assembles the Base (No-Cheat) client jar.'
     archiveClassifier.set('base')
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    from sourceSets.main.output
     from sourceSets.base.output
 }
 
@@ -103,12 +105,18 @@ tasks.register('cheatJar', Jar) {
     group = 'build'
     description = 'Assembles the Cheat client jar.'
     archiveClassifier.set('cheat')
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    from sourceSets.main.output
     from sourceSets.cheat.output
 }
 
 // 7. Ensure dependencies are hooked up for running
 dependencies {
+    runtimeOnly sourceSets.main.output
     runtimeOnly sourceSets.cheat.output
+    compileOnly localGameJars
+    runtimeOnly localGameJars
+    compileOnly puzzleApiJars
     baseCompileOnly localGameJars
     baseRuntimeOnly localGameJars
     baseCompileOnly puzzleApiJars

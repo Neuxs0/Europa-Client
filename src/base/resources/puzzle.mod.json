@@ -21,7 +21,7 @@
         ]
     },
     "mixins": [
-        "${mod_id}.mixins.json"
+        "${mod_id}.common.mixins.json"
     ],
     "depends": {
         "cosmic-reach": "${cosmic_reach_dependency}",

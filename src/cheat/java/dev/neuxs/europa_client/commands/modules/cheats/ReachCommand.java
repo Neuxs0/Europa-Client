@@ -2,7 +2,7 @@ package dev.neuxs.europa_client.commands.modules.cheats;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.commands.ClientCommand;
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import dev.neuxs.europa_client.utils.Chat;
 
 public class ReachCommand extends ClientCommand {
@@ -10,7 +10,7 @@ public class ReachCommand extends ClientCommand {
     @Override
     public void run() {
         if (args.length == 1) {
-            Modules.reach.toggle(true);
+            CheatModules.reach.toggle(true);
             return;
         }
 
@@ -25,7 +25,7 @@ public class ReachCommand extends ClientCommand {
                     return;
                 }
 
-                Modules.reach.setReachDistance(reachValue);
+                CheatModules.reach.setReachDistance(reachValue);
             } catch (NumberFormatException ex) {
                 Client.clientChat.addMessage(null, Chat.getClientPrefix() + "Invalid number format. Use a valid float value.");
             }

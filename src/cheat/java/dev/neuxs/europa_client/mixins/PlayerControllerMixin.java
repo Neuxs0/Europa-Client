@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import finalforeach.cosmicreach.entities.PlayerController;
 import finalforeach.cosmicreach.entities.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,15 +17,15 @@ public abstract class PlayerControllerMixin {
 
     @Inject(method = "update", at = @At("HEAD"))
     private void europa_client$prepareFly(float deltaTime, CallbackInfo ci) {
-        if (Modules.fly != null) {
-            Modules.fly.prepare(player);
+        if (CheatModules.fly != null) {
+            CheatModules.fly.prepare(player);
         }
     }
 
     @Inject(method = "update", at = @At("TAIL"))
     private void europa_client$applyFly(float deltaTime, CallbackInfo ci) {
-        if (Modules.fly != null) {
-            Modules.fly.apply(player);
+        if (CheatModules.fly != null) {
+            CheatModules.fly.apply(player);
         }
     }
 }

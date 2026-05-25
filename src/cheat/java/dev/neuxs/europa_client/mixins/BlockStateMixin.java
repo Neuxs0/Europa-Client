@@ -1,6 +1,6 @@
 package dev.neuxs.europa_client.mixins;
 
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import dev.neuxs.europa_client.utils.XrayRendering;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.rendering.IMeshData;
@@ -22,7 +22,7 @@ public abstract class BlockStateMixin {
             int[] skyLights,
             CallbackInfo ci
     ) {
-        if (Modules.xray != null && Modules.xray.isEnabled()) {
+        if (CheatModules.xray != null && CheatModules.xray.isEnabled()) {
             XrayRendering.beginBlock((BlockState) (Object) this);
         }
     }
@@ -38,7 +38,7 @@ public abstract class BlockStateMixin {
             int[] skyLights,
             CallbackInfo ci
     ) {
-        if (Modules.xray != null && Modules.xray.isEnabled()) {
+        if (CheatModules.xray != null && CheatModules.xray.isEnabled()) {
             XrayRendering.endBlock();
         }
     }

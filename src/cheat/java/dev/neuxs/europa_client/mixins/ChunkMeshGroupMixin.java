@@ -1,7 +1,7 @@
 package dev.neuxs.europa_client.mixins;
 
 import com.badlogic.gdx.utils.Array;
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import dev.neuxs.europa_client.utils.XrayChunkMeshAppender;
 import finalforeach.cosmicreach.rendering.ChunkMeshGroup;
 import finalforeach.cosmicreach.rendering.meshes.MeshData;
@@ -18,7 +18,7 @@ public abstract class ChunkMeshGroupMixin {
             Chunk chunk,
             CallbackInfoReturnable<Array<MeshData>> cir
     ) {
-        if (Modules.xray != null && Modules.xray.isEnabled()) {
+        if (CheatModules.xray != null && CheatModules.xray.isEnabled()) {
             cir.setReturnValue(XrayChunkMeshAppender.appendEnclosedOres(chunk, cir.getReturnValue()));
         }
     }

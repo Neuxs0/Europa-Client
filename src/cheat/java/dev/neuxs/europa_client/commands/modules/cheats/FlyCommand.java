@@ -2,7 +2,7 @@ package dev.neuxs.europa_client.commands.modules.cheats;
 
 import dev.neuxs.europa_client.Client;
 import dev.neuxs.europa_client.commands.ClientCommand;
-import dev.neuxs.europa_client.modules.Modules;
+import dev.neuxs.europa_client.modules.CheatModules;
 import dev.neuxs.europa_client.utils.Chat;
 
 public class FlyCommand extends ClientCommand {
@@ -10,7 +10,7 @@ public class FlyCommand extends ClientCommand {
     @Override
     public void run() {
         if (args.length == 1) {
-            Modules.fly.toggle(true);
+            CheatModules.fly.toggle(true);
             return;
         }
 
@@ -27,7 +27,7 @@ public class FlyCommand extends ClientCommand {
                     return;
                 }
 
-                Modules.fly.setSpeed(speedValue);
+                CheatModules.fly.setSpeed(speedValue);
             } catch (NumberFormatException ex) {
                 Client.clientChat.addMessage(null,
                         Chat.getClientPrefix() +
