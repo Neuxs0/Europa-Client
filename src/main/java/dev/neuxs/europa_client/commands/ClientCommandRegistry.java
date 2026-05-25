@@ -9,6 +9,7 @@ import dev.neuxs.europa_client.commands.misc.VersionCommand;
 import dev.neuxs.europa_client.commands.modules.utils.NoFogCommand;
 import dev.neuxs.europa_client.commands.utils.DisconnectCommand;
 import dev.neuxs.europa_client.commands.modules.utils.FullbrightCommand;
+import dev.neuxs.europa_client.commands.modules.utils.FreecamCommand;
 import dev.neuxs.europa_client.commands.modules.utils.PacketInspectorCommand;
 import dev.neuxs.europa_client.commands.utils.PlayerListCommand;
 import dev.neuxs.europa_client.commands.utils.QuitGameCommand;
@@ -38,6 +39,7 @@ public class ClientCommandRegistry {
         ClientCommandManager.registerCommand("fullbright", FullbrightCommand::new, "fb");
         ClientCommandManager.registerCommand("nofog", NoFogCommand::new, "nf");
         ClientCommandManager.registerCommand("packetInspector", PacketInspectorCommand::new);
+        ClientCommandManager.registerCommand("freecam", FreecamCommand::new, "fc");
 
         Client.getVariant().registerCommands();
     }

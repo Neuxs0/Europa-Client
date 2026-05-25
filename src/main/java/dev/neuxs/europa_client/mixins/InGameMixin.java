@@ -1,6 +1,7 @@
 package dev.neuxs.europa_client.mixins;
 
 import com.badlogic.gdx.Gdx;
+import dev.neuxs.europa_client.modules.Modules;
 import dev.neuxs.europa_client.ui.GUI;
 import dev.neuxs.europa_client.ui.HudEditor;
 import dev.neuxs.europa_client.accessor.InGameAccessor;
@@ -20,6 +21,11 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
 
     @Shadow
     static PlayerController playerController;
+
+    @Inject(method = "unloadWorld", at = @At("HEAD"))
+    private void europa_client$disableFreecamOnWorldUnload(CallbackInfo ci) {
+        disableFreecam();
+    }
 
     // Thanks to tympanicblock61 for telling me about this
     @Inject(method = "switchAwayTo", at = @At("HEAD"), cancellable = true)
@@ -47,6 +53,12 @@ public abstract class InGameMixin extends GameState implements InGameAccessor {
     @Override
     public PlayerController europa_client$getPlayerController_accessor() {
         return playerController;
+    }
+
+    private static void disableFreecam() {
+        if (Modules.freecam != null && Modules.freecam.isEnabled()) {
+            Modules.freecam.toggle(false);
+        }
     }
 
     protected InGameMixin() {}

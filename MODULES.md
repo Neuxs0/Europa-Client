@@ -3,6 +3,22 @@
 ### Fullbright
 - Description: Makes everything bright
 - Settings: None
+### Freecam
+- Description: Detaches the camera from the player. In the Cheat client, freecam can clip through blocks.
+- Settings:
+    - speed \<float>
+        - Default: 8.0
+        - Minimum: 1.0
+        - Maximum: 30.0
+    - horizontalMovement \<boolean>
+        - Default: true
+        - Description: Moves forward and backward along the horizontal plane instead of camera pitch
+    - playerInteraction \<boolean>
+        - Default: true
+        - Description: Use the player's view for block and entity interactions while freecam is enabled
+    - disableOnDamage \<boolean>
+        - Default: true
+        - Description: Disable freecam when the local player takes damage
 ### No-Clip
 - Description: Become a ghost, though one that can die again
 - Settings:
@@ -29,3 +45,19 @@
 ### Fullbright
 - Description: Makes everything bright
 - Settings: None
+### Freecam
+- Description: Detaches the camera from the player without clipping through blocks.
+- Settings:
+    - speed \<float>
+        - Default: 8.0
+        - Minimum: 1.0
+        - Maximum: 30.0
+    - horizontalMovement \<boolean>
+        - Default: true
+        - Description: Moves forward and backward along the horizontal plane instead of camera pitch
+    - playerInteraction \<boolean>
+        - Default: true
+        - Description: Use the player's view for block and entity interactions while freecam is enabled
+    - disableOnDamage \<boolean>
+        - Default: true
+        - Description: Disable freecam when the local player takes damage

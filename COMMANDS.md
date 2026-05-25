@@ -40,6 +40,16 @@
     - Aliases: #fb
     - Description: Makes everything bright
     - Sub-commands: None
+- **Freecam**
+    - Usage: #freecam
+    - Aliases: #fc
+    - Description: Detach the camera from the player (Can clip through blocks in the Cheat client)
+    - Sub-commands:
+        - **set**
+            - Usage: #freecam set \<setting> \<value>
+            - Aliases: None
+            - Description: Sets settings for freecam
+            - Settings: <a href="./MODULES.md#freecam">See here for settings</a>
 - **No-Clip**
     - Usage: #noclip
     - Aliases: #nc
@@ -118,7 +128,7 @@
 - **Freecam**
     - Usage: #freecam
     - Aliases: #fc
-    - Description: Detatch the camera from the player (Cannot clip through blocks)
+    - Description: Detach the camera from the player (Cannot clip through blocks)
     - Sub-commands:
         - **set**
             - Usage: #freecam set \<setting> \<value>

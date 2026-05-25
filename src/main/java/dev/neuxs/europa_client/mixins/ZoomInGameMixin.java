@@ -44,6 +44,9 @@ public abstract class ZoomInGameMixin extends GameState {
             )
     )
     private void hideEuropaZoomHand(Vector3 heldItemPosition, ItemStack itemStack, PerspectiveCamera camera) {
+        if (Modules.freecam != null && !Modules.freecam.shouldShowHand()) {
+            return;
+        }
         if (Modules.zoom == null || Modules.zoom.shouldShowHand()) {
             ItemRenderer.renderHeldItem(heldItemPosition, itemStack, camera);
         }

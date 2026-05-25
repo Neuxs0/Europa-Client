@@ -36,4 +36,13 @@ public abstract class EntityMixin {
             VelocityTracker.recordLocalPlayerMovement(self, deltaTime);
         }
     }
+
+    @Inject(method = "onDamage", at = @At("HEAD"))
+    private void europa_client$disableFreecamOnLocalPlayerDamage(float amount, CallbackInfo ci) {
+        GameEntity self = (GameEntity) (Object) this;
+        Player localPlayer = InGame.getLocalPlayer();
+        if (Modules.freecam != null && localPlayer != null && localPlayer.getEntity() == self) {
+            Modules.freecam.onLocalPlayerDamaged(amount);
+        }
+    }
 }

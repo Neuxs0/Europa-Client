@@ -5,6 +5,7 @@
     "compatibilityLevel": "JAVA_17",
     "mixins": [
         "UIMixin",
+        "BlockGameMixin",
         "InGameMixin",
         "BlockModelJsonMixin",
         "ChunkShaderMixin",
@@ -21,6 +22,8 @@
         "ZoomInGameMixin",
         "ZoomUIMixin",
         "ZoomPlayerControllerMixin",
+        "FreecamPlayerControllerMixin",
+        "FreecamPlayerEntityMixin",
         "TickRunnerMixin",
         "EndTickPacketMixin",
         "GameSingletonsInterface"

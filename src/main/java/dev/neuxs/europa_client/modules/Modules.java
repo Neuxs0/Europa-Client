@@ -10,6 +10,7 @@ import dev.neuxs.europa_client.modules.ui.VanillaHealthbarHud;
 import dev.neuxs.europa_client.modules.ui.VanillaHotbarHud;
 import dev.neuxs.europa_client.modules.ui.VelocityHud;
 import dev.neuxs.europa_client.modules.utils.Fullbright;
+import dev.neuxs.europa_client.modules.utils.Freecam;
 import dev.neuxs.europa_client.modules.utils.NoFog;
 import dev.neuxs.europa_client.modules.utils.PacketInspector;
 import dev.neuxs.europa_client.modules.utils.Zoom;
@@ -22,6 +23,7 @@ public class Modules {
     public static NoFog noFog;
     public static PacketInspector packetInspector;
     public static Zoom zoom;
+    public static Freecam freecam;
 
     public static FpsCounter fpsCounter;
     public static TpsCounter tpsCounter;
@@ -57,6 +59,8 @@ public class Modules {
         registerModule(packetInspector = new PacketInspector(unknown, false), utilModuleList);
 
         registerModule(zoom = new Zoom(unknown, false), utilModuleList);
+
+        registerModule(freecam = new Freecam(unknown, false), utilModuleList);
 
         if (Client.getVariant() != null) {
             Client.getVariant().registerModules();
