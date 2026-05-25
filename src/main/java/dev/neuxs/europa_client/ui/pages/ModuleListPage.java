@@ -159,7 +159,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     public void update(float deltaTime) {
         searchInput.update(viewport, deltaTime);
         sortDropdown.update(viewport);
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             entry.update(viewport, deltaTime);
         }
 
@@ -320,6 +320,10 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         }
     }
 
+    private List<ModuleEntry> getFilteredEntriesSnapshot() {
+        return new ArrayList<>(filteredAndSortedEntries);
+    }
+
     private boolean applySettingValue(Setting<?> setting, Object rawValue) {
         try {
             saveModuleChange(() -> setting.setValueFromObject(rawValue));
@@ -359,7 +363,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     @Override public boolean keyDown(int keycode) {
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry.keyDown(keycode)) {
                 return true;
             }
@@ -368,7 +372,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     @Override public boolean keyUp(int keycode) {
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry.keyUp(keycode)) {
                 return true;
             }
@@ -377,7 +381,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     @Override public boolean keyTyped(char character) {
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry.keyTyped(character)) {
                 return true;
             }
@@ -393,7 +397,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
         touchPos.set(screenX, screenY);
         viewport.unproject(touchPos);
 
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry.handleTouchDown(touchPos.x, touchPos.y, button)) {
                 searchInput.setFocus(false);
                 clearTextFocusExcept(entry);
@@ -443,7 +447,7 @@ public abstract class ModuleListPage extends Page implements InputProcessor {
     }
 
     private void clearTextFocusExcept(ModuleEntry activeEntry) {
-        for (ModuleEntry entry : filteredAndSortedEntries) {
+        for (ModuleEntry entry : getFilteredEntriesSnapshot()) {
             if (entry != activeEntry) {
                 entry.clearTextFocus();
             }
