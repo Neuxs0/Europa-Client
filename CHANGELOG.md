@@ -17,9 +17,6 @@ Release time: 17:00 PDT, May 25, 2026
 ### Fixes
 - Fixed fullbright desync between module state and rendering state
 - Improved fullbright lighting for chunks, entities, and item renders
-- Fixed keybind validation and module toggle sync edge cases
-- Fixed settings page scroll direction and small-control text fitting issues
-- Fixed xray/fullbright rendering conflicts and suppressed xray effects while rendering item models
 ### Misc
 - Updated to Cosmic Reach Alpha v0.5.19
 - Updated to require Puzzle Loader Cosmic v1.6.0-alpha
